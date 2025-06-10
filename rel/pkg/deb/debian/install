@@ -1,0 +1,2 @@
+bin/riak-control usr/bin/
+rc_www var/lib/

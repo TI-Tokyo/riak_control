@@ -1,0 +1,13 @@
+name: "riak_control"
+origin: "databases"
+comment: "Riak Web Interface"
+licenses: ["Apache 2"]
+licenselogic: "single"
+arch: "freebsd:13:x86:64"
+www: "https://tiot.jp"
+maintainer: "riak_control_packaging@tiot.jp"
+prefix: "/usr/local"
+categories: ["databases"]
+desc: "Riak Control is Web interface for Riak"
+scripts: {
+}

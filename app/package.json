@@ -1,0 +1,46 @@
+{
+    "name": "rc-ui",
+    "version": "4.0.0",
+    "license": "Apache-2.0",
+    "scripts": {
+        "clean:build": "rimraf build",
+        "prebuild": "yarn run clean:build",
+        "prebuild:dev": "yarn run clean:build",
+        "build": "webpack --mode production --config ./webpack/config.prod.js",
+        "build:dev": "webpack --mode development --config ./webpack/config.dev.js",
+        "dev:serve": "http-server build -p 3003 --cors",
+        "errors": "webpack --mode development --display-error-details"
+    },
+    "dependencies": {
+        "elm": "^0.19.1-6",
+        "elm-webpack-loader": "^8.0.0",
+        "less": "^4.2.0",
+        "material-components-web-elm": "^9.1.0",
+        "parcel": "^2.15.2"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.22.20",
+        "@popperjs/core": "^2.11.8",
+        "@webcomponents/webcomponentsjs": "^2.8.0",
+        "autoprefixer": "^10.4.15",
+        "babel-loader": "^10.0.0",
+        "bootstrap": "^5.3.6",
+        "copy-webpack-plugin": "^13.0.0",
+        "css-loader": "^6.8.1",
+        "file-loader": "^6.2.0",
+        "html-loader": "^5.1.0",
+        "html-webpack-plugin": "^5.6.3",
+        "http-server": "^14.1.1",
+        "less-loader": "^11.1.3",
+        "postcss": "^8.5.4",
+        "source-map-loader": "^1.0.0",
+        "style-loader": "^3.3.3",
+        "vulcanize-loader": "^2.0.1",
+        "web-component": "^1.0.26",
+        "webpack": "^5.99.9",
+        "webpack-cli": "^4.5.0",
+        "webpack-dev-server": "^4.15.1",
+        "webpack-merge": "^6.0.1"
+    },
+    "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"
+}

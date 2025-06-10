@@ -1,0 +1,4 @@
+Format: http://dep.debian.net/deps/dep5
+Upstream-Name: riak-control
+Upstream-Contact: Riak Control Maintainer <riak_control@tiot.jp>
+License: Apache-2.0

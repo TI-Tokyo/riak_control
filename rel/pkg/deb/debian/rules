@@ -1,0 +1,33 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+export DH_VERBOSE=1
+
+ROOTDIR := debian/riak-cs-control
+
+build:
+	mv www rc_www
+	sed -i 's|.set_me_from_distro_packaging|/var/lib/rc_www|' bin/riak-control
+
+clean:
+
+install:
+	dh_testdir
+	dh_testroot
+	dh_prep
+	dh_installdirs
+	dh_install
+	dh_installman
+	dh_fixperms
+
+# We have nothing to do by default.
+binary-indep: install build-stamp
+	dh_compress -a
+	dh_installdeb
+	dh_gencontrol
+	dh_builddeb
+
+build-stamp:
+
+binary: binary-indep

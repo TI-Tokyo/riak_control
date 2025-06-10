@@ -1,0 +1,9 @@
+#!/bin/sh
+
+PORT=${RIAK_CONTROL_PORT:-8091}
+
+a=$set_me_from_distro_packaging
+a1=${a:-$RIAK_CONTROL_DOCROOT}
+D=${a1:-$(basename)/../www}
+
+(cd "$D" && python3 -m http.server $PORT)

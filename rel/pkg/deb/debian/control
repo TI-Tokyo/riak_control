@@ -1,0 +1,13 @@
+Source: riak-control
+Section: net
+Priority: optional
+Maintainer: riak_control-packaging@tiot.jp
+Build-Depends: debhelper (>= 7), devscripts, dh-make
+Standards-Version: 4.7
+Homepage: https://tiot.jp
+
+Package: riak-control
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}, python3
+Homepage: tiot.jp
+Description: Riak Web Interface
