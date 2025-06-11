@@ -39,8 +39,6 @@ import Http
 import Time
 import Material.Snackbar as Snackbar
 import File exposing (File)
-import Bytes exposing (Bytes)
-import Keyboard exposing (RawKey)
 
 
 type Tab
@@ -100,7 +98,6 @@ type Msg
     | EditUserCancelled
 
     -- misc
-    | KeyboardMsg Keyboard.Msg
     | SnackbarClosed Snackbar.MessageId
 
     | NewTime Time.Posix

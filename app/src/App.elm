@@ -24,12 +24,10 @@ import Model exposing (..)
 import Update exposing (refreshAll)
 import Msg exposing (Msg(..))
 import View.Common exposing (SortByField(..))
-import Data.Acl exposing (AceGrantSection(..))
 
 import Dict exposing (Dict)
 import Task
 import Time
-import Keyboard exposing (Key(..))
 import Material.Snackbar as Snackbar
 
 type alias Flags =
@@ -68,4 +66,4 @@ init f =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.map KeyboardMsg Keyboard.subscriptions
+    Sub.none

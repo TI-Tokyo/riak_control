@@ -37,7 +37,6 @@ import Platform.Cmd
 import Dict exposing (Dict)
 import Json.Decode
 import Http
-import Keyboard exposing (Key(..))
 import Material.Snackbar as Snackbar
 
 

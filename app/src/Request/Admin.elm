@@ -39,7 +39,6 @@ import Http
 import HttpBuilder
 import Url.Builder
 import Json.Encode
-import Base64
 import Url
 
 

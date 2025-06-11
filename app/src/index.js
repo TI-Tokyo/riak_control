@@ -27,7 +27,7 @@ const app = Elm.Main.init({
     node: document.getElementById('root'),
     flags: {
         riakInstanceUrl: "https://127.0.0.1:8098",
-        riakUser: "Murzyk"
+        riakUser: "Murzyk",
         riakPassword: "kolochava"
     }
 });
