@@ -31,18 +31,17 @@ import Time
 import Material.Snackbar as Snackbar
 
 type alias Flags =
-    { riakUrl : String
-    , riakUser : String
-    , riakPassword : String
-    , riakAdminPathPrefix : String
+    { riakNodeUrl : String
+    , riakAdminUser : String
+    , riakAdminPassword : String
     }
 
 
 init : Flags -> (Model, Cmd Msg)
 init f =
     let
-        haveCreds = f.riakPassword /= ""
-        config = Config f.riakUrl f.riakUser f.riakPassword f.rdrAdminPathPrefix
+        haveCreds = f.riakAdminPassword /= ""
+        config = Config f.riakNodeUrl f.riakAdminUser f.riakAdminPassword
         state = State
                     []
                     Snackbar.initialQueue Msg.General True
@@ -50,12 +49,11 @@ init f =
                                 , riak = "---"
                                 }
                     , config = Nothing
-                    , configRaw = "---"
                     , uptime = { uptime = "---" }
-                    } False
-                    (not haveCreds) f.riakUrl f.riakUser f.riakPassword f.riakAdminPathPrefix
+                    }
+                    (not haveCreds) f.riakNodeUrl f.riakAdminUser f.riakAdminPassword
                     -- User
-                    "" ["Name", "Display name"] Name True
+                    "" ["Name"] Name True
                     False "" "" Nothing Nothing
         model = Model config state (Time.millisToPosix 0)
     in

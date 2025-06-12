@@ -34,7 +34,6 @@ type alias ServerUptime =
 type alias ServerInfo =
     { version : ServerVersion
     , config : Maybe ServerConfig
-    , configRaw : String
     , uptime : ServerUptime
     }
 

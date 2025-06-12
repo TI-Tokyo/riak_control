@@ -19,8 +19,7 @@
 -- ---------------------------------------------------------------------
 
 module Request.Admin exposing
-    ( getServerConfig
-    , getServerVersion
+    ( getServerVersion
     , getServerUptime
     , listUsers
     , createUser
@@ -29,7 +28,7 @@ module Request.Admin exposing
     )
 
 import Model exposing (Model)
-import Data.User exposing (User, Group)
+import Data.User exposing (User)
 import Data.Json
 import Msg exposing (Msg(..))
 import Util
@@ -40,19 +39,12 @@ import HttpBuilder
 import Url.Builder
 import Json.Encode
 import Url
+import Base64
 
-
-getServerConfig : Model -> Cmd Msg
-getServerConfig m =
-    Url.Builder.crossOrigin m.c.riakUrl [ m.c.riakAdminPathPrefix, "s", "config" ] []
-        |> HttpBuilder.get
-        |> HttpBuilder.withHeaders (stdHeaders m)
-        |> HttpBuilder.withExpect (Http.expectJson GotServerConfig Data.Json.decodeServerConfig)
-        |> HttpBuilder.request
 
 getServerUptime : Model -> Cmd Msg
 getServerUptime m =
-    Url.Builder.crossOrigin m.c.riakUrl [ m.c.riakAdminPathPrefix, "s", "uptime" ] []
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ riakAdminPathPrefix, "s", "uptime" ] []
         |> HttpBuilder.get
         |> HttpBuilder.withHeaders (stdHeaders m)
         |> HttpBuilder.withExpect (Http.expectJson GotServerUptime Data.Json.decodeServerUptime)
@@ -60,7 +52,7 @@ getServerUptime m =
 
 getServerVersion : Model -> Cmd Msg
 getServerVersion m =
-    Url.Builder.crossOrigin m.c.riakUrl [ m.c.riakAdminPathPrefix, "s", "version" ] []
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ riakAdminPathPrefix, "s", "version" ] []
         |> HttpBuilder.get
         |> HttpBuilder.withHeaders (stdHeaders m)
         |> HttpBuilder.withExpect (Http.expectJson GotServerVersion Data.Json.decodeServerVersion)
@@ -70,7 +62,7 @@ getServerVersion m =
 
 listUsers : Model -> Cmd Msg
 listUsers m =
-    Url.Builder.crossOrigin m.c.riakUrl [ m.c.riakAdminPathPrefix, "u" ] []
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ riakAdminPathPrefix, "u" ] []
         |> HttpBuilder.get
         |> HttpBuilder.withHeaders (stdHeaders m)
         |> HttpBuilder.withExpect (Http.expectJson GotUserList Data.Json.decodeUserList)
@@ -85,7 +77,7 @@ createUser m  =
         body = json |> Json.Encode.encode 0
         ct = "application/json"
     in
-       Url.Builder.crossOrigin m.c.riakUrl [ m.c.riakAdminPathPrefix, "u" ] []
+       Url.Builder.crossOrigin m.c.riakNodeUrl [ riakAdminPathPrefix, "u" ] []
             |> HttpBuilder.post
             |> HttpBuilder.withHeaders (stdHeaders m)
             |> HttpBuilder.withExpect (Http.expectWhatever UserCreated)
@@ -102,7 +94,7 @@ updateUser m  =
         body = json |> Json.Encode.encode 0
         ct = "application/json"
     in
-       Url.Builder.crossOrigin m.c.riakUrl [ m.c.riakAdminPathPrefix, "u", u.id ] []
+       Url.Builder.crossOrigin m.c.riakNodeUrl [ riakAdminPathPrefix, "u", u.name ] []
             |> HttpBuilder.put
             |> HttpBuilder.withHeaders (stdHeaders m)
             |> HttpBuilder.withExpect (Http.expectWhatever UserCreated)
@@ -110,10 +102,22 @@ updateUser m  =
             |> HttpBuilder.request
 
 
+deleteUser : Model -> String -> Cmd Msg
+deleteUser m uid =
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ riakAdminPathPrefix, "u", uid ] []
+        |> HttpBuilder.delete
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withExpect (Http.expectWhatever UserDeleted)
+        |> HttpBuilder.request
+
+
 stdHeaders m =
     let ct = "application/json" in
     [ ("accept", ct)
     , ("content-type", ct)
     , ("authorization",
-        "Basic " ++ (Base64.encode ("root" ++ ":" ++ m.c.rdrRootPassword)))
+        "Basic " ++ (Base64.encode (m.c.riakAdminUser ++ ":" ++ m.c.riakAdminPassword)))
     ]
+
+riakAdminPathPrefix =
+    "admin"

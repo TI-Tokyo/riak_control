@@ -54,7 +54,7 @@ makeContent m =
         , div [] (View.User.Dialog.makeEditUserDialog m)
         , div [] (View.Shared.makeDeleteThingConfirmDialog
                       m .confirmDeleteUserDialogShownFor
-                      (.name << (Model.userBy m .id)) "user"
+                      (.name << (Model.userBy m .name)) "user"
                       DeleteUserConfirmed DeleteUserNotConfirmed)
         , div [] (maybeShowCreateUserFab m)
         ]
@@ -125,7 +125,7 @@ userCardActions m u =
         Card.actions
             { buttons =
                   [ Card.button (Button.config
-                                |> Button.setOnClick (DeleteUser u.id)
+                                |> Button.setOnClick (DeleteUser u.name)
                                 |> Button.setDisabled (isRoot u)
                                 |> Button.setAttributes [ style "color" "red" ]
                                 ) "Delete"

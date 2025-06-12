@@ -20,8 +20,6 @@
 
 module View.Shared exposing
     ( makeDeleteThingConfirmDialog
-    , groupsAsList
-    , userStatsDetail
     , maybeItems
     , checkboxStateFromBool
     )
@@ -38,48 +36,6 @@ import Material.Checkbox as Checkbox
 import Material.List as List
 import Material.List.Item as ListItem
 import Filesize
-
-
-userStatsDetail {total_files, total_dirs, total_size} =
-    let
-        maybeS = \n -> case n of
-                           1 -> ""
-                           _ -> "s"
-    in
-    (Filesize.format total_size) ++ " (" ++ String.fromInt total_size ++ " bytes) in "
-        ++ String.fromInt total_files ++ " file" ++ (maybeS total_files) ++ " in "
-        ++ String.fromInt total_dirs ++ " dir" ++ (maybeS total_dirs)
-
-
-groupsAsList m allGids selected msg =
-    let
-        selectArg =
-            \p ->
-                if List.member p selected then
-                    Just ListItem.selected
-                else
-                    Nothing
-        element =
-            case allGids of
-                [] ->
-                    text "(no groups)"
-                p0 :: pn ->
-                    List.list List.config
-                        (ListItem.listItem
-                             (ListItem.config
-                             |> ListItem.setSelected (selectArg p0)
-                             |> ListItem.setOnClick (msg p0))
-                             [ text <| .name <| Model.groupBy m .id p0 ])
-                        (List.map (\p ->
-                                       (ListItem.listItem
-                                            (ListItem.config
-                                            |> ListItem.setSelected (selectArg p)
-                                            |> ListItem.setOnClick (msg p))
-                                            [ text <| .name <| Model.groupBy m .id p ]))
-                             pn)
-    in
-        div [] [element]
-
 
 
 makeDeleteThingConfirmDialog m d g t confirmedMsg notConfirmedMsg =

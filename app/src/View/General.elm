@@ -38,7 +38,6 @@ import Material.Typography as Typography
 makeContent m =
     Html.div View.Style.topContent
         [ div [] [ makeServerInfo m ]
-        , div [] (makeServerConfigDialog m)
         , div [style "width" "max(max-content, 80%)"] (configDialog m)
         ]
 
@@ -54,7 +53,7 @@ serverInfoDetails m =
         { blocks =
               ( Card.block <|
                     div View.Style.cardInnerHeader
-                        [ text "RDrive instance" ]
+                        [ text "Riak instance" ]
               , [ Card.block <|
                     div View.Style.cardInnerContent
                         [ text (cardContent m) ]
@@ -63,36 +62,10 @@ serverInfoDetails m =
         , actions = cardActions
         }
 
-makeServerConfigDialog m =
-    if m.s.serverConfigShown then
-        [ Dialog.confirmation
-              (Dialog.config
-              |> Dialog.setOpen True
-              |> Dialog.setOnClose ServerConfigDialogDismissed
-              |> Dialog.setAttributes [ style "max-height" "80%"
-                                      , style "z-index" "90"
-                                      ]
-              )
-              { title = "RDrive server config"
-              , content = [ div [ style "font-size" "small"
-                                , style "font-family" "monospace"
-                                , style "white-space" "pre"
-                                ]
-                                [ text (Util.pprintJson m.s.serverInfo.configRaw) ]
-                          ]
-              , actions = [ Button.text (Button.config
-                                        |> Button.setOnClick ServerConfigDialogDismissed)
-                                "Dismiss"
-                          ]
-              }
-        ]
-    else
-        []
-
 cardContent m =
-    "Riak instance url: " ++ m.c.riakUrl ++ "\n" ++
-    "     Riak version: " ++ m.s.serverInfo.version.rdrive ++ " on " ++ m.s.serverInfo.version.otp ++"\n" ++
-    "           Uptime: " ++ m.s.serverInfo.uptime.uptime
+    "Riak node url: " ++ m.c.riakNodeUrl ++ "\n" ++
+    " Riak version: " ++ m.s.serverInfo.version.riak ++ " on " ++ m.s.serverInfo.version.otp ++"\n" ++
+    "       Uptime: " ++ m.s.serverInfo.uptime.uptime
 
 cardActions =
     Just <|
@@ -101,9 +74,6 @@ cardActions =
                   [ Card.button (Button.config
                                 |> Button.setOnClick ShowConfigDialog
                                 ) "Change"
-                  , Card.button (Button.config
-                                |> (Button.setOnClick ShowServerConfig))
-                        "Show Server Config"
                   ]
             , icons =
                 []
@@ -117,7 +87,7 @@ configDialog m =
               |> Dialog.setOpen True
               |> Dialog.setOnClose SetConfigCancelled
               )
-              { title = "RDrive instance url and admin creds"
+              { title = "Riak node url and admin creds"
               , content =
                     [ Html.div [ style "display" "grid"
                                , style "grid-template-columns" "1"
@@ -127,22 +97,22 @@ configDialog m =
                                 (TextField.config
                                 |> TextField.setAttributes [ attribute "spellCheck" "false" ]
                                 |> TextField.setLabel (Just "Riak node url")
-                                |> TextField.setValue (Just m.s.newConfigUrl)
-                                |> TextField.setOnInput ConfigUrlChanged
+                                |> TextField.setValue (Just m.s.newConfigRiakNodeUrl)
+                                |> TextField.setOnInput ConfigRiakNodeUrlChanged
+                                )
+                          , TextField.filled
+                                (TextField.config
+                                |> TextField.setAttributes [ attribute "spellCheck" "false" ]
+                                |> TextField.setLabel (Just "Admin user")
+                                |> TextField.setValue (Just m.s.newConfigRiakAdminUser)
+                                |> TextField.setOnInput ConfigRiakAdminUserChanged
                                 )
                           , TextField.filled
                                 (TextField.config
                                 |> TextField.setAttributes [ attribute "spellCheck" "false" ]
                                 |> TextField.setLabel (Just "Root password")
-                                |> TextField.setValue (Just m.s.newConfigRootPassword)
-                                |> TextField.setOnInput ConfigRootPasswordChanged
-                                )
-                          , TextField.filled
-                                (TextField.config
-                                |> TextField.setAttributes [ attribute "spellCheck" "false" ]
-                                |> TextField.setLabel (Just "Admin path prefix")
-                                |> TextField.setValue (Just m.s.newConfigAdminPathPrefix)
-                                |> TextField.setOnInput ConfigAdminPathPrefixChanged
+                                |> TextField.setValue (Just m.s.newConfigRiakAdminUser)
+                                |> TextField.setOnInput ConfigRiakAdminPasswordChanged
                                 )
                           ]
                     ]

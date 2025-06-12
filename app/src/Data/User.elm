@@ -30,8 +30,7 @@ type UserStatus
     | INVALID
 
 type alias User =
-    { id : String
-    , name : String
+    { name : String
     , status : UserStatus
     }
 
@@ -43,7 +42,6 @@ userStatusToString a =
         _ -> "(unknown)"
 
 dummyUser =
-    { id = ""
-    , name = "-"
+    { name = "-"
     , status = Active
     }

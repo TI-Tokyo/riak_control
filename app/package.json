@@ -12,23 +12,26 @@
         "errors": "webpack --mode development --display-error-details"
     },
     "dependencies": {
+        "@webcomponents/webcomponentsjs": "^2.8.0",
+        "elm": "^0.19.1-6",
+        "elm-webpack-loader": "^8.0.0",
+        "material-components-web-elm": "^9.1.0",
+        "parcel": "^2.15.2"
+    },
+    "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+    "devDependencies": {
         "@babel/core": "^7.27.4",
         "@popperjs/core": "^2.11.8",
         "babel-loader": "^10.0.0",
         "babel-polyfill": "^6.26.0",
         "bootstrap": "^5.3.6",
         "copy-webpack-plugin": "^13.0.0",
-        "custom-elements-es5-adapter": "^1.0.0",
-        "elm": "^0.19.1-6",
-        "elm-webpack-loader": "^8.0.0",
+        "file-loader": "^6.2.0",
+        "http-server": "^14.1.1",
         "popperjs-core": "^1.0.0",
         "rimraf": "^6.0.1",
         "web-component": "^1.0.26",
-        "webcomponents-loader": "^1.0.1",
-        "webpack": "^5.99.9"
-    },
-    "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447",
-    "devDependencies": {
+        "webpack": "^5.99.9",
         "webpack-cli": "^6.0.1"
     }
 }

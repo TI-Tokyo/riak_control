@@ -22,6 +22,7 @@ module View.Common exposing (..)
 
 type SortByField
     = Name
+    | Unsorted
 
 type alias SortOrder = Bool
 

@@ -23,7 +23,8 @@
             "elm/url": "1.0.0",
             "icidasset/elm-material-icons": "11.0.0",
             "lukewestby/elm-http-builder": "8.0.0",
-            "rtfeldman/elm-iso8601-date-strings": "1.1.4"
+            "rtfeldman/elm-iso8601-date-strings": "1.1.4",
+            "truqu/elm-base64": "2.0.4"
         },
         "indirect": {
             "avh4/elm-color": "1.0.0",

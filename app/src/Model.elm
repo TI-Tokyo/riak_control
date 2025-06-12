@@ -29,6 +29,7 @@ import Data.Server exposing (..)
 import Data.User exposing (..)
 
 import Msg
+import View.Common exposing (SortOrder, SortByField)
 
 import Material.Snackbar as Snackbar
 import Time
@@ -42,7 +43,9 @@ type alias Model =
     }
 
 type alias Config =
-    { riakInstanceUrl : String
+    { riakNodeUrl : String
+    , riakAdminUser : String
+    , riakAdminPassword : String
     }
 
 type alias State =
@@ -56,9 +59,9 @@ type alias State =
     , serverInfo : ServerInfo
     --
     , configDialogShown : Bool
-    , newConfigUrl : String
-    , newConfigRootPassword : String
-    , newConfigAdminPathPrefix : String
+    , newConfigRiakNodeUrl : String
+    , newConfigRiakAdminUser : String
+    , newConfigRiakAdminPassword : String
 
     -- users
     , userFilterValue : String

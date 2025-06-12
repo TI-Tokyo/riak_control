@@ -43,6 +43,7 @@ import File exposing (File)
 
 type Tab
     = General
+    | Users
 
 type Msg
     = NoOp
@@ -50,8 +51,6 @@ type Msg
 
     -- General
     ----------
-    | GetServerConfig
-    | GotServerConfig (Result Http.Error ServerConfig)
     | GetServerVersion
     | GotServerVersion (Result Http.Error ServerVersion)
     | GetServerUptime
@@ -73,15 +72,11 @@ type Msg
     | TabClicked Tab
     | OpenTopDrawer
     | ShowConfigDialog
-    | ConfigUrlChanged String
-    | ConfigUserChanged String
-    | ConfigPasswordChanged String
-    | ConfigAdminPathPrefixChanged String
+    | ConfigRiakNodeUrlChanged String
+    | ConfigRiakAdminUserChanged String
+    | ConfigRiakAdminPasswordChanged String
     | SetConfig
     | SetConfigCancelled
-
-    | ShowServerConfig
-    | ServerConfigDialogDismissed
 
     -- users
     | UserFilterChanged String

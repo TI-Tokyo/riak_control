@@ -19,7 +19,10 @@
 -- ---------------------------------------------------------------------
 
 module Data.Json exposing
-    ()
+    ( decodeUserList
+    , decodeServerUptime
+    , decodeServerVersion
+    )
 
 import Data.User exposing (..)
 import Data.Server exposing (..)
@@ -32,3 +35,30 @@ import Iso8601
 import Time
 import Dict
 
+decodeServerUptime =
+    succeed ServerUptime
+        |> required "uptime" string
+
+decodeServerVersion =
+    succeed ServerVersion
+        |> required "riak" string
+        |> required "otp" string
+
+
+decodeUserList : D.Decoder (List User)
+decodeUserList =
+    list user
+
+user =
+    succeed User
+        |> required "name" string
+        |> required "status" userStatus
+
+userStatus =
+    map userStatusFromString string
+
+userStatusFromString a =
+    case a of
+        "active" -> Active
+        "suspended" -> Suspended
+        _ -> INVALID

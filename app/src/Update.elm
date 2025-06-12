@@ -66,22 +66,7 @@ update msg m =
                 ({m | s = {s_ | serverInfo = {si_ | version = a}}}, Cmd.none)
         GotServerVersion (Err err) ->
             let s_ = m.s in
-            ( {m | s = {s_ | users = [], groups = [], msgQueue = Snackbar.addMessage
-                            (Snackbar.message ("Failed to get server config: " ++ (explainHttpError err))) m.s.msgQueue}}
-            , Cmd.none
-            )
-
-        GetServerConfig ->
-            (m, Request.Admin.getServerConfig m)
-        GotServerConfig (Ok a) ->
-            let
-                s_ = m.s
-                si_ = s_.serverInfo
-            in
-                ({m | s = {s_ | serverInfo = {si_ | config = Just a}}}, Cmd.none)
-        GotServerConfig (Err err) ->
-            let s_ = m.s in
-            ( {m | s = {s_ | users = [], groups = [], msgQueue = Snackbar.addMessage
+            ( {m | s = {s_ | users = [], msgQueue = Snackbar.addMessage
                             (Snackbar.message ("Failed to get server config: " ++ (explainHttpError err))) m.s.msgQueue}}
             , Cmd.none
             )
@@ -96,19 +81,8 @@ update msg m =
                 ({m | s = {s_ | serverInfo = {si_ | uptime = a}}}, Cmd.none)
         GotServerUptime (Err err) ->
             let s_ = m.s in
-            ( {m | s = {s_ | users = [], groups = [], msgQueue = Snackbar.addMessage
+            ( {m | s = {s_ | users = [], msgQueue = Snackbar.addMessage
                             (Snackbar.message ("Failed to get server uptime: " ++ (explainHttpError err))) m.s.msgQueue}}
-            , Cmd.none
-            )
-
-        ShowServerConfig ->
-            let s_ = m.s in
-            ( {m | s = {s_ | serverConfigShown = True}}
-            , Cmd.none
-            )
-        ServerConfigDialogDismissed ->
-            let s_ = m.s in
-            ( {m | s = {s_ | serverConfigShown = False}}
             , Cmd.none
             )
 
@@ -118,34 +92,23 @@ update msg m =
         ShowConfigDialog ->
             let s_ = m.s in
             ({m | s = {s_ | configDialogShown = True}}, Cmd.none)
-        ConfigUrlChanged s ->
+        ConfigRiakNodeUrlChanged s ->
             let s_ = m.s in
-            ({m | s = {s_ | newConfigUrl = s}}, Cmd.none)
-        ConfigUserChanged s ->
-            let
-                s_ = m.s
-                newUserCreds = Dict.insert "root" s s_.browserViewAsUserCreds
-            in
-            ({m | s = {s_ | newConfigRootPassword = s
-                          , browserViewAsUserCreds = newUserCreds}}, Cmd.none)
-        ConfigPasswordChanged s ->
-            let
-                s_ = m.s
-                newUserCreds = Dict.insert "root" s s_.browserViewAsUserCreds
-            in
-            ({m | s = {s_ | newConfigRootPassword = s
-                          , browserViewAsUserCreds = newUserCreds}}, Cmd.none)
-        ConfigAdminPathPrefixChanged s ->
+            ({m | s = {s_ | newConfigRiakNodeUrl = s}}, Cmd.none)
+        ConfigRiakAdminUserChanged s ->
             let s_ = m.s in
-            ({m | s = {s_ | newConfigAdminPathPrefix = s}}, Cmd.none)
+            ({m | s = {s_ | newConfigRiakAdminUser = s}}, Cmd.none)
+        ConfigRiakAdminPasswordChanged s ->
+            let s_ = m.s in
+            ({m | s = {s_ | newConfigRiakAdminPassword = s}}, Cmd.none)
         SetConfig ->
             let
                 c_ = m.c
                 s_ = m.s
             in
-            ( { m | c = {c_ | rdrInstanceUrl = m.s.newConfigUrl
-                            , rdrRootPassword = m.s.newConfigRootPassword
-                            , rdrAdminPathPrefix = m.s.newConfigAdminPathPrefix
+            ( { m | c = {c_ | riakNodeUrl = m.s.newConfigRiakNodeUrl
+                            , riakAdminUser = m.s.newConfigRiakAdminUser
+                            , riakAdminPassword = m.s.newConfigRiakAdminPassword
                         },
                     s = {s_ | configDialogShown = False}
               }
@@ -198,7 +161,6 @@ update msg m =
             (resetCreateUserDialogFields m, Cmd.none)
         UserCreated (Ok ()) ->
             (resetCreateUserDialogFields m, Cmd.batch [ Request.Admin.listUsers m
-                                                      , Request.Admin.listGroups m
                                                       ])
         UserCreated (Err err) ->
             let s_ = m.s in
@@ -233,12 +195,6 @@ update msg m =
         ShowEditUserDialog u ->
             let s_ = m.s in
             ({m | s = {s_ | openEditUserDialogFor = Just u}}, Cmd.none)
-        EditedUserQuotaChanged s ->
-            let
-                s_ = m.s
-                u_ = Maybe.withDefault dummyUser m.s.openEditUserDialogFor
-            in
-                ({m | s = {s_ | openEditUserDialogFor = Just {u_ | quota = String.toInt s}}}, Cmd.none)
         EditedUserStatusChanged ->
             let
                 s_ = m.s
@@ -255,12 +211,6 @@ update msg m =
 
         -- Notifications
         ------------------------------
-        KeyboardMsg keyMsg ->
-            let s_ = m.s in
-            ( { m | s = {s_ | pressedKeys = Keyboard.update keyMsg s_.pressedKeys} }
-            , Cmd.none
-            )
-
         SnackbarClosed a ->
             let
                 s_ = m.s
@@ -281,18 +231,21 @@ refreshTabMsg m t =
     case t of
         Msg.General -> Cmd.batch [ Request.Admin.getServerVersion m
                                  , Request.Admin.getServerUptime m
-                                 , Request.Admin.getServerConfig m
-                                 , Request.Admin.getServerConfigRaw m
                                  ]
         Msg.Users -> Request.Admin.listUsers m
 
 refreshAll m =
     Cmd.batch [ Request.Admin.getServerVersion m
               , Request.Admin.getServerUptime m
-              , Request.Admin.getServerConfig m
-              , Request.Admin.getServerConfigRaw m
               , Request.Admin.listUsers m
               ]
+
+resetCreateUserDialogFields m =
+    let s_ = m.s in
+    {m | s = {s_ | createUserDialogShown = False
+                 , newUserName = ""
+             }
+    }
 
 explainHttpError a =
     case a of

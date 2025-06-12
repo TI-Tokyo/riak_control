@@ -74,7 +74,7 @@ makeTopAppBar m =
                   [ makeFilterControls m ]
               , TopAppBar.section [ TopAppBar.alignEnd ]
                   [ span [ TopAppBar.alignEnd, style "padding" "0 1em" ]
-                        [ text m.c.rdrInstanceUrl ]
+                        [ text m.c.riakNodeUrl ]
                   , span [ TopAppBar.alignEnd ]
                       [ img [src "images/logo.png", style "object-fit" "contain"] [] ]
                   ]
