@@ -51,6 +51,8 @@ type Msg
 
     -- General
     ----------
+    | Ping
+    | Pong
     | GetServerVersion
     | GotServerVersion (Result Http.Error ServerVersion)
     | GetServerUptime

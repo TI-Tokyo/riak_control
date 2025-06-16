@@ -53,7 +53,7 @@ serverInfoDetails m =
         { blocks =
               ( Card.block <|
                     div View.Style.cardInnerHeader
-                        [ text "Riak instance" ]
+                        [ text "Riak node" ]
               , [ Card.block <|
                     div View.Style.cardInnerContent
                         [ text (cardContent m) ]
@@ -111,7 +111,7 @@ configDialog m =
                                 (TextField.config
                                 |> TextField.setAttributes [ attribute "spellCheck" "false" ]
                                 |> TextField.setLabel (Just "Root password")
-                                |> TextField.setValue (Just m.s.newConfigRiakAdminUser)
+                                |> TextField.setValue (Just m.s.newConfigRiakAdminPassword)
                                 |> TextField.setOnInput ConfigRiakAdminPasswordChanged
                                 )
                           ]
