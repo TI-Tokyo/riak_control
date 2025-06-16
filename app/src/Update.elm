@@ -56,6 +56,21 @@ update msg m =
 
         -- ServerInfo
         ------------------------------
+        Ping ->
+            (m, Request.Admin.ping m)
+        Pong (Ok a) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | users = [], msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Got " ++ a)) m.s.msgQueue}}
+            , Cmd.none
+            )
+        Pong (Err err) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | users = [], msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Failed to ping riak: " ++ (explainHttpError err))) m.s.msgQueue}}
+            , Cmd.none
+            )
+
         GetServerVersion ->
             (m, Request.Admin.getServerVersion m)
         GotServerVersion (Ok a) ->

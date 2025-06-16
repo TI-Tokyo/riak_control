@@ -52,7 +52,7 @@ type Msg
     -- General
     ----------
     | Ping
-    | Pong
+    | Pong (Result Http.Error String)
     | GetServerVersion
     | GotServerVersion (Result Http.Error ServerVersion)
     | GetServerUptime

@@ -56,7 +56,6 @@ type alias State =
     , topDrawerOpen : Bool
 
     -- general
-    , pingSent : Time.Posix
     , serverInfo : ServerInfo
     --
     , configDialogShown : Bool

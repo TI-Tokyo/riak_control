@@ -19,7 +19,8 @@
 -- ---------------------------------------------------------------------
 
 module Request.Admin exposing
-    ( getServerVersion
+    ( ping
+    , getServerVersion
     , getServerUptime
     , listUsers
     , createUser
@@ -41,6 +42,14 @@ import Json.Encode
 import Url
 import Base64
 
+
+ping : Model -> Cmd Msg
+ping m =
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "ping" ] []
+        |> HttpBuilder.get
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withExpect (Http.expectString Pong)
+        |> HttpBuilder.request
 
 getServerUptime : Model -> Cmd Msg
 getServerUptime m =

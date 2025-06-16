@@ -74,6 +74,9 @@ cardActions =
                   [ Card.button (Button.config
                                 |> Button.setOnClick ShowConfigDialog
                                 ) "Change"
+                  , Card.button (Button.config
+                                |> Button.setOnClick Ping
+                                ) "Ping"
                   ]
             , icons =
                 []
