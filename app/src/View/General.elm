@@ -64,8 +64,8 @@ serverInfoDetails m =
 
 cardContent m =
     "Riak node url: " ++ m.c.riakNodeUrl ++ "\n" ++
-    " Riak version: " ++ m.s.serverInfo.version.riak ++ " on " ++ m.s.serverInfo.version.otp ++"\n" ++
-    "       Uptime: " ++ m.s.serverInfo.uptime.uptime
+    " Riak version: " ++ m.s.serverInfo.riak_version ++ " on " ++ m.s.serverInfo.system_version ++"\n" ++
+    "       Uptime: " ++ m.s.serverInfo.uptime
 
 cardActions =
     Just <|

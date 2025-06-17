@@ -45,11 +45,9 @@ init f =
         state = State
                     []
                     Snackbar.initialQueue Msg.General True
-                    { version = { otp = "---"
-                                , riak = "---"
-                                }
-                    , config = Nothing
-                    , uptime = { uptime = "---" }
+                    { riak_version = "---"
+                    , system_version = "---"
+                    , uptime = "---"
                     }
                     (not haveCreds) f.riakNodeUrl f.riakAdminUser f.riakAdminPassword
                     -- User

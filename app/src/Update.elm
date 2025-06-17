@@ -61,7 +61,7 @@ update msg m =
         Pong (Ok a) ->
             let s_ = m.s in
             ( {m | s = {s_ | users = [], msgQueue = Snackbar.addMessage
-                            (Snackbar.message ("Got " ++ a)) m.s.msgQueue}}
+                            (Snackbar.message ("Ping response: " ++ a)) m.s.msgQueue}}
             , Cmd.none
             )
         Pong (Err err) ->
@@ -71,33 +71,17 @@ update msg m =
             , Cmd.none
             )
 
-        GetServerVersion ->
-            (m, Request.Admin.getServerVersion m)
-        GotServerVersion (Ok a) ->
+        GetServerInfo ->
+            (m, Request.Admin.getServerInfo m)
+        GotServerInfo (Ok a) ->
             let
                 s_ = m.s
-                si_ = s_.serverInfo
             in
-                ({m | s = {s_ | serverInfo = {si_ | version = a}}}, Cmd.none)
-        GotServerVersion (Err err) ->
+                ({m | s = {s_ | serverInfo = a}}, Cmd.none)
+        GotServerInfo (Err err) ->
             let s_ = m.s in
             ( {m | s = {s_ | users = [], msgQueue = Snackbar.addMessage
-                            (Snackbar.message ("Failed to get server config: " ++ (explainHttpError err))) m.s.msgQueue}}
-            , Cmd.none
-            )
-
-        GetServerUptime ->
-            (m, Request.Admin.getServerUptime m)
-        GotServerUptime (Ok a) ->
-            let
-                s_ = m.s
-                si_ = s_.serverInfo
-            in
-                ({m | s = {s_ | serverInfo = {si_ | uptime = a}}}, Cmd.none)
-        GotServerUptime (Err err) ->
-            let s_ = m.s in
-            ( {m | s = {s_ | users = [], msgQueue = Snackbar.addMessage
-                            (Snackbar.message ("Failed to get server uptime: " ++ (explainHttpError err))) m.s.msgQueue}}
+                            (Snackbar.message ("Failed to get server info: " ++ (explainHttpError err))) m.s.msgQueue}}
             , Cmd.none
             )
 
@@ -244,14 +228,12 @@ update msg m =
 
 refreshTabMsg m t =
     case t of
-        Msg.General -> Cmd.batch [ Request.Admin.getServerVersion m
-                                 , Request.Admin.getServerUptime m
+        Msg.General -> Cmd.batch [ Request.Admin.getServerInfo m
                                  ]
         Msg.Users -> Request.Admin.listUsers m
 
 refreshAll m =
-    Cmd.batch [ Request.Admin.getServerVersion m
-              , Request.Admin.getServerUptime m
+    Cmd.batch [ Request.Admin.getServerInfo m
               , Request.Admin.listUsers m
               ]
 

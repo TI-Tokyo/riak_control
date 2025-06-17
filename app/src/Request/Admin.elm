@@ -20,8 +20,7 @@
 
 module Request.Admin exposing
     ( ping
-    , getServerVersion
-    , getServerUptime
+    , getServerInfo
     , listUsers
     , createUser
     , deleteUser
@@ -45,28 +44,25 @@ import Base64
 
 ping : Model -> Cmd Msg
 ping m =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ "ping" ] []
+    let
+        headers = [ ("accept", "*")
+                  , ("authorization",
+                         "Basic " ++ (Base64.encode (m.c.riakAdminUser ++ ":" ++ m.c.riakAdminPassword)))
+                  ]
+    in
+        Url.Builder.crossOrigin m.c.riakNodeUrl [ "ping" ] []
+            |> HttpBuilder.get
+            |> HttpBuilder.withHeaders headers
+            |> HttpBuilder.withExpect (Http.expectString Pong)
+            |> HttpBuilder.request
+
+getServerInfo : Model -> Cmd Msg
+getServerInfo m =
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "system_info" ] []
         |> HttpBuilder.get
         |> HttpBuilder.withHeaders (stdHeaders m)
-        |> HttpBuilder.withExpect (Http.expectString Pong)
+        |> HttpBuilder.withExpect (Http.expectJson GotServerInfo Data.Json.decodeServerInfo)
         |> HttpBuilder.request
-
-getServerUptime : Model -> Cmd Msg
-getServerUptime m =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ riakAdminPathPrefix, "s", "uptime" ] []
-        |> HttpBuilder.get
-        |> HttpBuilder.withHeaders (stdHeaders m)
-        |> HttpBuilder.withExpect (Http.expectJson GotServerUptime Data.Json.decodeServerUptime)
-        |> HttpBuilder.request
-
-getServerVersion : Model -> Cmd Msg
-getServerVersion m =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ riakAdminPathPrefix, "s", "version" ] []
-        |> HttpBuilder.get
-        |> HttpBuilder.withHeaders (stdHeaders m)
-        |> HttpBuilder.withExpect (Http.expectJson GotServerVersion Data.Json.decodeServerVersion)
-        |> HttpBuilder.request
-
 
 
 listUsers : Model -> Cmd Msg

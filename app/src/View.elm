@@ -84,7 +84,7 @@ makeTopAppBar m =
 
 listWhat m =
     case m.s.activeTab of
-        Msg.General -> GetServerUptime
+        Msg.General -> GetServerInfo
         Msg.Users -> ListUsers
 
 

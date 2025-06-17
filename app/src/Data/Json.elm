@@ -20,8 +20,7 @@
 
 module Data.Json exposing
     ( decodeUserList
-    , decodeServerUptime
-    , decodeServerVersion
+    , decodeServerInfo
     )
 
 import Data.User exposing (..)
@@ -35,14 +34,11 @@ import Iso8601
 import Time
 import Dict
 
-decodeServerUptime =
-    succeed ServerUptime
+decodeServerInfo =
+    succeed ServerInfo
+        |> required "riak_version" string
+        |> required "system_version" string
         |> required "uptime" string
-
-decodeServerVersion =
-    succeed ServerVersion
-        |> required "riak" string
-        |> required "otp" string
 
 
 decodeUserList : D.Decoder (List User)

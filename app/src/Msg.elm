@@ -29,8 +29,6 @@ import Data.User exposing
     )
 import Data.Server exposing
     ( ServerInfo
-    , ServerUptime
-    , ServerVersion
     , ServerConfig
     )
 
@@ -53,10 +51,8 @@ type Msg
     ----------
     | Ping
     | Pong (Result Http.Error String)
-    | GetServerVersion
-    | GotServerVersion (Result Http.Error ServerVersion)
-    | GetServerUptime
-    | GotServerUptime (Result Http.Error ServerUptime)
+    | GetServerInfo
+    | GotServerInfo (Result Http.Error ServerInfo)
 
     -- Users
     | ListUsers

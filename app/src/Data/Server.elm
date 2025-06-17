@@ -20,21 +20,11 @@
 
 module Data.Server exposing (..)
 
-import Dict exposing (Dict)
-
-
-type alias ServerVersion =
-    { otp : String
-    , riak : String
-    }
-type alias ServerUptime =
-    { uptime : String
-    }
 
 type alias ServerInfo =
-    { version : ServerVersion
-    , config : Maybe ServerConfig
-    , uptime : ServerUptime
+    { riak_version : String
+    , system_version : String
+    , uptime : String
     }
 
 
