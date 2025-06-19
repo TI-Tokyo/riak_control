@@ -67,7 +67,7 @@ getServerInfo m =
 
 listUsers : Model -> Cmd Msg
 listUsers m =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ riakAdminPathPrefix, "u" ] []
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "users" ] []
         |> HttpBuilder.get
         |> HttpBuilder.withHeaders (stdHeaders m)
         |> HttpBuilder.withExpect (Http.expectJson GotUserList Data.Json.decodeUserList)
@@ -82,7 +82,7 @@ createUser m  =
         body = json |> Json.Encode.encode 0
         ct = "application/json"
     in
-       Url.Builder.crossOrigin m.c.riakNodeUrl [ riakAdminPathPrefix, "u" ] []
+       Url.Builder.crossOrigin m.c.riakNodeUrl [ "users" ] []
             |> HttpBuilder.post
             |> HttpBuilder.withHeaders (stdHeaders m)
             |> HttpBuilder.withExpect (Http.expectWhatever UserCreated)
@@ -94,12 +94,11 @@ updateUser m  =
     let
         u = Maybe.withDefault Data.User.dummyUser m.s.openEditUserDialogFor
         json = Json.Encode.object ([ ("name", Json.Encode.string u.name)
-                                   , ("status", Json.Encode.string (Data.User.userStatusToString u.status))
                                    ])
         body = json |> Json.Encode.encode 0
         ct = "application/json"
     in
-       Url.Builder.crossOrigin m.c.riakNodeUrl [ riakAdminPathPrefix, "u", u.name ] []
+       Url.Builder.crossOrigin m.c.riakNodeUrl [ "users", u.name ] []
             |> HttpBuilder.put
             |> HttpBuilder.withHeaders (stdHeaders m)
             |> HttpBuilder.withExpect (Http.expectWhatever UserCreated)
@@ -109,7 +108,7 @@ updateUser m  =
 
 deleteUser : Model -> String -> Cmd Msg
 deleteUser m uid =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ riakAdminPathPrefix, "u", uid ] []
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "users", uid ] []
         |> HttpBuilder.delete
         |> HttpBuilder.withHeaders (stdHeaders m)
         |> HttpBuilder.withExpect (Http.expectWhatever UserDeleted)

@@ -24,7 +24,6 @@ module View.User.AppBarContent exposing
 
 import Model exposing (Model)
 import Msg exposing (Msg(..))
-import Data.User exposing (UserStatus(..))
 import View.Common exposing (SortByField(..))
 import View.Shared
 import View.Style

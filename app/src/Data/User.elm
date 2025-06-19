@@ -24,24 +24,17 @@ import Dict exposing (Dict)
 import Time
 
 
-type UserStatus
-    = Active
-    | Suspended
-    | INVALID
-
 type alias User =
     { name : String
-    , status : UserStatus
+    , groups : List String
+    , password_hash : String
+    , options : Dict.Dict String String
     }
 
 
-userStatusToString a =
-    case a of
-        Active -> "active"
-        Suspended -> "suspended"
-        _ -> "(unknown)"
-
 dummyUser =
     { name = "-"
-    , status = Active
+    , groups = []
+    , password_hash = "-"
+    , options = Dict.empty
     }

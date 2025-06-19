@@ -24,7 +24,6 @@ module View.User exposing
 
 import Model exposing (Model)
 import Msg exposing (Msg(..))
-import Data.User exposing (UserStatus(..))
 import View.User.Dialog
 import View.Common exposing (SortByField(..))
 import View.Shared
@@ -45,6 +44,7 @@ import Material.Switch as Switch
 import Material.Chip.Filter as FilterChip
 import Material.ChipSet.Filter as FilterChipSet
 import Iso8601
+import Dict
 
 
 makeContent m =
@@ -88,37 +88,30 @@ sort m aa =
 
 
 makeUser m u =
-    let
-        maybeDisabled =
-            if u.status == Active then
-                ""
-            else
-                " (suspended)"
-    in
-        div []
-            [ Card.card Card.config
-                 { blocks =
-                       ( Card.block <|
-                             div View.Style.cardInnerHeader
-                             [ text (u.name ++ maybeDisabled)]
-                       , [ Card.block <|
-                               div (View.Style.cardInnerContent ++ (isEnabledStyle u))
-                               [ cardContent m u |> text
-                               ]
-                         ]
-                       )
-                 , actions = userCardActions m u
-                }
-            ]
-
-isEnabledStyle {status} =
-    if status == Suspended then
-        [ style "color" "grey" ]
-    else
-        []
+    div []
+        [ Card.card Card.config
+             { blocks =
+                   ( Card.block <|
+                         div View.Style.cardInnerHeader
+                         [ text u.name ]
+                   , [ Card.block <|
+                           div View.Style.cardInnerContent
+                           [ cardContent m u |> text
+                           ]
+                     ]
+                   )
+             , actions = userCardActions m u
+            }
+        ]
 
 cardContent m u =
-    "Name: " ++ u.name
+    let
+        options = List.map (\(k, v) -> k ++ "=" ++ v) (Dict.toList u.options)
+    in
+        "          Name: " ++ u.name ++ "\n" ++
+        " Password hash: " ++ u.password_hash
+        ++ View.Shared.maybeItems 16 u.groups "Groups" 60
+        ++ View.Shared.maybeItems 16 options "Options" 60
 
 userCardActions m u =
     Just <|

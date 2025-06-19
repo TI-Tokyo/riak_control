@@ -26,7 +26,7 @@ module Update exposing
 import Model exposing (..)
 import Msg exposing (Msg(..))
 import Request.Admin
-import Data.User exposing (UserStatus(..), dummyUser)
+import Data.User exposing (dummyUser)
 import Data.Json
 import View.Common
 import Util
@@ -194,12 +194,6 @@ update msg m =
         ShowEditUserDialog u ->
             let s_ = m.s in
             ({m | s = {s_ | openEditUserDialogFor = Just u}}, Cmd.none)
-        EditedUserStatusChanged ->
-            let
-                s_ = m.s
-                u_ = Maybe.withDefault dummyUser m.s.openEditUserDialogFor
-            in
-                ({m | s = {s_ | openEditUserDialogFor = Just {u_ | status = toggleStatus u_.status}}}, Cmd.none)
         UpdateUser ->
             let s_ = m.s in
             ({m | s = {s_ | openEditUserDialogFor = Nothing}}, Request.Admin.updateUser m)
@@ -256,8 +250,3 @@ explainHttpError a =
             "Bad status " ++ String.fromInt s
         Http.BadUrl s ->
             "BadUrl. This shouldn't have happened."
-
-toggleStatus a =
-    case a of
-        Active -> Suspended
-        _ -> Active

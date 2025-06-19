@@ -25,7 +25,6 @@ module View.User.Dialog exposing
 
 import Model exposing (Model)
 import Msg exposing (Msg(..))
-import Data.User exposing (UserStatus(..))
 import View.Common exposing (SortByField(..))
 import View.Shared
 import View.Style
@@ -115,11 +114,6 @@ makeEditUserDialog m =
                                          , style "margin" "0.6em 0 0 0"
                                          ]
                                   [ text "Enabled"
-                                  , Switch.switch
-                                    (Switch.config
-                                    |> Switch.setChecked (u.status == Active)
-                                    |> Switch.setOnChange EditedUserStatusChanged
-                                    )
                                   ]
                               ]
                         ]

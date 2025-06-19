@@ -48,13 +48,6 @@ decodeUserList =
 user =
     succeed User
         |> required "name" string
-        |> required "status" userStatus
-
-userStatus =
-    map userStatusFromString string
-
-userStatusFromString a =
-    case a of
-        "active" -> Active
-        "suspended" -> Suspended
-        _ -> INVALID
+        |> required "groups" (list string)
+        |> required "password_hash" string
+        |> optional "options" (dict string) Dict.empty

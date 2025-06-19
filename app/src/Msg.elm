@@ -87,7 +87,6 @@ type Msg
     | NewUserPasswordChanged String
     | CreateUserCancelled
     | ShowEditUserDialog User
-    | EditedUserStatusChanged
     | EditUserCancelled
 
     -- misc
