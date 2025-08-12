@@ -18,16 +18,15 @@
 --
 -- ---------------------------------------------------------------------
 
-module Data.Server exposing (..)
+module Request.Util exposing (..)
 
+import Base64
 
-type alias ServerInfo =
-    { riakVersion : String
-    , systemVersion : String
-    , uptime : Int
-    , uptimeStr : String
-    }
-
-
-type alias ServerConfig =
-    {}
+stdHeaders m =
+    let ct = "application/json" in
+    [ ("accept", ct)
+    , ("content-type", ct)
+    , ("referer", m.c.riakNodeUrl)
+    , ("authorization",
+        "Basic " ++ (Base64.encode (m.c.riakAdminUser ++ ":" ++ m.c.riakAdminPassword)))
+    ]

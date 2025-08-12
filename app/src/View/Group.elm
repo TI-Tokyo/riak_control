@@ -18,14 +18,14 @@
 --
 -- ---------------------------------------------------------------------
 
-module View.User exposing
+module View.Group exposing
     ( makeContent
     )
 
 import Model exposing (Model)
 import Msg exposing (Msg(..))
 import Data.Security
-import View.User.Dialog
+import View.Group.Dialog
 import View.Common exposing (SortByField(..))
 import View.Shared
 import View.Style
@@ -42,120 +42,103 @@ import Material.Typography as Typography
 import Material.Select as Select
 import Material.Select.Item as SelectItem
 import Material.Switch as Switch
-import Material.Chip.Filter as FilterChip
-import Material.ChipSet.Filter as FilterChipSet
 import Iso8601
 import Dict
 
 
 makeContent m =
     div View.Style.topContent
-        [ div View.Style.card (makeUsers m)
-        , div [] (View.User.Dialog.makeCreateUserDialog m)
-        , div [] (View.User.Dialog.makeEditUserDialog m)
-        , div [] (View.User.Dialog.makeEditUserGroupsDialog m)
-        , div [] (View.User.Dialog.makeAddUserGroupsDialog m)
-        , div [] (View.Shared.makeEditGrantsDialog m Data.Security.UserRole)
-        , div [] (View.Shared.makeAddGrantsDialog m Data.Security.UserRole)
+        [ div View.Style.card (makeGroups m)
+        , div [] (View.Group.Dialog.makeCreateGroupDialog m)
+        , div [] (View.Group.Dialog.makeEditGroupDialog m)
+        , div [] (View.Shared.makeEditGrantsDialog m Data.Security.GroupRole)
+        , div [] (View.Shared.makeAddGrantsDialog m Data.Security.GroupRole)
         , div [] (View.Shared.makeDeleteThingConfirmDialog
-                      m .confirmDeleteUserDialogShownFor
-                      (.name << (Model.userBy m .name)) "user"
-                      DeleteUserConfirmed DeleteUserNotConfirmed)
-        , div [] (maybeShowCreateUserFab m)
+                      m .confirmDeleteGroupDialogShownFor
+                      (.name << (Model.groupBy m .name)) "group"
+                      DeleteGroupConfirmed DeleteGroupNotConfirmed)
+        , div [] (maybeShowCreateGroupFab m)
         ]
 
 
-makeUsers m =
-    case m.s.users |> (filter m) |> (sort m) |> List.map (makeUser m) of
+makeGroups m =
+    case m.s.groups |> (filter m) |> (sort m) |> List.map (makeGroup m) of
         [] ->
             [ img [src "images/filter-man.jpg"] [] ]
         rr ->
             rr
 
-filter m uu =
-    case m.s.userFilterValue of
-        "" -> uu
+filter m aa =
+    case m.s.groupFilterValue of
+        "" -> aa
         s ->
             List.filter
-                (\u ->
-                     (  (List.member "Name" m.s.userFilterIn && String.contains s u.name)
+                (\g ->
+                     (  (List.member "Name" m.s.groupFilterIn && String.contains s g.name)
                      )
-                ) uu
+                ) aa
 
 sort m aa =
     let
         aa0 =
-            case m.s.userSortBy of
+            case m.s.groupSortBy of
                 Name -> List.sortBy .name aa
                 _ -> aa
     in
-        if m.s.userSortOrder then aa0 else List.reverse aa0
+        if m.s.groupSortOrder then aa0 else List.reverse aa0
 
 
-makeUser m u =
+makeGroup m a =
     div []
         [ Card.card Card.config
              { blocks =
                    ( Card.block <|
                          div View.Style.cardInnerHeader
-                         [ text u.name ]
+                         [ text a.name ]
                    , [ Card.block <|
                            div View.Style.cardInnerContent
-                           [ cardContent m u |> text
+                           [ cardContent m a |> text
                            ]
                      ]
                    )
-             , actions = userCardActions m u
+             , actions = groupCardActions m a
             }
         ]
 
 cardContent m u =
     let
         options = List.map (\(k, v) -> k ++ "=" ++ v) (Dict.toList u.options)
-        grants = List.map Data.Security.grantToStr u.grants
+        grants = List.map (\{scope, permissions} -> scope ++ ":[" ++ (String.join "," permissions) ++ "]") u.grants
     in
-        "          Name: " ++ u.name
-        ++ View.Shared.maybeItems 16 grants "Grants" 60
-        ++ View.Shared.maybeItems 16 u.groups "Groups" 60
-        ++ View.Shared.maybeItems 16 options "Options" 60
+        View.Shared.maybeItems 12 grants "Grants" 60
+        ++ View.Shared.maybeItems 12 options "Options" 60
 
-userCardActions m u =
+groupCardActions m a =
     Just <|
         Card.actions
             { buttons =
                   [ Card.button (Button.config
-                                |> Button.setOnClick (DeleteUser u.name)
+                                |> Button.setOnClick (DeleteGroup a.name)
                                 |> Button.setAttributes [ style "color" "red" ]
                                 ) "Delete"
                   , Card.button (Button.config
-                                |> Button.setOnClick (ShowEditUserDialog u.name)
+                                |> Button.setOnClick (ShowEditGroupDialog a)
                                 ) "Edit"
                   , Card.button (Button.config
-                                |> Button.setOnClick (ShowEditUserGroupsDialog u.name)
-                                ) "Groups"
-                  , Card.button (Button.config
-                                |> Button.setOnClick (ShowEditGrantsDialog u.name)
+                                |> Button.setOnClick (ShowEditGrantsDialog a.name)
                                 ) "Grants"
                   ]
-            , icons =
-                maybeSelfMark m u
+            , icons = []
             }
 
 
-maybeSelfMark m u =
-    if u.name == m.c.riakAdminUser then
-        [ Card.icon IconButton.config (IconButton.icon "*") ]
-    else
-        []
-
-
-maybeShowCreateUserFab m =
-    if m.s.createUserDialogShown then
+maybeShowCreateGroupFab m =
+    if m.s.createGroupDialogShown then
         []
     else
         [ Fab.fab
               (Fab.config
-              |> Fab.setOnClick ShowCreateUserDialog
+              |> Fab.setOnClick ShowCreateGroupDialog
               |> Fab.setAttributes View.Style.createFab
               )
               (Fab.icon "add")

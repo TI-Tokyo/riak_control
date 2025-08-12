@@ -60,6 +60,13 @@ cardInnerBlock =
     , style "font-family" "monospace"
     ]
 
+dialogContentPart =
+    [ style "display" "grid"
+    , style "grid-template-columns" "1"
+    , style "row-gap" "0.3em"
+    ]
+
+
 jsonInset =
     [ style "scale" "0.8"
     , style "background-color" "#f5f5f5"
@@ -73,12 +80,6 @@ createFab =
     [ style "position" "fixed"
     , style "bottom" "2rem"
     , style "right" "2rem"
-    ]
-
-createFab2 =
-    [ style "position" "fixed"
-    , style "bottom" "2rem"
-    , style "right" "7rem"
     ]
 
 filterAndSort =

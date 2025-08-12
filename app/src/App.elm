@@ -21,45 +21,63 @@
 module App exposing (init, subscriptions, Flags)
 
 import Model exposing (..)
+import Data.Cluster
 import Update exposing (refreshAll)
 import Msg exposing (Msg(..))
 import View.Common exposing (SortByField(..))
-import Data.Acl exposing (AceGrantSection(..))
 
 import Dict exposing (Dict)
 import Task
 import Time
-import Keyboard exposing (Key(..))
 import Material.Snackbar as Snackbar
 
 type alias Flags =
-    { riakUrl : String
-    , riakUser : String
-    , riakPassword : String
-    , riakAdminPathPrefix : String
+    { riakNodeUrl : String
+    , riakAdminUser : String
+    , riakAdminPassword : String
     }
 
 
 init : Flags -> (Model, Cmd Msg)
 init f =
     let
-        haveCreds = f.riakPassword /= ""
-        config = Config f.riakUrl f.riakUser f.riakPassword f.rdrAdminPathPrefix
-        state = State
-                    []
-                    Snackbar.initialQueue Msg.General True
-                    { version = { otp = "---"
-                                , riak = "---"
-                                }
-                    , config = Nothing
-                    , configRaw = "---"
-                    , uptime = { uptime = "---" }
-                    } False
-                    (not haveCreds) f.riakUrl f.riakUser f.riakPassword f.riakAdminPathPrefix
-                    -- User
-                    "" ["Name", "Display name"] Name True
-                    False "" "" Nothing Nothing
-        model = Model config state (Time.millisToPosix 0)
+        haveCreds = f.riakAdminPassword /= ""
+        config =
+            Config
+                f.riakNodeUrl f.riakAdminUser f.riakAdminPassword
+                3000
+        state =
+            State
+                Data.Cluster.emptyCluster
+                [] [] []
+                Snackbar.initialQueue Msg.General True
+                { riakVersion = "---"
+                , systemVersion = "---"
+                , uptime = 0
+                , uptimeStr = "---"
+                }
+                (not haveCreds) f.riakNodeUrl f.riakAdminUser f.riakAdminPassword
+                -- Cluster
+                "(awaiting refresh)" Name True
+                False ""  ""
+                "" "" "(replacement)"
+                -- User
+                "" ["Name"] Name True
+                False "(newUserName)" "(newUserPassword)" Nothing Nothing
+                Nothing Nothing [] []
+                -- Group
+                "" ["Name"] Name True
+                False "" Nothing Nothing
+                -- shared
+                Nothing Nothing  [] "" ""
+                -- TictacAAE
+                Dict.empty ""
+                "" [] TtaaeTreeStatus False
+        model =
+            Model
+                config
+                state
+                (Time.millisToPosix 0)
     in
         ( model
         , refreshAll model
@@ -67,5 +85,5 @@ init f =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.map KeyboardMsg Keyboard.subscriptions
+subscriptions m =
+    Time.every m.c.refreshEvery Tick

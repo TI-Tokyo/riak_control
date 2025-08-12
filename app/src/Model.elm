@@ -23,12 +23,16 @@ module Model exposing
     , Config
     , State
     , userBy
+    , groupBy
     )
 
 import Data.Server exposing (..)
-import Data.User exposing (..)
+import Data.Cluster exposing (..)
+import Data.Security exposing (..)
+import Data.Ttaae exposing (..)
 
 import Msg
+import View.Common exposing (SortOrder, SortByField)
 
 import Material.Snackbar as Snackbar
 import Time
@@ -42,11 +46,17 @@ type alias Model =
     }
 
 type alias Config =
-    { riakInstanceUrl : String
+    { riakNodeUrl : String
+    , riakAdminUser : String
+    , riakAdminPassword : String
+    , refreshEvery : Float
     }
 
 type alias State =
-    { users : List User
+    { cluster : Cluster
+    , users : List User
+    , groups : List Group
+    , permissions : List String
 
     , msgQueue : Snackbar.Queue Msg.Msg
     , activeTab : Msg.Tab
@@ -56,9 +66,21 @@ type alias State =
     , serverInfo : ServerInfo
     --
     , configDialogShown : Bool
-    , newConfigUrl : String
-    , newConfigRootPassword : String
-    , newConfigAdminPathPrefix : String
+    , newConfigRiakNodeUrl : String
+    , newConfigRiakAdminUser : String
+    , newConfigRiakAdminPassword : String
+
+    -- cluster
+    , notReadyMessage : String
+    , clusterMemberSortBy : SortByField
+    , clusterMemberSortOrder : SortOrder
+    --
+    , addNodeDialogShown : Bool
+    , newNodeToJoin : String
+    , nodeMenuOpenedFor : String
+    , replaceDialogShownFor : String
+    , forceReplaceDialogShownFor : String
+    , replaceNodeWith : String
 
     -- users
     , userFilterValue : String
@@ -69,14 +91,50 @@ type alias State =
     , createUserDialogShown : Bool
     , newUserName : String
     , newUserPassword : String
-    , openEditUserDialogFor : Maybe User
+    , openEditUserDialogFor : Maybe String
     , confirmDeleteUserDialogShownFor : Maybe String
 
+    , openEditUserGroupsDialogFor : Maybe String
+    , openAddUserGroupsDialogFor : Maybe String
+    , selectedUserGroupsForAdd : List String
+    , selectedUserGroupsForDelete : List String
+
+    -- groups
+    , groupFilterValue : String
+    , groupFilterIn : List String
+    , groupSortBy : SortByField
+    , groupSortOrder : SortOrder
+    --
+    , createGroupDialogShown : Bool
+    , newGroupName : String
+    , openEditGroupDialogFor : Maybe Group
+    , confirmDeleteGroupDialogShownFor : Maybe String
+
+    -- Group/User shared
+    , openEditGrantsDialogFor : Maybe String
+    , openAddGrantsDialogFor : Maybe String
+    , selectedGrantsForDelete : List String
+    , addingGrantPermission : String
+    , addingGrantScope : String
+
+    -- TictacAAE
+    , ttaaeReport : Dict.Dict String (List Data.Ttaae.TtaaeTree)
+    , ttaaeReportShownForNode : String
+    , ttaaeTreeFilterValue : String
+    , ttaaeTreeFilterIn : List String
+    , ttaaeTreeSortBy : SortByField
+    , ttaaeTreeSortOrder : SortOrder
     }
 
 
 userBy : Model -> (User -> String) -> String -> User
 userBy m by a =
-    case List.filter (\u -> a == by u) m.s.users of
-        [] -> Data.User.dummyUser
+    case List.filter (\x -> a == by x) m.s.users of
+        [] -> Data.Security.dummyUser
         u :: _ -> u
+
+groupBy : Model -> (Group -> String) -> String -> Group
+groupBy m by a =
+    case List.filter (\x -> a == by x) m.s.groups of
+        [] -> Data.Security.dummyGroup
+        g :: _ -> g

@@ -18,32 +18,35 @@
 --
 -- ---------------------------------------------------------------------
 
-module Data.User exposing (..)
+module Request.Ttaae exposing
+    ( getReport
+    )
 
-import Dict exposing (Dict)
-import Time
+import Model exposing (Model)
+import Data.Json
+import Data.Ttaae exposing (..)
+import Msg exposing (Msg(..))
+import Util
+import Request.Util exposing (..)
+
+import Http
+import HttpBuilder
+import Url.Builder
+import Json.Encode
+import Json.Decode
 
 
-type UserStatus
-    = Active
-    | Suspended
-    | INVALID
-
-type alias User =
-    { id : String
-    , name : String
-    , status : UserStatus
-    }
-
-
-userStatusToString a =
-    case a of
-        Active -> "active"
-        Suspended -> "suspended"
-        _ -> "(unknown)"
-
-dummyUser =
-    { id = ""
-    , name = "-"
-    , status = Active
-    }
+getReport : Model -> String -> Cmd Msg
+getReport m a =
+    let
+        qs =
+            if a == "" then
+                []
+            else
+                [ Url.Builder.string "nodes" a ]
+    in
+        Url.Builder.crossOrigin m.c.riakNodeUrl [ "tictacaae" ] qs
+            |> HttpBuilder.get
+            |> HttpBuilder.withHeaders (stdHeaders m)
+            |> HttpBuilder.withExpect (Http.expectJson GotTtaaeReport Data.Json.decodeTtaaeReport)
+            |> HttpBuilder.request

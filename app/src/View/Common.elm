@@ -22,6 +22,15 @@ module View.Common exposing (..)
 
 type SortByField
     = Name
+    | MemTotal
+    | MemErlang
+    | MemUsed
+    | Uptime
+    | TtaaeTreeStatus
+    | TtaaeTreeNextRebuild
+    | TtaaeTreeLastRebuild
+    | TtaaeTreeTotalDirtySegments
+    | Unsorted
 
 type alias SortOrder = Bool
 
@@ -31,10 +40,26 @@ sortOrderText =
 selectSortByString a =
     case a of
         Name -> "Name"
+        MemTotal -> "Memory (total)"
+        MemErlang -> "Memory (Erlang)"
+        MemUsed -> "Memory (riak)"
+        Uptime -> "Uptime"
+        TtaaeTreeStatus -> "Tree status"
+        TtaaeTreeNextRebuild -> "Next rebuild"
+        TtaaeTreeLastRebuild -> "Last rebuild"
+        TtaaeTreeTotalDirtySegments -> "Total dirty segments"
         Unsorted -> "None"
 
 stringToSortBy a =
     case a of
         "Name" -> Name
+        "Memory (total)" -> MemTotal
+        "Memory (Erlang)" -> MemErlang
+        "Memory (riak)" -> MemUsed
+        "Uptime" -> Uptime
+        "Tree status" -> TtaaeTreeStatus
+        "Next rebuild" -> TtaaeTreeNextRebuild
+        "Last rebuild" -> TtaaeTreeLastRebuild
+        "Total dirty segments" -> TtaaeTreeTotalDirtySegments
         _ -> Unsorted
 

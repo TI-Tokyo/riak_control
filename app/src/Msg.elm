@@ -24,27 +24,27 @@ module Msg exposing
     , getNewTime
     )
 
-import Data.User exposing
-    ( User
-    )
+import Data.Security exposing (User, Group, Grant)
 import Data.Server exposing
     ( ServerInfo
-    , ServerUptime
-    , ServerVersion
     , ServerConfig
     )
-
+import Data.Cluster exposing (Cluster, CurrentMember)
+import Data.Ttaae
 import Task
 import Http
 import Time
 import Material.Snackbar as Snackbar
 import File exposing (File)
-import Bytes exposing (Bytes)
-import Keyboard exposing (RawKey)
+import Dict exposing (Dict)
 
 
 type Tab
     = General
+    | Cluster
+    | Ttaae
+    | Users
+    | Groups
 
 type Msg
     = NoOp
@@ -52,12 +52,58 @@ type Msg
 
     -- General
     ----------
-    | GetServerConfig
-    | GotServerConfig (Result Http.Error ServerConfig)
-    | GetServerVersion
-    | GotServerVersion (Result Http.Error ServerVersion)
-    | GetServerUptime
-    | GotServerUptime (Result Http.Error ServerUptime)
+    | Ping
+    | TimedPong (Result Http.Error Int)
+    | GetServerInfo
+    | GotServerInfo (Result Http.Error ServerInfo)
+
+    -- Cluster
+    | GetCluster
+    | GotCluster (Result Http.Error Cluster)
+
+    | ClusterMemberSortByFieldChanged String
+    | ClusterMemberSortOrderChanged
+
+    | ShowAddNodeDialog
+    | AddNodeDialogCancelled
+    | NewClusterNodeChanged String
+
+    | NodeMenuOpen String
+    | NodeMenuClose
+    | PlanClear
+    | PlanCleared (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanCommit
+    | PlanCommitted (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeJoin
+    | PlanNodeJoined (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeLeave String
+    | PlanNodeLeft (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeRemove String
+    | PlanNodeRemoved (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeReplace String String
+    | PlanNodeReplaced (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeForceReplace String String
+    | PlanNodeForceReplaced (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeDown String
+    | PlanNodeDowned (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeStop String
+    | PlanNodeStopped (Result Http.Error Data.Cluster.ClusterActionResult)
+
+    | AskPlanNodeReplace String
+    | PlanNodeReplaceDialogConfirmed
+    | PlanNodeReplaceDialogCancelled
+    | AskPlanNodeForceReplace String
+    | PlanNodeForceReplaceDialogConfirmed
+    | PlanNodeForceReplaceDialogCancelled
+    | PlanNodeReplaceWithChanged String
+
+    -- TictacAAE
+    | GetTtaaeReport
+    | GotTtaaeReport (Result Http.Error (Dict String (List Data.Ttaae.TtaaeTree)))
+
+    | TtaaeTreeSortByFieldChanged String
+    | TtaaeTreeSortOrderChanged
+    | TtaaeTreeShowForNodeChanged String
 
     -- Users
     | ListUsers
@@ -70,20 +116,31 @@ type Msg
     | UserDeleted (Result Http.Error ())
     | UpdateUser
 
+    -- Groups
+    | ListGroups
+    | GotGroupList (Result Http.Error (List Group))
+    | CreateGroup
+    | GroupCreated (Result Http.Error ())
+    | DeleteGroup String
+    | DeleteGroupConfirmed
+    | DeleteGroupNotConfirmed
+    | GroupDeleted (Result Http.Error ())
+    | UpdateGroup
+
+    | ListPermissions
+    | GotPermissionList (Result Http.Error (List String))
+
     -- UI interactions
     ------------------
     | TabClicked Tab
     | OpenTopDrawer
+
     | ShowConfigDialog
-    | ConfigUrlChanged String
-    | ConfigUserChanged String
-    | ConfigPasswordChanged String
-    | ConfigAdminPathPrefixChanged String
+    | ConfigRiakNodeUrlChanged String
+    | ConfigRiakAdminUserChanged String
+    | ConfigRiakAdminPasswordChanged String
     | SetConfig
     | SetConfigCancelled
-
-    | ShowServerConfig
-    | ServerConfigDialogDismissed
 
     -- users
     | UserFilterChanged String
@@ -95,15 +152,52 @@ type Msg
     | NewUserNameChanged String
     | NewUserPasswordChanged String
     | CreateUserCancelled
-    | ShowEditUserDialog User
-    | EditedUserStatusChanged
+    | ShowEditUserDialog String
     | EditUserCancelled
 
+    | ShowEditUserGroupsDialog String
+    | SelectOrUnselectUserGroupToAdd String
+    | SelectOrUnselectUserGroupToDelete String
+    | EditUserGroupsCancelled
+    | ShowAddUserGroupDialog String
+    | AddUserGroupBatch
+    | DeleteUserGroupBatch
+    | AddUserGroupDialogCancelled
+    | UserGroupAdded (Result Http.Error ())
+    | UserGroupDeleted (Result Http.Error ())
+    | UserGrantAdded (Result Http.Error ())
+    | UserGrantDeleted (Result Http.Error ())
+
+    -- groups
+    | GroupFilterChanged String
+    | GroupFilterInItemClicked String
+    | GroupSortByFieldChanged String
+    | GroupSortOrderChanged
+
+    | ShowCreateGroupDialog
+    | NewGroupNameChanged String
+    | CreateGroupCancelled
+    | ShowEditGroupDialog Group
+    | EditGroupCancelled
+    | GroupGrantAdded (Result Http.Error ())
+    | GroupGrantDeleted (Result Http.Error ())
+
+    -- shared
+    | ShowEditGrantsDialog String
+    | SelectOrUnselectGrantToDelete String
+    | EditGrantsCancelled
+    | ShowAddGrantDialog String
+    | AddingGrantPermissionChanged String
+    | AddingGrantScopeChanged String
+    | AddGrant Data.Security.Role
+    | DeleteGrantBatch Data.Security.Role
+    | AddGrantDialogCancelled
+
     -- misc
-    | KeyboardMsg Keyboard.Msg
     | SnackbarClosed Snackbar.MessageId
 
     | NewTime Time.Posix
+    | Tick Time.Posix
 
 
 getNewTime : Cmd Msg

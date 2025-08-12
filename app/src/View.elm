@@ -21,8 +21,14 @@
 module View exposing (view)
 
 import View.General
+import View.Cluster
+import View.Cluster.AppBarContent
+import View.Ttaae
+import View.Ttaae.AppBarContent
 import View.User
 import View.User.AppBarContent
+import View.Group
+import View.Group.AppBarContent
 import View.Style
 import Model exposing (Model)
 import Msg exposing (Msg(..))
@@ -54,7 +60,8 @@ makeTopAppBar m =
     TopAppBar.regular
         (TopAppBar.config
         |> TopAppBar.setFixed True
-        |> TopAppBar.setAttributes [ style "z-index" "20" ])
+        |> TopAppBar.setAttributes [ style "z-index" "20"
+                                   , style "background" "#64a8da" ])
         [ TopAppBar.row []
               [ TopAppBar.section [ TopAppBar.alignStart ]
                     [ IconButton.iconButton
@@ -74,9 +81,9 @@ makeTopAppBar m =
                   [ makeFilterControls m ]
               , TopAppBar.section [ TopAppBar.alignEnd ]
                   [ span [ TopAppBar.alignEnd, style "padding" "0 1em" ]
-                        [ text m.c.rdrInstanceUrl ]
+                        [ text m.c.riakNodeUrl ]
                   , span [ TopAppBar.alignEnd ]
-                      [ img [src "images/logo.png", style "object-fit" "contain"] [] ]
+                      [ img [src "images/openriak-logo.png", style "object-fit" "contain"] [] ]
                   ]
               ]
         ]
@@ -84,8 +91,11 @@ makeTopAppBar m =
 
 listWhat m =
     case m.s.activeTab of
-        Msg.General -> GetServerUptime
+        Msg.General -> GetServerInfo
+        Msg.Cluster -> GetCluster
+        Msg.Ttaae -> GetTtaaeReport
         Msg.Users -> ListUsers
+        Msg.Groups -> ListGroups
 
 
 makeDrawer m =
@@ -103,13 +113,28 @@ makeDrawer m =
                                 (ListItem.config
                                 |> ListItem.setOnClick (TabClicked Msg.General)
                                 )
-                                [ text "Riak node" ]
+                                [ text "General" ]
                           )
                           [ ListItem.listItem
+                                (ListItem.config
+                                |> ListItem.setOnClick (TabClicked Msg.Cluster)
+                                )
+                                [ itemWithCount "Cluster" m.s.cluster.current ]
+                          , ListItem.listItem
+                                (ListItem.config
+                                |> ListItem.setOnClick (TabClicked Msg.Ttaae)
+                                )
+                                [ text "TictacAAE" ]
+                          , ListItem.listItem
                                 (ListItem.config
                                 |> ListItem.setOnClick (TabClicked Msg.Users)
                                 )
                                 [ itemWithCount "Users" m.s.users ]
+                          , ListItem.listItem
+                                (ListItem.config
+                                |> ListItem.setOnClick (TabClicked Msg.Groups)
+                                )
+                                [ itemWithCount "Groups" m.s.groups ]
                           ]
                     ]
               ]
@@ -123,14 +148,23 @@ itemWithCount s a =
 makeContents m =
     case m.s.activeTab of
         Msg.General -> View.General.makeContent m
+        Msg.Cluster -> View.Cluster.makeContent m
+        Msg.Ttaae -> View.Ttaae.makeContent m
         Msg.Users -> View.User.makeContent m
+        Msg.Groups -> View.Group.makeContent m
 
 makeFilterControls m =
     case m.s.activeTab of
         Msg.General -> div [] []
+        Msg.Cluster -> div View.Style.filterAndSort (View.Cluster.AppBarContent.makeFilterControls m)
+        Msg.Ttaae -> div View.Style.filterAndSort (View.Ttaae.AppBarContent.makeFilterControls m)
         Msg.Users -> div View.Style.filterAndSort (View.User.AppBarContent.makeFilterControls m)
+        Msg.Groups -> div View.Style.filterAndSort (View.Group.AppBarContent.makeFilterControls m)
 
 activeTabName m =
     case m.s.activeTab of
         Msg.General -> "General"
+        Msg.Cluster -> "Cluster"
+        Msg.Ttaae -> "TictacAAE"
         Msg.Users -> "Users"
+        Msg.Groups -> "Groups"

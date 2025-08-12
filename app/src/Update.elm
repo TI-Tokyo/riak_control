@@ -26,7 +26,12 @@ module Update exposing
 import Model exposing (..)
 import Msg exposing (Msg(..))
 import Request.Admin
-import Data.User exposing (UserStatus(..), dummyUser)
+import Request.Cluster
+import Request.Security
+import Request.Ttaae
+import Data.Cluster exposing (emptyCluster)
+import Data.Security exposing (dummyUser, dummyGroup)
+import Data.Ttaae
 import Data.Json
 import View.Common
 import Util
@@ -37,7 +42,6 @@ import Platform.Cmd
 import Dict exposing (Dict)
 import Json.Decode
 import Http
-import Keyboard exposing (Key(..))
 import Material.Snackbar as Snackbar
 
 
@@ -57,59 +61,45 @@ update msg m =
 
         -- ServerInfo
         ------------------------------
-        GetServerVersion ->
-            (m, Request.Admin.getServerVersion m)
-        GotServerVersion (Ok a) ->
+        Ping ->
             let
-                s_ = m.s
-                si_ = s_.serverInfo
+                task =
+                    Time.now
+                        |> andThen
+                           (\t0 ->
+                                Request.Admin.pingTask m
+                                    |> andThen
+                                        (\_ ->
+                                             Time.now
+                                                 |> andThen
+                                                      (\t1 ->
+                                                           (Time.posixToMillis t1) - (Time.posixToMillis t0)
+                                                               |> succeed
+                                                      )
+                                        )
+                           )
             in
-                ({m | s = {s_ | serverInfo = {si_ | version = a}}}, Cmd.none)
-        GotServerVersion (Err err) ->
+                (m, attempt TimedPong task)
+        TimedPong (Ok a) ->
             let s_ = m.s in
-            ( {m | s = {s_ | users = [], groups = [], msgQueue = Snackbar.addMessage
-                            (Snackbar.message ("Failed to get server config: " ++ (explainHttpError err))) m.s.msgQueue}}
+            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Ping response: OK in " ++ (String.fromInt a) ++ " msec")) m.s.msgQueue}}
+            , Cmd.none
+            )
+        TimedPong (Err err) ->
+            ( handleHttpError m "Failed to ping riak: " err
             , Cmd.none
             )
 
-        GetServerConfig ->
-            (m, Request.Admin.getServerConfig m)
-        GotServerConfig (Ok a) ->
+        GetServerInfo ->
+            (m, Request.Admin.getServerInfo m)
+        GotServerInfo (Ok a) ->
             let
                 s_ = m.s
-                si_ = s_.serverInfo
             in
-                ({m | s = {s_ | serverInfo = {si_ | config = Just a}}}, Cmd.none)
-        GotServerConfig (Err err) ->
-            let s_ = m.s in
-            ( {m | s = {s_ | users = [], groups = [], msgQueue = Snackbar.addMessage
-                            (Snackbar.message ("Failed to get server config: " ++ (explainHttpError err))) m.s.msgQueue}}
-            , Cmd.none
-            )
-
-        GetServerUptime ->
-            (m, Request.Admin.getServerUptime m)
-        GotServerUptime (Ok a) ->
-            let
-                s_ = m.s
-                si_ = s_.serverInfo
-            in
-                ({m | s = {s_ | serverInfo = {si_ | uptime = a}}}, Cmd.none)
-        GotServerUptime (Err err) ->
-            let s_ = m.s in
-            ( {m | s = {s_ | users = [], groups = [], msgQueue = Snackbar.addMessage
-                            (Snackbar.message ("Failed to get server uptime: " ++ (explainHttpError err))) m.s.msgQueue}}
-            , Cmd.none
-            )
-
-        ShowServerConfig ->
-            let s_ = m.s in
-            ( {m | s = {s_ | serverConfigShown = True}}
-            , Cmd.none
-            )
-        ServerConfigDialogDismissed ->
-            let s_ = m.s in
-            ( {m | s = {s_ | serverConfigShown = False}}
+                ({m | s = {s_ | serverInfo = a}}, Cmd.none)
+        GotServerInfo (Err err) ->
+            ( handleHttpError m "Failed to get server info: " err
             , Cmd.none
             )
 
@@ -119,42 +109,241 @@ update msg m =
         ShowConfigDialog ->
             let s_ = m.s in
             ({m | s = {s_ | configDialogShown = True}}, Cmd.none)
-        ConfigUrlChanged s ->
+        ConfigRiakNodeUrlChanged s ->
             let s_ = m.s in
-            ({m | s = {s_ | newConfigUrl = s}}, Cmd.none)
-        ConfigUserChanged s ->
-            let
-                s_ = m.s
-                newUserCreds = Dict.insert "root" s s_.browserViewAsUserCreds
-            in
-            ({m | s = {s_ | newConfigRootPassword = s
-                          , browserViewAsUserCreds = newUserCreds}}, Cmd.none)
-        ConfigPasswordChanged s ->
-            let
-                s_ = m.s
-                newUserCreds = Dict.insert "root" s s_.browserViewAsUserCreds
-            in
-            ({m | s = {s_ | newConfigRootPassword = s
-                          , browserViewAsUserCreds = newUserCreds}}, Cmd.none)
-        ConfigAdminPathPrefixChanged s ->
+            ({m | s = {s_ | newConfigRiakNodeUrl = s}}, Cmd.none)
+        ConfigRiakAdminUserChanged s ->
             let s_ = m.s in
-            ({m | s = {s_ | newConfigAdminPathPrefix = s}}, Cmd.none)
+            ({m | s = {s_ | newConfigRiakAdminUser = s}}, Cmd.none)
+        ConfigRiakAdminPasswordChanged s ->
+            let s_ = m.s in
+            ({m | s = {s_ | newConfigRiakAdminPassword = s}}, Cmd.none)
         SetConfig ->
             let
                 c_ = m.c
                 s_ = m.s
             in
-            ( { m | c = {c_ | rdrInstanceUrl = m.s.newConfigUrl
-                            , rdrRootPassword = m.s.newConfigRootPassword
-                            , rdrAdminPathPrefix = m.s.newConfigAdminPathPrefix
-                        },
-                    s = {s_ | configDialogShown = False}
-              }
-            , Cmd.none
-            )
+                ( { m | c = {c_ | riakNodeUrl = m.s.newConfigRiakNodeUrl
+                                , riakAdminUser = m.s.newConfigRiakAdminUser
+                                , riakAdminPassword = m.s.newConfigRiakAdminPassword
+                            },
+                        s = {s_ | configDialogShown = False}
+                  }
+                , Cmd.none
+                )
         SetConfigCancelled ->
             let s_ = m.s in
             ({m | s = {s_ | configDialogShown = False}}, Cmd.none)
+
+
+        -- Cluster
+        ------------------------------
+        GetCluster ->
+            (m, Request.Cluster.getCluster m)
+        GotCluster (Ok a) ->
+            let s_ = m.s in
+            ({m | s = { s_ | cluster = a
+                           , notReadyMessage = ""}}, Cmd.none)
+        GotCluster (Err (Http.BadStatus 425)) ->
+            let s_ = m.s in
+            ({m | s = {s_ | notReadyMessage = "ring not ready"}}
+            , Cmd.none
+            )
+        GotCluster (Err err) ->
+            ( handleHttpError m "Failed to fetch cluster status: " err
+            , Cmd.none
+            )
+
+        ClusterMemberSortByFieldChanged s ->
+            let s_ = m.s in
+            ({m | s = {s_ | clusterMemberSortBy = View.Common.stringToSortBy s}}, Cmd.none)
+        ClusterMemberSortOrderChanged ->
+            let s_ = m.s in
+            ({m | s = {s_ | clusterMemberSortOrder = not s_.clusterMemberSortOrder}}, Cmd.none)
+
+        NewClusterNodeChanged s ->
+            let s_ = m.s in
+            ({m | s = {s_ | newNodeToJoin = s}}, Cmd.none)
+
+
+        PlanClear ->
+            let s_ = m.s in
+            ({m | s = s_}, Request.Cluster.planClear m)
+        PlanCleared (Ok _) ->
+            (m, refreshCluster)
+        PlanCleared (Err err) ->
+            ( handleHttpError m "Failed to clear plan: " err
+            , Cmd.none
+            )
+
+        PlanCommit ->
+            let s_ = m.s in
+            ({m | s = s_}, Request.Cluster.planCommit m)
+        PlanCommitted (Ok _) ->
+            (m, refreshCluster)
+        PlanCommitted (Err err) ->
+            ( handleHttpError m "Failed to commit plan: " err
+            , Cmd.none
+            )
+
+        -- Nodes
+        ShowAddNodeDialog ->
+            let s_ = m.s in
+            ({m | s = {s_ | addNodeDialogShown = True}}, Cmd.none)
+        AddNodeDialogCancelled ->
+            let s_ = m.s in
+            ({m | s = {s_ | addNodeDialogShown = False}}, Cmd.none)
+        PlanNodeJoin ->
+            let s_ = m.s in
+            ({m | s = {s_ | newNodeToJoin = ""}}, Request.Cluster.stageJoin m m.s.newNodeToJoin)
+        PlanNodeJoined (Ok r) ->
+            let
+                s_ = m.s
+                m_ = {m | s = {s_ | newNodeToJoin = ""}}
+            in
+                handleClusterActionResult m_ "staging join" r.result
+        PlanNodeJoined (Err (Http.BadStatus 412)) ->
+            handleClusterActionResult m "staging join" "node is down"
+        PlanNodeJoined (Err err) ->
+            ( handleHttpError m "Failed to stage node join: " err
+            , Cmd.none
+            )
+
+        NodeMenuOpen a ->
+            let s_ = m.s in
+            ({m | s = {s_ | nodeMenuOpenedFor = a}}, Cmd.none)
+        NodeMenuClose ->
+            let s_ = m.s in
+            ({m | s = {s_ | nodeMenuOpenedFor = ""}}, Cmd.none)
+
+        PlanNodeLeave a ->
+            let s_ = m.s in
+            ({m | s = {s_ | nodeMenuOpenedFor = ""}}, Request.Cluster.stageLeave m a)
+        PlanNodeLeft (Ok r) ->
+            handleClusterActionResult m "staging node leave" r.result
+        PlanNodeLeft (Err err) ->
+            ( handleHttpError m "Failed to stage node leave: " err
+            , Cmd.none
+            )
+
+        PlanNodeRemove a ->
+            let s_ = m.s in
+            ({m | s = {s_ | nodeMenuOpenedFor = ""}}, Request.Cluster.stageRemove m a)
+        PlanNodeRemoved (Ok r) ->
+            handleClusterActionResult m "staging node remove" r.result
+        PlanNodeRemoved (Err err) ->
+            ( handleHttpError m "Failed to stage node remove: " err
+            , Cmd.none
+            )
+
+        AskPlanNodeReplace a ->
+            let s_ = m.s in
+            ({m | s = {s_ | nodeMenuOpenedFor = ""
+                          , replaceDialogShownFor = a
+                          , replaceNodeWith = ""}}, Cmd.none)
+        PlanNodeReplaceWithChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | replaceNodeWith = a}}, Cmd.none)
+        PlanNodeReplaceDialogConfirmed ->
+            let s_ = m.s in
+            ( {m | s = {s_ | replaceDialogShownFor = ""
+                           , replaceNodeWith = ""}}
+            , perform (\_ -> PlanNodeReplace s_.replaceDialogShownFor s_.replaceNodeWith) Time.now
+            )
+        PlanNodeReplaceDialogCancelled ->
+            let s_ = m.s in
+            ( {m | s = {s_ | replaceDialogShownFor = ""
+                           , replaceNodeWith = ""}}
+            , Cmd.none
+            )
+        PlanNodeReplace a b ->
+            let s_ = m.s in
+            ({m | s = {s_ | nodeMenuOpenedFor = ""}}, Request.Cluster.stageReplace m a b)
+        PlanNodeReplaced (Ok r) ->
+            handleClusterActionResult m "staging node replace" r.result
+        PlanNodeReplaced (Err err) ->
+            ( handleHttpError m "Failed to stage node replace: " err
+            , Cmd.none
+            )
+
+        AskPlanNodeForceReplace a ->
+            let s_ = m.s in
+            ({m | s = {s_ | nodeMenuOpenedFor = ""
+                          , forceReplaceDialogShownFor = a
+                          , replaceNodeWith = ""}}, Cmd.none)
+        PlanNodeForceReplaceDialogConfirmed ->
+            let s_ = m.s in
+            ( {m | s = {s_ | forceReplaceDialogShownFor = ""
+                           , replaceNodeWith = ""}}
+            , perform (\_ -> PlanNodeForceReplace s_.forceReplaceDialogShownFor s_.replaceNodeWith) Time.now
+            )
+        PlanNodeForceReplaceDialogCancelled ->
+            let s_ = m.s in
+            ( {m | s = {s_ | forceReplaceDialogShownFor = ""
+                           , replaceNodeWith = ""}}
+            , Cmd.none
+            )
+        PlanNodeForceReplace a b ->
+            let s_ = m.s in
+            ({m | s = {s_ | nodeMenuOpenedFor = ""}}, Request.Cluster.stageForceReplace m a b)
+        PlanNodeForceReplaced (Ok r) ->
+            handleClusterActionResult m "staging node force replace" r.result
+        PlanNodeForceReplaced (Err err) ->
+            ( handleHttpError m "Failed to stage node force_replace: " err
+            , Cmd.none
+            )
+
+        PlanNodeDown a ->
+            let s_ = m.s in
+            ({m | s = {s_ | nodeMenuOpenedFor = ""}}, Request.Cluster.stageDown m a)
+        PlanNodeDowned (Ok r) ->
+            handleClusterActionResult m "staging node down" r.result
+        PlanNodeDowned (Err err) ->
+            ( handleHttpError m "Failed to stage node down: " err
+            , Cmd.none
+            )
+
+        PlanNodeStop a ->
+            let s_ = m.s in
+            ({m | s = {s_ | nodeMenuOpenedFor = ""}}, Request.Cluster.stageStop m a)
+        PlanNodeStopped (Ok r) ->
+            handleClusterActionResult m "staging node stop" r.result
+        PlanNodeStopped (Err err) ->
+            ( handleHttpError m "Failed to stage node stop: " err
+            , Cmd.none
+            )
+
+        -- TictacAAE
+        ------------------------------
+        GetTtaaeReport ->
+            (m, Request.Ttaae.getReport m m.s.ttaaeReportShownForNode)
+        GotTtaaeReport (Ok r) ->
+            let
+                s_ = m.s
+                prevShownFor = s_.ttaaeReportShownForNode
+                thisNode = m.s.cluster.current
+                           |> List.filterMap (\{isMe, name} -> if isMe then Just name else Nothing)
+                           |> List.head
+                           |> Maybe.withDefault ""
+            in
+                ({m | s = {s_ | ttaaeReport = r
+                              , ttaaeReportShownForNode =
+                               if prevShownFor == "" then thisNode else prevShownFor}}, Cmd.none)
+        GotTtaaeReport (Err err) ->
+            ( handleHttpError m "Failed to get ttaae report: " err
+            , Cmd.none
+            )
+
+        TtaaeTreeSortByFieldChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | ttaaeTreeSortBy = View.Common.stringToSortBy a}}, Cmd.none)
+        TtaaeTreeSortOrderChanged ->
+            let s_ = m.s in
+            ({m | s = {s_ | ttaaeTreeSortOrder = not s_.ttaaeTreeSortOrder}}, Cmd.none)
+
+        TtaaeTreeShowForNodeChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | ttaaeReportShownForNode = a}}, Request.Ttaae.getReport m a)
 
 
         -- User
@@ -173,7 +362,7 @@ update msg m =
             ({m | s = {s_ | userSortOrder = not s_.userSortOrder}}, Cmd.none)
 
         ListUsers ->
-            (m, Request.Admin.listUsers m)
+            (m, Request.Security.listUsers m)
         GotUserList (Ok users) ->
             let s_ = m.s in
             ({m | s = { s_ | users = users}}, Cmd.none)
@@ -194,12 +383,11 @@ update msg m =
             let s_ = m.s in
             ({m | s = {s_ | newUserPassword = a}}, Cmd.none)
         CreateUser ->
-            (m, Request.Admin.createUser m)
+            (m, Request.Security.createUser m)
         CreateUserCancelled ->
             (resetCreateUserDialogFields m, Cmd.none)
         UserCreated (Ok ()) ->
-            (resetCreateUserDialogFields m, Cmd.batch [ Request.Admin.listUsers m
-                                                      , Request.Admin.listGroups m
+            (resetCreateUserDialogFields m, Cmd.batch [ Request.Security.listUsers m
                                                       ])
         UserCreated (Err err) ->
             let s_ = m.s in
@@ -217,13 +405,13 @@ update msg m =
                 a = Maybe.withDefault "" m.s.confirmDeleteUserDialogShownFor
             in
                 ( {m | s = {s_ | confirmDeleteUserDialogShownFor = Nothing}}
-                , Request.Admin.deleteUser m a
+                , Request.Security.deleteUser m a
                 )
         DeleteUserNotConfirmed ->
             let s_ = m.s in
             ( {m | s = {s_ | confirmDeleteUserDialogShownFor = Nothing}}, Cmd.none )
         UserDeleted (Ok ()) ->
-            (m, Request.Admin.listUsers m)
+            (m, Request.Security.listUsers m)
         UserDeleted (Err err) ->
             let s_ = m.s in
             ( {m | s = {s_ | msgQueue = Snackbar.addMessage
@@ -231,37 +419,232 @@ update msg m =
             , Cmd.none
             )
 
-        ShowEditUserDialog u ->
+        ShowEditUserDialog a ->
             let s_ = m.s in
-            ({m | s = {s_ | openEditUserDialogFor = Just u}}, Cmd.none)
-        EditedUserQuotaChanged s ->
-            let
-                s_ = m.s
-                u_ = Maybe.withDefault dummyUser m.s.openEditUserDialogFor
-            in
-                ({m | s = {s_ | openEditUserDialogFor = Just {u_ | quota = String.toInt s}}}, Cmd.none)
-        EditedUserStatusChanged ->
-            let
-                s_ = m.s
-                u_ = Maybe.withDefault dummyUser m.s.openEditUserDialogFor
-            in
-                ({m | s = {s_ | openEditUserDialogFor = Just {u_ | status = toggleStatus u_.status}}}, Cmd.none)
+            ({m | s = {s_ | openEditUserDialogFor = Just a}}, Cmd.none)
         UpdateUser ->
             let s_ = m.s in
-            ({m | s = {s_ | openEditUserDialogFor = Nothing}}, Request.Admin.updateUser m)
+            ({m | s = {s_ | openEditUserDialogFor = Nothing}}, Request.Security.updateUser m)
         EditUserCancelled ->
             let s_ = m.s in
             ({m | s = {s_ | openEditUserDialogFor = Nothing}}, Cmd.none)
 
 
-        -- Notifications
-        ------------------------------
-        KeyboardMsg keyMsg ->
+        ShowEditUserGroupsDialog a ->
             let s_ = m.s in
-            ( { m | s = {s_ | pressedKeys = Keyboard.update keyMsg s_.pressedKeys} }
+            ({m | s = {s_ | openEditUserGroupsDialogFor = Just a}}, Cmd.none)
+        EditUserGroupsCancelled ->
+            let s_ = m.s in
+            ({m | s = {s_ | openEditUserGroupsDialogFor = Nothing}}, Cmd.none)
+
+
+        ShowAddUserGroupDialog a ->
+            let s_ = m.s in
+            ({m | s = {s_ | openAddUserGroupsDialogFor = Just a}}, Cmd.none)
+        AddUserGroupDialogCancelled ->
+            let s_ = m.s in
+            ({m | s = {s_ | openAddUserGroupsDialogFor = Nothing}}, Cmd.none)
+        SelectOrUnselectUserGroupToAdd a ->
+            let s_ = m.s in
+            ({m | s = {s_ | selectedUserGroupsForAdd = Util.addOrDeleteElement s_.selectedUserGroupsForAdd a}}
+            , Cmd.none
+            )
+        SelectOrUnselectUserGroupToDelete a ->
+            let s_ = m.s in
+            ({m | s = {s_ | selectedUserGroupsForDelete = Util.addOrDeleteElement s_.selectedUserGroupsForDelete a}}
             , Cmd.none
             )
 
+        AddUserGroupBatch ->
+            let s_ = m.s in
+            ( {m | s = { s_
+                       | openAddUserGroupsDialogFor = Nothing
+                       , selectedUserGroupsForAdd = []
+                       , selectedUserGroupsForDelete = []}}
+            , Cmd.batch (List.map (Request.Security.addUserGroup m) s_.selectedUserGroupsForAdd)
+            )
+        DeleteUserGroupBatch ->
+            let s_ = m.s in
+            ( {m | s = { s_
+                       | selectedUserGroupsForAdd = []
+                       , selectedUserGroupsForDelete = []}}
+            , Cmd.batch (List.map (Request.Security.deleteUserGroup m) s_.selectedUserGroupsForDelete)
+            )
+
+        UserGroupAdded _ ->
+            (m, Request.Security.listUsers m)
+        UserGroupDeleted _ ->
+            (m, Request.Security.listUsers m)
+
+        UserGrantAdded _ ->
+            (m, Request.Security.listUsers m)
+        UserGrantDeleted _ ->
+            (m, Request.Security.listUsers m)
+
+
+        -- Group
+        ------------------------------
+        GroupFilterChanged s ->
+            let s_ = m.s in
+            ({m | s = {s_ | groupFilterValue = s}}, Cmd.none)
+        GroupFilterInItemClicked s ->
+            let s_ = m.s in
+            ({m | s = {s_ | groupFilterIn = Util.addOrDeleteElement s_.groupFilterIn s}}, Cmd.none)
+        GroupSortByFieldChanged s ->
+            let s_ = m.s in
+            ({m | s = {s_ | groupSortBy = View.Common.stringToSortBy s}}, Cmd.none)
+        GroupSortOrderChanged ->
+            let s_ = m.s in
+            ({m | s = {s_ | groupSortOrder = not s_.groupSortOrder}}, Cmd.none)
+
+        ListGroups ->
+            (m, Request.Security.listGroups m)
+        GotGroupList (Ok groups) ->
+            let s_ = m.s in
+            ({m | s = { s_ | groups = groups}}, Cmd.none)
+        GotGroupList (Err err) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | groups = [], msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Failed to fetch groups: " ++ (explainHttpError err))) m.s.msgQueue}}
+            , Cmd.none
+            )
+
+        ShowCreateGroupDialog ->
+            let s_ = m.s in
+            ({m | s = {s_ | createGroupDialogShown = True}}, Cmd.none)
+        NewGroupNameChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | newGroupName = a}}, Cmd.none)
+        CreateGroup ->
+            (m, Request.Security.createGroup m)
+        CreateGroupCancelled ->
+            (resetCreateGroupDialogFields m, Cmd.none)
+        GroupCreated (Ok ()) ->
+            (resetCreateGroupDialogFields m, Cmd.batch [ Request.Security.listGroups m
+                                                      ])
+        GroupCreated (Err err) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Failed to create group: " ++ (explainHttpError err))) m.s.msgQueue}}
+            , Cmd.none
+            )
+
+        DeleteGroup a ->
+            let s_ = m.s in
+            ( {m | s = {s_ | confirmDeleteGroupDialogShownFor = Just a}}, Cmd.none )
+        DeleteGroupConfirmed ->
+            let
+                s_ = m.s
+                a = Maybe.withDefault "" m.s.confirmDeleteGroupDialogShownFor
+            in
+                ( {m | s = {s_ | confirmDeleteGroupDialogShownFor = Nothing}}
+                , Request.Security.deleteGroup m a
+                )
+        DeleteGroupNotConfirmed ->
+            let s_ = m.s in
+            ( {m | s = {s_ | confirmDeleteGroupDialogShownFor = Nothing}}, Cmd.none )
+        GroupDeleted (Ok ()) ->
+            (m, Request.Security.listGroups m)
+        GroupDeleted (Err err) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Failed to delete group: " ++ (explainHttpError err))) m.s.msgQueue}}
+            , Cmd.none
+            )
+
+        ShowEditGroupDialog u ->
+            let s_ = m.s in
+            ({m | s = {s_ | openEditGroupDialogFor = Just u}}, Cmd.none)
+        UpdateGroup ->
+            let s_ = m.s in
+            ({m | s = {s_ | openEditGroupDialogFor = Nothing}}, Request.Security.updateGroup m)
+        EditGroupCancelled ->
+            let s_ = m.s in
+            ({m | s = {s_ | openEditGroupDialogFor = Nothing}}, Cmd.none)
+
+        -- Group/User shared
+        ShowEditGrantsDialog a ->
+            let s_ = m.s in
+            ({m | s = {s_ | openEditGrantsDialogFor = Just a}}, Cmd.none)
+        EditGrantsCancelled ->
+            let s_ = m.s in
+            ({m | s = {s_ | openEditGrantsDialogFor = Nothing}}, Cmd.none)
+
+
+        ShowAddGrantDialog a ->
+            let s_ = m.s in
+            ({m | s = {s_ | openAddGrantsDialogFor = Just a}}, Cmd.none)
+        AddGrantDialogCancelled ->
+            let s_ = m.s in
+            ({m | s = {s_ | openAddGrantsDialogFor = Nothing}}, Cmd.none)
+        SelectOrUnselectGrantToDelete a ->
+            let s_ = m.s in
+            ({m | s = {s_ | selectedGrantsForDelete = Util.addOrDeleteElement s_.selectedGrantsForDelete a}}
+            , Cmd.none
+            )
+        AddingGrantPermissionChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | addingGrantPermission = a}}
+            , Cmd.none
+            )
+        AddingGrantScopeChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | addingGrantScope = a}}
+            , Cmd.none
+            )
+
+        AddGrant r ->
+            let
+                s_ = m.s
+                req =
+                    case r of
+                        Data.Security.UserRole -> Request.Security.addUserGrant
+                        Data.Security.GroupRole -> Request.Security.addGroupGrant
+                perm = s_.addingGrantPermission
+                scope = s_.addingGrantScope
+            in
+                ( {m | s = { s_
+                               | openAddGrantsDialogFor = Nothing
+                               , addingGrantPermission = ""
+                               , addingGrantScope = ""}}
+                , req m perm scope
+                )
+        DeleteGrantBatch r ->
+            let
+                s_ = m.s
+                req =
+                    case r of
+                        Data.Security.UserRole -> Request.Security.deleteUserGrant
+                        Data.Security.GroupRole -> Request.Security.deleteGroupGrant
+                pp = List.concat <| List.map Data.Security.grantCrumbsFromStr s_.selectedGrantsForDelete
+            in
+            ( {m | s = { s_
+                       | selectedGrantsForDelete = []}}
+            , Cmd.batch (List.map (\(p, s) -> req m p s) pp)
+            )
+
+        GroupGrantAdded _ ->
+            (m, Request.Security.listGroups m)
+        GroupGrantDeleted _ ->
+            (m, Request.Security.listGroups m)
+
+
+        ListPermissions ->
+            (m, Request.Security.listPermissions m)
+
+        GotPermissionList (Ok aa) ->
+            let s_ = m.s in
+            ({m | s = { s_ | permissions = aa}}, Cmd.none)
+        GotPermissionList (Err err) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | permissions = [], msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Failed to fetch factory permissions: " ++ (explainHttpError err))) m.s.msgQueue}}
+            , Cmd.none
+            )
+
+
+        -- Notifications
+        ------------------------------
         SnackbarClosed a ->
             let
                 s_ = m.s
@@ -272,28 +655,47 @@ update msg m =
         NewTime t ->
             ({m|t = t}, Cmd.none)
 
+        -- system
         NoOp ->
             (m, Cmd.none)
         Discard _ ->
             (m, Cmd.none)
 
+        Tick a ->
+            if m.s.activeTab == Msg.Cluster then
+                ({ m | t = a}, Request.Cluster.getCluster m)
+            else
+                (m, Cmd.none)
 
 refreshTabMsg m t =
     case t of
-        Msg.General -> Cmd.batch [ Request.Admin.getServerVersion m
-                                 , Request.Admin.getServerUptime m
-                                 , Request.Admin.getServerConfig m
-                                 , Request.Admin.getServerConfigRaw m
-                                 ]
-        Msg.Users -> Request.Admin.listUsers m
+        Msg.General -> Request.Admin.getServerInfo m
+        Msg.Cluster -> Request.Cluster.getCluster m
+        Msg.Users -> Request.Security.listUsers m
+        Msg.Groups -> Request.Security.listGroups m
+        Msg.Ttaae -> Request.Ttaae.getReport m m.s.ttaaeReportShownForNode
 
 refreshAll m =
-    Cmd.batch [ Request.Admin.getServerVersion m
-              , Request.Admin.getServerUptime m
-              , Request.Admin.getServerConfig m
-              , Request.Admin.getServerConfigRaw m
-              , Request.Admin.listUsers m
+    Cmd.batch [ Request.Admin.getServerInfo m
+              , Request.Cluster.getCluster m
+              , Request.Security.listUsers m
+              , Request.Security.listGroups m
+              , Request.Security.listPermissions m
               ]
+
+resetCreateUserDialogFields m =
+    let s_ = m.s in
+    {m | s = {s_ | createUserDialogShown = False
+                 , newUserName = ""
+             }
+    }
+
+resetCreateGroupDialogFields m =
+    let s_ = m.s in
+    {m | s = {s_ | createGroupDialogShown = False
+                 , newGroupName = ""
+             }
+    }
 
 explainHttpError a =
     case a of
@@ -308,7 +710,23 @@ explainHttpError a =
         Http.BadUrl s ->
             "BadUrl. This shouldn't have happened."
 
-toggleStatus a =
-    case a of
-        Active -> Suspended
-        _ -> Active
+
+handleHttpError m msg err =
+    let s_ = m.s in
+    {m | s = {s_ | msgQueue = Snackbar.addMessage
+                       (Snackbar.message (msg ++ (explainHttpError err))) m.s.msgQueue}}
+
+handleClusterActionResult m a r =
+    let s_ = m.s in
+    case r of
+        "ok" ->
+            (m, refreshCluster)
+        notOk ->
+            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
+                              (Snackbar.message (a ++ " error: " ++ notOk)) m.s.msgQueue}}
+            , Cmd.none
+            )
+
+
+refreshCluster =
+    perform (\_ -> GetCluster) Time.now

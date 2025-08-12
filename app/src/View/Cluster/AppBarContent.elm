@@ -18,7 +18,7 @@
 --
 -- ---------------------------------------------------------------------
 
-module View.User.AppBarContent exposing
+module View.Cluster.AppBarContent exposing
     ( makeFilterControls
     )
 
@@ -35,53 +35,22 @@ import Material.TextField as TextField
 import Material.Typography as Typography
 import Material.Select as Select
 import Material.Select.Item as SelectItem
-import Material.Chip.Filter as FilterChip
-import Material.ChipSet.Filter as FilterChipSet
 
 
 
 makeFilterControls m =
-    let n = View.Common.selectSortByString Name in
-    [ TextField.outlined
-          (TextField.config
-          |> TextField.setLabel (Just "Filter by")
-          |> TextField.setValue (Just m.s.userFilterValue)
-          |> TextField.setOnInput UserFilterChanged
-          )
-    , makeFilterChips m
-    , Select.outlined
+    let n = View.Common.selectSortByString Uptime in
+    [ Select.outlined
           (Select.config
           |> Select.setLabel (Just "Sort by")
-          |> Select.setSelected (Just (View.Common.selectSortByString m.s.userSortBy))
-          |> Select.setOnChange UserSortByFieldChanged
+          |> Select.setSelected (Just (View.Common.selectSortByString m.s.clusterMemberSortBy))
+          |> Select.setOnChange ClusterMemberSortByFieldChanged
           )
           (SelectItem.selectItem (SelectItem.config { value = n }) n)
           (List.map
                (\i -> let j = View.Common.selectSortByString i in
                       SelectItem.selectItem (SelectItem.config {value = j}) j)
-               [Name])
-    , Button.text (Button.config |> Button.setOnClick UserSortOrderChanged)
-            (View.Common.sortOrderText m.s.userSortOrder)
+               [MemTotal, MemErlang, MemUsed])
+    , Button.text (Button.config |> Button.setOnClick ClusterMemberSortOrderChanged)
+            (View.Common.sortOrderText m.s.clusterMemberSortOrder)
     ]
-
-
-makeFilterChips m =
-    let
-        first = FilterChip.chip
-                (FilterChip.config
-                |> FilterChip.setSelected (List.member "Name" m.s.userFilterIn)
-                |> FilterChip.setOnChange (UserFilterInItemClicked "Name")
-                ) "Name"
-        rest =
-            List.map
-                (\n ->
-                     FilterChip.chip
-                       (FilterChip.config
-                       |> FilterChip.setSelected (List.member n m.s.userFilterIn)
-                       |> FilterChip.setOnChange (UserFilterInItemClicked n)
-                       )
-                       n
-                )
-            []
-    in
-        FilterChipSet.chipSet [] first rest

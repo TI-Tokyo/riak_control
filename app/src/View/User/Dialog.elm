@@ -19,13 +19,15 @@
 -- ---------------------------------------------------------------------
 
 module View.User.Dialog exposing
-    ( makeEditUserDialog
-    , makeCreateUserDialog
+    ( makeCreateUserDialog
+    , makeEditUserDialog
+    , makeEditUserGroupsDialog
+    , makeAddUserGroupsDialog
     )
 
 import Model exposing (Model)
 import Msg exposing (Msg(..))
-import Data.User exposing (UserStatus(..))
+import Data.Security
 import View.Common exposing (SortByField(..))
 import View.Shared
 import View.Style
@@ -53,10 +55,7 @@ makeCreateUserDialog m =
               )
               { title = "New user"
               , content =
-                    [ div [ style "display" "grid"
-                          , style "grid-template-columns" "1"
-                          , style "row-gap" "0.3em"
-                          ]
+                    [ div View.Style.dialogContentPart
                           [ div [ style "display" "grid"
                                 , style "grid-template-columns" "repeat(2, 1fr)"
                                 , style "align-items" "left"
@@ -67,6 +66,13 @@ makeCreateUserDialog m =
                                       |> TextField.setLabel (Just "Name")
                                       |> TextField.setRequired True
                                       |> TextField.setOnChange NewUserNameChanged
+                                      |> TextField.setAttributes [ attribute "spellCheck" "false" ]
+                                      )
+                                , TextField.filled
+                                      (TextField.config
+                                      |> TextField.setLabel (Just "Password")
+                                      |> TextField.setRequired True
+                                      |> TextField.setOnChange NewUserPasswordChanged
                                       |> TextField.setAttributes [ attribute "spellCheck" "false" ]
                                       )
                                 ]
@@ -97,7 +103,8 @@ allRequiredFieldsGood m =
 
 makeEditUserDialog m =
     case m.s.openEditUserDialogFor of
-        Just u ->
+        Just a ->
+            let u = Model.userBy m .name a in
             [ Dialog.confirmation
                   (Dialog.config
                   |> Dialog.setOpen True
@@ -105,22 +112,13 @@ makeEditUserDialog m =
                   )
                   { title = "Edit user " ++ u.name
                   , content =
-                        [ div [ style "display" "grid"
-                                   , style "grid-template-columns" "1"
-                                   , style "row-gap" "0.3em"
-                                   ]
+                        [ div View.Style.dialogContentPart
                               [ div [ style "display" "grid"
-                                         , style "grid-template-columns" "repeat(2, 1fr)"
-                                         , style "align-items" "center"
-                                         , style "margin" "0.6em 0 0 0"
-                                         ]
-                                  [ text "Enabled"
-                                  , Switch.switch
-                                    (Switch.config
-                                    |> Switch.setChecked (u.status == Active)
-                                    |> Switch.setOnChange EditedUserStatusChanged
-                                    )
-                                  ]
+                                    , style "grid-template-columns" "repeat(2, 1fr)"
+                                    , style "align-items" "center"
+                                    , style "margin" "0.6em 0 0 0"
+                                    ]
+                                    [ text "Enabled" ]
                               ]
                         ]
                   , actions =
@@ -138,3 +136,87 @@ makeEditUserDialog m =
             ]
         Nothing ->
             []
+
+
+makeEditUserGroupsDialog m =
+    case m.s.openEditUserGroupsDialogFor of
+        Just a ->
+            makeEditUserGroupsDialog2 m a
+        Nothing ->
+            []
+makeEditUserGroupsDialog2 m a =
+    let u = Model.userBy m .name a in
+    [ Dialog.confirmation
+          (Dialog.config
+          |> Dialog.setOpen True
+          |> Dialog.setOnClose EditUserGroupsCancelled
+          )
+          { title = "User groups"
+          , content =
+                [ div View.Style.dialogContentPart
+                      ([ View.Shared.groupsAsList m
+                             u.groups
+                             m.s.selectedUserGroupsForDelete
+                             SelectOrUnselectUserGroupToDelete ]
+                           ++ [ div []
+                                    [ IconButton.iconButton
+                                         (IconButton.config
+                                         |> IconButton.setOnClick (ShowAddUserGroupDialog a))
+                                         (IconButton.icon "add")
+                                    ,  IconButton.iconButton
+                                          (IconButton.config
+                                          |> IconButton.setOnClick DeleteUserGroupBatch
+                                          |> IconButton.setDisabled (m.s.selectedUserGroupsForDelete == [])
+                                          |> IconButton.setAttributes [ style "color" "red" ])
+                                          (IconButton.icon "delete")
+                                    ]
+                              ]
+                      )
+                ]
+          , actions =
+                [ Button.text
+                      (Button.config |> Button.setOnClick EditUserGroupsCancelled)
+                      "Dismiss"
+                ]
+          }
+    ]
+
+
+makeAddUserGroupsDialog m =
+    case m.s.openAddUserGroupsDialogFor of
+        Just a ->
+            makeAddUserGroupsDialog2 m a
+        Nothing ->
+            []
+
+makeAddUserGroupsDialog2 m a =
+    let
+        u = Model.userBy m .name a
+        allGroups = List.map .name m.s.groups
+    in
+        [ Dialog.confirmation
+              (Dialog.config
+              |> Dialog.setOpen True
+              |> Dialog.setOnClose AddUserGroupDialogCancelled
+              )
+              { title = "Available groups"
+              , content =
+                    [ div View.Style.dialogContentPart
+                          [ View.Shared.groupsAsList m
+                                (Util.subtract allGroups u.groups)
+                                m.s.selectedUserGroupsForAdd
+                                SelectOrUnselectUserGroupToAdd ]
+                    ]
+              , actions =
+                    [ Button.text
+                          (Button.config |> Button.setOnClick AddUserGroupDialogCancelled)
+                          "Dismiss"
+                    , Button.text
+                          (Button.config
+                          |> Button.setOnClick AddUserGroupBatch
+                          |> Button.setDisabled (m.s.selectedUserGroupsForAdd == [])
+                          |> Button.setAttributes [ Dialog.defaultAction ])
+                          "Add"
+                    ]
+              }
+        ]
