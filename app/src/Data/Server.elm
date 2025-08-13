@@ -28,6 +28,12 @@ type alias ServerInfo =
     , uptimeStr : String
     }
 
+emptyServerInfo =
+    { riakVersion = ""
+    , systemVersion = ""
+    , uptime = 0
+    , uptimeStr = ""
+    }
 
 type alias ServerConfig =
     {}

@@ -78,7 +78,7 @@ currentMember =
     succeed CurrentMember
         |> required "name" string
         |> required "status" currentMemberStatus
-        |> required "system_info" decodeServerInfo
+        |> optional "system_info" decodeServerInfo Data.Server.emptyServerInfo
         |> required "is_me" bool
         |> required "reachable" bool
         |> optional "ring_pct" float -1
