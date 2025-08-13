@@ -132,28 +132,46 @@ clusterActionEncoder a =
     case a of
         Clear ->
             Json.Encode.object
-                [ ("plan", Json.Encode.string "clear") ]
+                [ ("action", Json.Encode.string "clear_plan") ]
         Commit ->
             Json.Encode.object
-                [ ("plan", Json.Encode.string "commit") ]
+                [ ("action", Json.Encode.string "commit_plan") ]
         Apply (Data.Cluster.NodeJoin b) ->
             Json.Encode.object
-                [ ("stage", Json.Encode.object [ ("join", Json.Encode.string b)]) ]
+                [ ("action", Json.Encode.string "stage_join")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+                ]
         Apply (Data.Cluster.NodeLeave b) ->
             Json.Encode.object
-                [ ("stage", Json.Encode.object [ ("leave", Json.Encode.string b)]) ]
+                [ ("action", Json.Encode.string "stage_leave")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+                ]
         Apply (Data.Cluster.NodeRemove b) ->
             Json.Encode.object
-                [ ("stage", Json.Encode.object [ ("remove", Json.Encode.string b)]) ]
+                [ ("action", Json.Encode.string "stage_remove")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+                ]
         Apply (Data.Cluster.NodeReplace b c) ->
             Json.Encode.object
-                [ ("stage", Json.Encode.object [ ("replace", Json.Encode.string (b++":"++c))]) ]
+                [ ("action", Json.Encode.string "stage_replace")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b)
+                                                , ("with", Json.Encode.string c)
+                                                ])
+                ]
         Apply (Data.Cluster.NodeForceReplace b c) ->
             Json.Encode.object
-                [ ("stage", Json.Encode.object [ ("force_replace", Json.Encode.string (b++":"++c))]) ]
+                [ ("action", Json.Encode.string "stage_force_replace")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b)
+                                                , ("with", Json.Encode.string c)
+                                                ])
+                ]
         Apply (Data.Cluster.NodeDown b) ->
             Json.Encode.object
-                [ ("node", Json.Encode.object [ ("down", Json.Encode.string b)]) ]
+                [ ("action", Json.Encode.string "down_node")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+                ]
         Apply (Data.Cluster.NodeStop b) ->
             Json.Encode.object
-                [ ("node", Json.Encode.object [ ("stop", Json.Encode.string b)]) ]
+                [ ("action", Json.Encode.string "stop_node")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+                ]
