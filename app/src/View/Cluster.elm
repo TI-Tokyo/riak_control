@@ -36,6 +36,7 @@ import Material.Card as Card
 import Material.Button as Button
 import Material.IconButton as IconButton
 import Material.TextField as TextField
+import Material.TextArea as TextArea
 import Material.List as List
 import Material.List.Item as ListItem
 import Material.Menu as Menu
@@ -63,6 +64,7 @@ makeProperContent m =
         , makeAddNodeDialog m
         , makeCluster m
         , maybeMakeReplacementDialog m
+        , maybeMakeNodeConfigDialog m
         ]
 
 makeCluster m =
@@ -169,6 +171,7 @@ makeCurrentMember m u =
                               , li "Force Replace" (AskPlanNodeForceReplace u.name)
                               , li "Down" (PlanNodeDown u.name)
                               , li "Stop" (PlanNodeStop u.name)
+                              , li "Get Config" (GetNodeConfig u.name)
                               ]
                         ]
         paint =
@@ -343,6 +346,43 @@ makeReplacementDialog m a m1 m2 =
                         ]
           }
     ]
+
+maybeMakeNodeConfigDialog m =
+    case m.s.nodeConfigShownFor of
+        Nothing -> div [] []
+        Just a ->
+            div [ style "width" "max(max-content, 80%)"
+                , style "max-height" "60%"
+                ]
+                [ Dialog.confirmation
+                      (Dialog.config |> Dialog.setOpen True |> Dialog.setOnClose NodeConfigDialogCancelled)
+                      { title = "Application environments on node " ++ a
+                      , content = [ TextArea.filled
+                                        (TextArea.config
+                                        |> TextArea.setValue (Dict.get a m.s.nodeConfigs)
+                                        |> TextArea.setRows (Just 20)
+                                        |> TextArea.setCols (Just 90)
+                                        |> TextArea.setAttributes [ attribute "spellCheck" "false"
+                                                                  , style "font-size" "small"
+                                                                  , style "font-family" "monospace"
+                                                                  , style "white-space" "pre"
+                                                                  ]
+                                        )
+                                  ]
+                      , actions =
+                            [ Button.text
+                                  (Button.config
+                                  |> Button.setOnClick NodeConfigDialogCancelled
+                                  ) "Cancel"
+                            , Button.text
+                                  (Button.config
+                                  |> Button.setOnClick NodeConfigDialogConfirmed
+                                  |> Button.setAttributes [ Dialog.defaultAction ]
+                                  ) "Apply"
+                            ]
+                      }
+                ]
+
 
 
 sortCurrent m aa =

@@ -49,7 +49,7 @@ init f =
         state =
             State
                 Data.Cluster.emptyCluster
-                [] [] []
+                Dict.empty [] [] []
                 Snackbar.initialQueue Msg.General True
                 { riakVersion = "---"
                 , systemVersion = "---"
@@ -58,7 +58,7 @@ init f =
                 }
                 (not haveCreds) f.riakNodeUrl f.riakAdminUser f.riakAdminPassword
                 -- Cluster
-                "(awaiting refresh)" Name True
+                "(awaiting refresh)" Name True Nothing
                 False ""  ""
                 "" "" "(replacement)"
                 -- User

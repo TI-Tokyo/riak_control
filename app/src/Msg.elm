@@ -71,23 +71,23 @@ type Msg
     | NodeMenuOpen String
     | NodeMenuClose
     | PlanClear
-    | PlanCleared (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanCleared (Result Http.Error Data.Cluster.ActionResult)
     | PlanCommit
-    | PlanCommitted (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanCommitted (Result Http.Error Data.Cluster.ActionResult)
     | PlanNodeJoin
-    | PlanNodeJoined (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeJoined (Result Http.Error Data.Cluster.ActionResult)
     | PlanNodeLeave String
-    | PlanNodeLeft (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeLeft (Result Http.Error Data.Cluster.ActionResult)
     | PlanNodeRemove String
-    | PlanNodeRemoved (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeRemoved (Result Http.Error Data.Cluster.ActionResult)
     | PlanNodeReplace String String
-    | PlanNodeReplaced (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeReplaced (Result Http.Error Data.Cluster.ActionResult)
     | PlanNodeForceReplace String String
-    | PlanNodeForceReplaced (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeForceReplaced (Result Http.Error Data.Cluster.ActionResult)
     | PlanNodeDown String
-    | PlanNodeDowned (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeDowned (Result Http.Error Data.Cluster.ActionResult)
     | PlanNodeStop String
-    | PlanNodeStopped (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeStopped (Result Http.Error Data.Cluster.ActionResult)
 
     | AskPlanNodeReplace String
     | PlanNodeReplaceDialogConfirmed
@@ -96,6 +96,12 @@ type Msg
     | PlanNodeForceReplaceDialogConfirmed
     | PlanNodeForceReplaceDialogCancelled
     | PlanNodeReplaceWithChanged String
+
+    | GetNodeConfig String
+    | GotNodeConfig (Result Http.Error Data.Cluster.ConfigResult)
+
+    | NodeConfigDialogConfirmed
+    | NodeConfigDialogCancelled
 
     -- TictacAAE
     | GetTtaaeReport

@@ -24,6 +24,8 @@ module Data.Json exposing
     , decodeCluster
     , decodeClusterActionResult
 
+    , decodeNodeConfig
+
     , decodeUserList
     , decodeGroupList
 
@@ -69,9 +71,9 @@ decodeCluster =
         |> required "down_nodes" (list string)
 
 
-decodeClusterActionResult : D.Decoder ClusterActionResult
+decodeClusterActionResult : D.Decoder ActionResult
 decodeClusterActionResult =
-    succeed ClusterActionResult
+    succeed ActionResult
         |> required "result" string
 
 currentMember =
@@ -123,6 +125,10 @@ transferStats =
 transferStatsState =
     map Data.Cluster.transferStatsStateFromStr string
 
+
+decodeNodeConfig =
+    succeed ConfigResult
+        |> required "result" string
 
 
 -- Security ------------------------------

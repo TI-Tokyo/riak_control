@@ -54,6 +54,7 @@ type alias Config =
 
 type alias State =
     { cluster : Cluster
+    , nodeConfigs : Dict.Dict String String
     , users : List User
     , groups : List Group
     , permissions : List String
@@ -74,6 +75,7 @@ type alias State =
     , notReadyMessage : String
     , clusterMemberSortBy : SortByField
     , clusterMemberSortOrder : SortOrder
+    , nodeConfigShownFor : Maybe String
     --
     , addNodeDialogShown : Bool
     , newNodeToJoin : String

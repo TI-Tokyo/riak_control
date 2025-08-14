@@ -167,6 +167,9 @@ stageActionFromStr a =
         "force replace" -> ForceReplace
         _ -> BAD_STAGE_ACTION
 
+type Action
+    = PlanAction
+    | ConfigAction
 
 type PlanAction
     = Clear
@@ -183,5 +186,12 @@ type StageChange
     | NodeStop String
 
 
-type alias ClusterActionResult =
+type alias ActionResult =
     { result : String }
+
+type alias ConfigResult =
+    { result : String }
+
+type ConfigAction
+    = GetNodeConfig String
+    | PutNodeConfig String String

@@ -29,6 +29,8 @@ module Request.Cluster exposing
     , stageForceReplace
     , stageDown
     , stageStop
+
+    , getNodeConfig
     )
 
 import Model exposing (Model)
@@ -119,6 +121,15 @@ stageStop : Model -> String -> Cmd Msg
 stageStop m a =
     actionRequest m (Apply (Data.Cluster.NodeStop a)) PlanNodeStopped
 
+getNodeConfig : Model -> String -> Cmd Msg
+getNodeConfig m a =
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
+        |> HttpBuilder.post
+        |> HttpBuilder.withJsonBody (configActionEncoder (Data.Cluster.GetNodeConfig a))
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withExpect (Http.expectJson GotNodeConfig Data.Json.decodeNodeConfig)
+        |> HttpBuilder.request
+
 
 actionRequest m action msg =
     Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
@@ -174,4 +185,19 @@ clusterActionEncoder a =
             Json.Encode.object
                 [ ("action", Json.Encode.string "stop_node")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+                ]
+
+configActionEncoder a =
+    case a of
+        Data.Cluster.GetNodeConfig b ->
+            Json.Encode.object
+                [ ("action", Json.Encode.string "get_config")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+                ]
+        Data.Cluster.PutNodeConfig b c ->
+            Json.Encode.object
+                [ ("action", Json.Encode.string "put_config")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b)
+                                                , ("config", Json.Encode.string c)
+                                                ])
                 ]

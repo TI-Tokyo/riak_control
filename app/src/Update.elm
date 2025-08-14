@@ -313,6 +313,30 @@ update msg m =
             , Cmd.none
             )
 
+        GetNodeConfig a ->
+            (m, Request.Cluster.getNodeConfig m a)
+        GotNodeConfig (Ok r) ->
+            let
+                s_ = m.s
+                newNodeConfigs = Dict.insert s_.nodeMenuOpenedFor r.result s_.nodeConfigs
+            in
+                ( {m | s = {s_ | nodeMenuOpenedFor = ""
+                               , nodeConfigs = newNodeConfigs
+                               , nodeConfigShownFor = Just s_.nodeMenuOpenedFor}}
+                , Cmd.none
+                )
+        GotNodeConfig (Err err) ->
+            ( handleHttpError m "Failed to get node config: " err
+            , Cmd.none
+            )
+
+        NodeConfigDialogConfirmed ->
+            let s_ = m.s in
+            ({m | s = {s_ | nodeConfigShownFor = Nothing}}, Cmd.none)
+        NodeConfigDialogCancelled ->
+            let s_ = m.s in
+            ({m | s = {s_ | nodeConfigShownFor = Nothing}}, Cmd.none)
+
         -- TictacAAE
         ------------------------------
         GetTtaaeReport ->
