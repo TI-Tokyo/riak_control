@@ -330,9 +330,41 @@ update msg m =
             , Cmd.none
             )
 
-        NodeConfigDialogConfirmed ->
+        PutNodeConfig a b c ->
+            (m, Request.Cluster.putNodeConfig m a b c)
+        PuttedNodeConfig (Ok ()) ->
+            let
+                s_ = m.s
+            in
+                ( {m | s = {s_ | nodeMenuOpenedFor = ""
+                               , nodeConfigShownFor = Nothing}}
+                , Cmd.none
+                )
+        PuttedNodeConfig (Err err) ->
+            ( handleHttpError m "Failed to put node config: " err
+            , Cmd.none
+            )
+
+        NodeConfigChanged a ->
+            let
+                _ = Debug.log "a" a
+                s_ = m.s
+                n = s_.nodeConfigShownFor |> Maybe.withDefault ""
+            in
+                ({m | s = {s_ | nodeConfigs = Dict.insert n a s_.nodeConfigs}}, Cmd.none)
+        PersistNodeConfigChanged ->
             let s_ = m.s in
-            ({m | s = {s_ | nodeConfigShownFor = Nothing}}, Cmd.none)
+            ({m | s = {s_ | nodeConfigMakePersist = not s_.nodeConfigMakePersist}}, Cmd.none)
+        NodeConfigDialogConfirmed ->
+            let
+                s_ = m.s
+                node = Maybe.withDefault "" m.s.nodeConfigShownFor
+                cfg = Maybe.withDefault "" (Dict.get node m.s.nodeConfigs)
+                persist = m.s.nodeConfigMakePersist
+            in
+                ( {m | s = {s_ | nodeConfigShownFor = Nothing}}
+                , perform (\_ -> PutNodeConfig node cfg persist) Time.now
+                )
         NodeConfigDialogCancelled ->
             let s_ = m.s in
             ({m | s = {s_ | nodeConfigShownFor = Nothing}}, Cmd.none)

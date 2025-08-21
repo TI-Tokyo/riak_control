@@ -99,7 +99,11 @@ type Msg
 
     | GetNodeConfig String
     | GotNodeConfig (Result Http.Error Data.Cluster.ConfigResult)
+    | PutNodeConfig String String Bool
+    | PuttedNodeConfig (Result Http.Error ())
 
+    | NodeConfigChanged String
+    | PersistNodeConfigChanged
     | NodeConfigDialogConfirmed
     | NodeConfigDialogCancelled
 

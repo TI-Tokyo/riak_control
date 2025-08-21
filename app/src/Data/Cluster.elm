@@ -194,4 +194,4 @@ type alias ConfigResult =
 
 type ConfigAction
     = GetNodeConfig String
-    | PutNodeConfig String String
+    | PutNodeConfig String String Bool

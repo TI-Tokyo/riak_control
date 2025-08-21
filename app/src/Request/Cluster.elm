@@ -31,6 +31,7 @@ module Request.Cluster exposing
     , stageStop
 
     , getNodeConfig
+    , putNodeConfig
     )
 
 import Model exposing (Model)
@@ -130,6 +131,15 @@ getNodeConfig m a =
         |> HttpBuilder.withExpect (Http.expectJson GotNodeConfig Data.Json.decodeNodeConfig)
         |> HttpBuilder.request
 
+putNodeConfig : Model -> String -> String -> Bool -> Cmd Msg
+putNodeConfig m a b c =
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
+        |> HttpBuilder.post
+        |> HttpBuilder.withJsonBody (configActionEncoder (Data.Cluster.PutNodeConfig a b c))
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withExpect (Http.expectWhatever PuttedNodeConfig)
+        |> HttpBuilder.request
+
 
 actionRequest m action msg =
     Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
@@ -194,10 +204,11 @@ configActionEncoder a =
                 [ ("action", Json.Encode.string "get_config")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
                 ]
-        Data.Cluster.PutNodeConfig b c ->
+        Data.Cluster.PutNodeConfig b c d ->
             Json.Encode.object
                 [ ("action", Json.Encode.string "put_config")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b)
                                                 , ("config", Json.Encode.string c)
+                                                , ("persist", Json.Encode.bool d)
                                                 ])
                 ]

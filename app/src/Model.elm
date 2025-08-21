@@ -76,6 +76,7 @@ type alias State =
     , clusterMemberSortBy : SortByField
     , clusterMemberSortOrder : SortOrder
     , nodeConfigShownFor : Maybe String
+    , nodeConfigMakePersist : Bool
     --
     , addNodeDialogShown : Bool
     , newNodeToJoin : String

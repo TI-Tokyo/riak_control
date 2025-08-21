@@ -25,6 +25,7 @@ module View.Cluster exposing
 import Model exposing (Model)
 import Msg exposing (Msg(..))
 import Data.Cluster
+import View.Cluster.Dialog
 import View.Common exposing (SortByField(..))
 import View.Shared
 import View.Style
@@ -35,17 +36,11 @@ import Html.Attributes exposing (attribute, style, src)
 import Material.Card as Card
 import Material.Button as Button
 import Material.IconButton as IconButton
-import Material.TextField as TextField
-import Material.TextArea as TextArea
 import Material.List as List
 import Material.List.Item as ListItem
 import Material.Menu as Menu
-import Material.Dialog as Dialog
 import Material.Fab as Fab
 import Material.Typography as Typography
-import Material.Select as Select
-import Material.Select.Item as SelectItem
-import Material.Switch as Switch
 import Iso8601
 import Dict
 import Numeral
@@ -61,10 +56,10 @@ makeProperContent m =
     div View.Style.topContent
         [ makeTransfers m
         , makeAddNodeFab m
-        , makeAddNodeDialog m
         , makeCluster m
-        , maybeMakeReplacementDialog m
-        , maybeMakeNodeConfigDialog m
+        , View.Cluster.Dialog.maybeMakeAddNodeDialog m
+        , View.Cluster.Dialog.maybeMakeReplacementDialog m
+        , View.Cluster.Dialog.maybeMakeNodeConfigDialog m
         ]
 
 makeCluster m =
@@ -92,46 +87,6 @@ makeAddNodeFab m =
                   )
                   (Fab.icon "add")
             ]
-
-makeAddNodeDialog m =
-    if m.s.addNodeDialogShown then
-        div []
-            [ Dialog.confirmation
-                  (Dialog.config
-                  |> Dialog.setOpen True
-                  |> Dialog.setOnClose AddNodeDialogCancelled
-                  )
-                  { title = "Add node to cluster"
-                  , content =
-                        [ div [ style "display" "grid"
-                              , style "grid-template-columns" "1"
-                              , style "row-gap" "0.3em"
-                              ]
-                              [ TextField.filled
-                                    (TextField.config
-                                    |> TextField.setLabel (Just "Node to join")
-                                    |> TextField.setValue (Just m.s.newNodeToJoin)
-                                    |> TextField.setOnInput NewClusterNodeChanged
-                                    |> TextField.setAttributes [ attribute "spellCheck" "false" ]
-                                    )
-                              ]
-                        ]
-                  , actions =
-                        [ Button.text
-                              (Button.config |> Button.setOnClick AddNodeDialogCancelled)
-                              "Cancel"
-                        , Button.text
-                              (Button.config
-                              |> Button.setOnClick PlanNodeJoin
-                              |> Button.setAttributes [ Dialog.defaultAction ]
-                              )
-                              "Add"
-                        ]
-                  }
-            ]
-    else
-        div [] []
-
 
 
 -- current cluster
@@ -171,7 +126,7 @@ makeCurrentMember m u =
                               , li "Force Replace" (AskPlanNodeForceReplace u.name)
                               , li "Down" (PlanNodeDown u.name)
                               , li "Stop" (PlanNodeStop u.name)
-                              , li "Get Config" (GetNodeConfig u.name)
+                              , li "App env" (GetNodeConfig u.name)
                               ]
                         ]
         paint =
@@ -301,88 +256,6 @@ makeFinalMember m u =
 finalMemberCardContent m u =
     let mf = (\a -> Numeral.format "000,0" a) in
     " Ring/Pending %: " ++ (mf u.ringPct) ++ " / " ++ (mf u.pendingPct)
-
-
-maybeMakeReplacementDialog m =
-    case (m.s.replaceDialogShownFor, m.s.forceReplaceDialogShownFor) of
-        ("", "") -> div [] []
-        (a, "") ->
-            div []
-                (makeReplacementDialog
-                     m ("Replace node " ++ a)
-                     PlanNodeReplaceDialogConfirmed
-                     PlanNodeReplaceDialogCancelled)
-        ("", a) ->
-            div []
-                (makeReplacementDialog
-                     m ("Force replace node " ++ a)
-                     PlanNodeForceReplaceDialogConfirmed
-                     PlanNodeForceReplaceDialogCancelled)
-        (_, _) -> div [] []
-
-makeReplacementDialog m a m1 m2 =
-    [ Dialog.confirmation
-          (Dialog.config |> Dialog.setOpen True |> Dialog.setOnClose m2)
-          { title = a
-          , content = [ TextField.filled
-                            (TextField.config
-                            |> TextField.setLabel (Just "With")
-                            |> TextField.setRequired True
-                            |> TextField.setValue (Just m.s.replaceNodeWith)
-                            |> TextField.setOnInput PlanNodeReplaceWithChanged
-                            |> TextField.setAttributes [ attribute "spellCheck" "false" ]
-                            )
-                      ]
-                  , actions =
-                        [ Button.text
-                              (Button.config
-                              |> Button.setOnClick m2
-                              ) "Cancel"
-                        , Button.text
-                              (Button.config
-                              |> Button.setOnClick m1
-                              |> Button.setAttributes [ Dialog.defaultAction ]
-                              ) "Ok"
-                        ]
-          }
-    ]
-
-maybeMakeNodeConfigDialog m =
-    case m.s.nodeConfigShownFor of
-        Nothing -> div [] []
-        Just a ->
-            div [ style "width" "max(max-content, 80%)"
-                , style "max-height" "60%"
-                ]
-                [ Dialog.confirmation
-                      (Dialog.config |> Dialog.setOpen True |> Dialog.setOnClose NodeConfigDialogCancelled)
-                      { title = "Application environments on node " ++ a
-                      , content = [ TextArea.filled
-                                        (TextArea.config
-                                        |> TextArea.setValue (Dict.get a m.s.nodeConfigs)
-                                        |> TextArea.setRows (Just 20)
-                                        |> TextArea.setCols (Just 90)
-                                        |> TextArea.setAttributes [ attribute "spellCheck" "false"
-                                                                  , style "font-size" "small"
-                                                                  , style "font-family" "monospace"
-                                                                  , style "white-space" "pre"
-                                                                  ]
-                                        )
-                                  ]
-                      , actions =
-                            [ Button.text
-                                  (Button.config
-                                  |> Button.setOnClick NodeConfigDialogCancelled
-                                  ) "Cancel"
-                            , Button.text
-                                  (Button.config
-                                  |> Button.setOnClick NodeConfigDialogConfirmed
-                                  |> Button.setAttributes [ Dialog.defaultAction ]
-                                  ) "Apply"
-                            ]
-                      }
-                ]
-
 
 
 sortCurrent m aa =
