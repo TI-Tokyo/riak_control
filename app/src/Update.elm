@@ -29,6 +29,7 @@ import Request.Admin
 import Request.Cluster
 import Request.Security
 import Request.Ttaae
+import Data.Server
 import Data.Cluster exposing (emptyCluster)
 import Data.Security exposing (dummyUser, dummyGroup)
 import Data.Ttaae
@@ -42,6 +43,7 @@ import Platform.Cmd
 import Dict exposing (Dict)
 import Json.Decode
 import Http
+import Process
 import Material.Snackbar as Snackbar
 
 
@@ -146,11 +148,14 @@ update msg m =
                            , notReadyMessage = ""}}, Cmd.none)
         GotCluster (Err (Http.BadStatus 425)) ->
             let s_ = m.s in
-            ({m | s = {s_ | notReadyMessage = "ring not ready"}}
+            ({m | s = {s_ | cluster = Data.Cluster.emptyCluster
+                          , notReadyMessage = "ring not ready"}}
             , Cmd.none
             )
         GotCluster (Err err) ->
-            ( handleHttpError m "Failed to fetch cluster status: " err
+            let s_ = m.s in
+            ({m | s = {s_ | cluster = Data.Cluster.emptyCluster
+                          , notReadyMessage = explainHttpError err}}
             , Cmd.none
             )
 
@@ -347,7 +352,6 @@ update msg m =
 
         NodeConfigChanged a ->
             let
-                _ = Debug.log "a" a
                 s_ = m.s
                 n = s_.nodeConfigShownFor |> Maybe.withDefault ""
             in
@@ -368,6 +372,91 @@ update msg m =
         NodeConfigDialogCancelled ->
             let s_ = m.s in
             ({m | s = {s_ | nodeConfigShownFor = Nothing}}, Cmd.none)
+
+        SignalNodeRestart a ->
+            let s_ = m.s in
+            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Restarting " ++ a)) m.s.msgQueue}}
+            , Request.Cluster.signalRestart m a
+            )
+        SignalledNodeRestart (Ok ()) ->
+            (m, Cmd.none)
+        SignalledNodeRestart (Err err) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Failed to signal node restart: " ++ (explainHttpError err))) m.s.msgQueue}}
+            , Cmd.none
+            )
+
+        PromptBeginRollingRestart ->
+            let s_ = m.s in
+            ( {m | s = {s_ | rollingRestartRequestShown = True}}
+            , Cmd.none
+            )
+        BeginRollingRestartConfirmed ->
+            let s_ = m.s in
+            ( {m | s = {s_ | rollingRestartRequestShown = False}}
+            , perform (\_ -> BeginRollingRestart) Time.now
+            )
+        BeginRollingRestartCancelled ->
+            let s_ = m.s in
+            ( {m | s = {s_ | rollingRestartRequestShown = False}}
+            , Cmd.none
+            )
+        BeginRollingRestart ->
+            let
+                s_ = m.s
+                claimantLast = (\a b -> if a.claimant then GT else LT)
+                rp = s_.cluster.current
+                   |> List.sortWith claimantLast
+                   |> List.map (\{name, systemInfo} -> { name = name
+                                                       , lastUptime = systemInfo.uptime
+                                                       })
+            in
+                ( {m | s = {s_ | nodeBeingRestartedNow = Nothing
+                               , rollingRestartQueue = rp}}
+                , perform (\_ -> AttemptNodeRestart) Time.now
+                )
+
+        AttemptNodeRestart ->
+            let s_ = m.s in
+            if s_.rollingRestartQueue == [] then
+                ( {m | s = {s_ | nodeBeingRestartedNow = Nothing
+                               , msgQueue = Snackbar.addMessage
+                                     (Snackbar.message ("rolling restart completed")) m.s.msgQueue}}
+                , Cmd.none
+                )
+            else
+                if Model.clusterIsStable m then
+                    let
+                        (n0, nn) = Util.headAndTail s_.rollingRestartQueue {name = "", lastUptime = 0}
+                    in
+                        ( {m | s = {s_ | rollingRestartQueue = nn
+                                       , nodeBeingRestartedNow = Just n0}}
+                        , Cmd.batch [ perform (\_ -> SignalNodeRestart n0.name) Time.now
+                                    , perform (\_ -> WaitForNode n0) (Process.sleep 5000
+                                                                     |> andThen (\_ -> Time.now))
+                                    ]
+                        )
+                else
+                    ( m
+                    , perform (\_ -> AttemptNodeRestart) (Process.sleep 5000
+                                                         |> andThen (\_ -> Time.now))
+                    )
+        WaitForNode n ->
+            let
+                currentUptime =
+                    case Model.nodeBy m .name n.name of
+                        Nothing ->
+                            -1
+                        Just cm ->
+                            cm.systemInfo.uptime
+            in
+                if currentUptime /= -1 && currentUptime < n.lastUptime then
+                    (m, perform (\_ -> AttemptNodeRestart) Time.now)
+                else
+                    (m, perform (\_ -> WaitForNode n) (Process.sleep 5000 |> andThen (\_ -> Time.now)))
+
 
         -- TictacAAE
         ------------------------------
@@ -712,13 +801,8 @@ update msg m =
             ({m|t = t}, Cmd.none)
 
         -- system
-        NoOp ->
-            (m, Cmd.none)
-        Discard _ ->
-            (m, Cmd.none)
-
         Tick a ->
-            if m.s.activeTab == Msg.Cluster then
+            if m.s.activeTab == Msg.Cluster || m.s.rollingRestartQueue /= [] then
                 ({ m | t = a}, Request.Cluster.getCluster m)
             else
                 (m, Cmd.none)

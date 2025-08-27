@@ -22,6 +22,7 @@ module View.Cluster.Dialog exposing
     ( maybeMakeAddNodeDialog
     , maybeMakeReplacementDialog
     , maybeMakeNodeConfigDialog
+    , maybePromptRollingRestartDialog
     )
 
 import Model exposing (Model)
@@ -176,6 +177,29 @@ maybeMakeNodeConfigDialog m =
                             ]
                       }
                 ]
+
+
+maybePromptRollingRestartDialog m =
+    if m.s.rollingRestartRequestShown then
+        div []
+            [ Dialog.confirmation
+                  (Dialog.config |> Dialog.setOpen True |> Dialog.setOnClose BeginRollingRestartCancelled)
+                  { title = "Rolling restart"
+                  , content = [ text "Begin rolling restart of the cluster?" ]
+                  , actions =
+                        [ Button.text
+                              (Button.config
+                              |> Button.setOnClick BeginRollingRestartCancelled
+                              ) "No"
+                        , Button.text
+                              (Button.config
+                              |> Button.setOnClick BeginRollingRestartConfirmed
+                              ) "Yes"
+                        ]
+                  }
+            ]
+    else
+        div [] []
 
 
 

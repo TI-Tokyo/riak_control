@@ -26,6 +26,14 @@ import Iso8601
 import Regex
 import Json.Print
 
+headAndTail l defaultHd =
+    case l of
+        a0 :: aa ->
+            (a0, aa)
+        _ ->
+            (defaultHd, [])
+
+
 
 isoDateToPosix : String -> Time.Posix
 isoDateToPosix a =

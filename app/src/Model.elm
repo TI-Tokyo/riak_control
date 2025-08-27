@@ -24,6 +24,8 @@ module Model exposing
     , State
     , userBy
     , groupBy
+    , nodeBy
+    , clusterIsStable
     )
 
 import Data.Server exposing (..)
@@ -55,6 +57,8 @@ type alias Config =
 type alias State =
     { cluster : Cluster
     , nodeConfigs : Dict.Dict String String
+    , rollingRestartQueue : List Data.Cluster.RestartingNode
+    , nodeBeingRestartedNow : Maybe Data.Cluster.RestartingNode
     , users : List User
     , groups : List Group
     , permissions : List String
@@ -84,6 +88,7 @@ type alias State =
     , replaceDialogShownFor : String
     , forceReplaceDialogShownFor : String
     , replaceNodeWith : String
+    , rollingRestartRequestShown : Bool
 
     -- users
     , userFilterValue : String
@@ -141,3 +146,27 @@ groupBy m by a =
     case List.filter (\x -> a == by x) m.s.groups of
         [] -> Data.Security.dummyGroup
         g :: _ -> g
+
+
+nodeBy : Model -> (CurrentMember -> String) -> String -> Maybe CurrentMember
+nodeBy m by a =
+    case List.filter (\x -> a == by x) m.s.cluster.current of
+        [] -> Nothing
+        g :: _ -> Just g
+
+
+clusterIsStable : Model -> Bool
+clusterIsStable m =
+    case ( m.s.cluster.current == []
+         , m.s.cluster.transfers == []
+         , Maybe.withDefault {name = "", lastUptime = -1} m.s.nodeBeingRestartedNow |> .name |> nodeBy m .name
+         ) of
+        (True, _, _) ->   -- no cluster view (e.g., claimant down)
+            False
+        (_, False, _) ->  -- transfers ongoing
+            False
+        (_, _, Just n) ->
+            (n.status == Data.Cluster.Valid) &&
+                (List.member "riak_kv" n.services)
+        (_, _, Nothing) ->
+            m.s.nodeBeingRestartedNow == Nothing

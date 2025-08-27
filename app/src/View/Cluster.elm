@@ -54,12 +54,14 @@ makeContent m =
 
 makeProperContent m =
     div View.Style.topContent
-        [ makeTransfers m
+        [ makeRollingRestartProgress m
+        , makeTransfers m
         , makeAddNodeFab m
         , makeCluster m
         , View.Cluster.Dialog.maybeMakeAddNodeDialog m
         , View.Cluster.Dialog.maybeMakeReplacementDialog m
         , View.Cluster.Dialog.maybeMakeNodeConfigDialog m
+        , View.Cluster.Dialog.maybePromptRollingRestartDialog m
         ]
 
 makeCluster m =
@@ -76,7 +78,7 @@ makeCluster m =
     ]
 
 makeAddNodeFab m =
-    if m.s.addNodeDialogShown then
+    if m.s.addNodeDialogShown || m.s.rollingRestartQueue /= [] then
         div [] []
     else
         div []
@@ -100,12 +102,22 @@ makeCurrentCluster m =
                     div [] [ text "(cluster is empty)" ]
                 rr ->
                     div View.Style.card rr
+        rrButtonDisabled =
+            not (Model.clusterIsStable m)
+        maybeRRButton =
+            if m.s.rollingRestartQueue == [] && m.s.cluster.stagedChanges == [] then
+                [ Button.text (Button.config
+                              |> Button.setDisabled rrButtonDisabled
+                              |> Button.setOnClick PromptBeginRollingRestart)
+                      "Rolling Restart" ]
+            else
+                []
     in
         div ([ style "padding" "1em"
              ] ++ (if haveStaged then [style "border-right" "solid grey"] else []))
-            [ section "Current Cluster"
-            , members
-            ]
+            ([ section "Current Cluster"
+             , members
+             ] ++ maybeRRButton)
 
 makeCurrentMember m u =
     let
@@ -114,8 +126,9 @@ makeCurrentMember m u =
                   [ text txt ]
              )
         menu =
-            div [ Menu.surfaceAnchor ]
-                        [ Button.text (Button.config |> Button.setOnClick (NodeMenuOpen u.name)) "..."
+            if m.s.rollingRestartQueue == [] then
+                div [ Menu.surfaceAnchor ]
+                    [ Button.text (Button.config |> Button.setOnClick (NodeMenuOpen u.name)) "..."
                         , Menu.menu
                               (Menu.config
                               |> Menu.setOpen (m.s.nodeMenuOpenedFor == u.name)
@@ -127,8 +140,11 @@ makeCurrentMember m u =
                               , li "Down" (PlanNodeDown u.name)
                               , li "Stop" (PlanNodeStop u.name)
                               , li "App env" (GetNodeConfig u.name)
+                              , li "Restart" (SignalNodeRestart u.name)
                               ]
                         ]
+            else
+                div [] []
         paint =
             case u.status of
                 Data.Cluster.Valid -> []
@@ -137,20 +153,20 @@ makeCurrentMember m u =
                 Data.Cluster.Joining -> [ style "background" "green" ]
                 _ -> []
     in
-    Card.card Card.config
-        { blocks =
-              ( Card.block <|
-                    div View.Style.cardInnerHeader
-                    [ text u.name ]
-              , [ Card.block <|
-                      div (View.Style.cardInnerContent ++ paint)
+        Card.card Card.config
+            { blocks =
+                  ( Card.block <|
+                        div View.Style.cardInnerHeader
+                        [ text u.name ]
+                  , [ Card.block <|
+                          div (View.Style.cardInnerContent ++ paint)
                           [ currentCardContent m u |> text
                           , menu
                           ]
-                ]
-              )
-        , actions = currentMemberCardActions m u
-        }
+                    ]
+                  )
+            , actions = currentMemberCardActions m u
+            }
 
 currentCardContent m u =
     let
@@ -291,6 +307,22 @@ section a =
         , style "font-variant-caps" "small-caps"
         ] [ text a ]
 
+
+makeRollingRestartProgress m =
+    if m.s.rollingRestartQueue == [] then
+        div [] []
+    else
+        let
+            endMsg =
+                case m.s.rollingRestartQueue of
+                    [] -> ""
+                    n :: _ -> ", next is " ++ n.name
+            -- _ = Debug.log "m.s.rollingRestartQueue" m.s.rollingRestartQueue
+        in
+            div [ style "color" "red"
+                ] [ text <| "Rolling restart in progress: restarting now "
+                        ++ (Maybe.withDefault {name = "", lastUptime = -1} m.s.nodeBeingRestartedNow |> .name)
+                        ++ endMsg ]
 
 makeTransfers m =
     if m.s.cluster.transfers == [] then

@@ -36,6 +36,7 @@ type alias CurrentMember =
     , systemInfo : Data.Server.ServerInfo
     , isMe : Bool
     , reachable : Bool
+    , services : List String
     , ringPct : Float
     , pendingPct : Float
     , memTotal : Int
@@ -195,3 +196,11 @@ type alias ConfigResult =
 type ConfigAction
     = GetNodeConfig String
     | PutNodeConfig String String Bool
+    | SignalRestart String
+
+
+
+type alias RestartingNode =
+    { name : String
+    , lastUptime : Int
+    }

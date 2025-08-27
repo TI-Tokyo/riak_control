@@ -83,6 +83,7 @@ currentMember =
         |> optional "system_info" decodeServerInfo Data.Server.emptyServerInfo
         |> required "is_me" bool
         |> required "reachable" bool
+        |> optional "services" (list string) []
         |> optional "ring_pct" float -1
         |> optional "pending_pct" float -1
         |> optional "mem_total" int -1

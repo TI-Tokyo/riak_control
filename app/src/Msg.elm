@@ -47,12 +47,9 @@ type Tab
     | Groups
 
 type Msg
-    = NoOp
-    | Discard String
-
     -- General
     ----------
-    | Ping
+    = Ping
     | TimedPong (Result Http.Error Int)
     | GetServerInfo
     | GotServerInfo (Result Http.Error ServerInfo)
@@ -106,6 +103,16 @@ type Msg
     | PersistNodeConfigChanged
     | NodeConfigDialogConfirmed
     | NodeConfigDialogCancelled
+
+    | SignalNodeRestart String
+    | SignalledNodeRestart (Result Http.Error ())
+
+    | PromptBeginRollingRestart
+    | BeginRollingRestartConfirmed
+    | BeginRollingRestartCancelled
+    | BeginRollingRestart
+    | AttemptNodeRestart
+    | WaitForNode Data.Cluster.RestartingNode
 
     -- TictacAAE
     | GetTtaaeReport

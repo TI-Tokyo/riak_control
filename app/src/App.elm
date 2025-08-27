@@ -49,7 +49,8 @@ init f =
         state =
             State
                 Data.Cluster.emptyCluster
-                Dict.empty [] [] []
+                Dict.empty [] Nothing
+                [] [] []
                 Snackbar.initialQueue Msg.General True
                 { riakVersion = "---"
                 , systemVersion = "---"
@@ -61,6 +62,7 @@ init f =
                 "(awaiting refresh)" Name True Nothing False
                 False ""  ""
                 "" "" "(replacement)"
+                False
                 -- User
                 "" ["Name"] Name True
                 False "(newUserName)" "(newUserPassword)" Nothing Nothing

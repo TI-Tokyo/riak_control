@@ -32,6 +32,8 @@ module Request.Cluster exposing
 
     , getNodeConfig
     , putNodeConfig
+
+    , signalRestart
     )
 
 import Model exposing (Model)
@@ -140,6 +142,15 @@ putNodeConfig m a b c =
         |> HttpBuilder.withExpect (Http.expectWhatever PuttedNodeConfig)
         |> HttpBuilder.request
 
+signalRestart : Model -> String -> Cmd Msg
+signalRestart m a =
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
+        |> HttpBuilder.post
+        |> HttpBuilder.withJsonBody (configActionEncoder (Data.Cluster.SignalRestart a))
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withExpect (Http.expectWhatever SignalledNodeRestart)
+        |> HttpBuilder.request
+
 
 actionRequest m action msg =
     Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
@@ -210,5 +221,11 @@ configActionEncoder a =
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b)
                                                 , ("config", Json.Encode.string c)
                                                 , ("persist", Json.Encode.bool d)
+                                                ])
+                ]
+        Data.Cluster.SignalRestart b ->
+            Json.Encode.object
+                [ ("action", Json.Encode.string "restart")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b)
                                                 ])
                 ]
