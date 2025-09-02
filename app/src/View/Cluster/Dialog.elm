@@ -135,6 +135,24 @@ maybeMakeNodeConfigDialog m =
     case m.s.nodeConfigShownFor of
         Nothing -> div [] []
         Just a ->
+            let
+                maybeReplaceOption =
+                    if m.s.nodeConfigPersist then
+                        [ FormField.formField
+                              (FormField.config
+                              |> FormField.setLabel (Just "Replace entirely")
+                              )
+                              [ Checkbox.checkbox
+                                    (Checkbox.config
+                                    |> Checkbox.setState (checkBoxStateFromBool m.s.nodeConfigReplace)
+                                    |> Checkbox.setOnChange NodeConfigReplaceChanged
+                                    )
+                              ]
+                        ]
+                    else
+                        []
+            in
+
             div [ style "width" "max(max-content, 80%)"
                 , style "max-height" "60%"
                 ]
@@ -153,17 +171,17 @@ maybeMakeNodeConfigDialog m =
                                                                   , style "white-space" "pre"
                                                                   ]
                                         )
-                                  ,  FormField.formField
+                                  , FormField.formField
                                         (FormField.config
-                                        |> FormField.setLabel (Just "Persist to advanced.config?")
+                                        |> FormField.setLabel (Just "Persist to advanced.config")
                                         )
                                         [ Checkbox.checkbox
                                               (Checkbox.config
-                                              |> Checkbox.setState (checkBoxStateFromBool m.s.nodeConfigMakePersist)
-                                              |> Checkbox.setOnChange PersistNodeConfigChanged
+                                              |> Checkbox.setState (checkBoxStateFromBool m.s.nodeConfigPersist)
+                                              |> Checkbox.setOnChange NodeConfigPersistChanged
                                               )
                                         ]
-                                  ]
+                                  ] ++ maybeReplaceOption
                       , actions =
                             [ Button.text
                                   (Button.config

@@ -80,7 +80,8 @@ type alias State =
     , clusterMemberSortBy : SortByField
     , clusterMemberSortOrder : SortOrder
     , nodeConfigShownFor : Maybe String
-    , nodeConfigMakePersist : Bool
+    , nodeConfigPersist : Bool
+    , nodeConfigReplace : Bool
     --
     , addNodeDialogShown : Bool
     , newNodeToJoin : String

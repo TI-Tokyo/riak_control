@@ -133,11 +133,11 @@ getNodeConfig m a =
         |> HttpBuilder.withExpect (Http.expectJson GotNodeConfig Data.Json.decodeNodeConfig)
         |> HttpBuilder.request
 
-putNodeConfig : Model -> String -> String -> Bool -> Cmd Msg
-putNodeConfig m a b c =
+putNodeConfig : Model -> String -> String -> Bool -> Bool -> Cmd Msg
+putNodeConfig m a b c d =
     Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
         |> HttpBuilder.post
-        |> HttpBuilder.withJsonBody (configActionEncoder (Data.Cluster.PutNodeConfig a b c))
+        |> HttpBuilder.withJsonBody (configActionEncoder (Data.Cluster.PutNodeConfig a b c d))
         |> HttpBuilder.withHeaders (stdHeaders m)
         |> HttpBuilder.withExpect (Http.expectWhatever PuttedNodeConfig)
         |> HttpBuilder.request
@@ -215,12 +215,13 @@ configActionEncoder a =
                 [ ("action", Json.Encode.string "get_config")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
                 ]
-        Data.Cluster.PutNodeConfig b c d ->
+        Data.Cluster.PutNodeConfig b c d e ->
             Json.Encode.object
                 [ ("action", Json.Encode.string "put_config")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b)
                                                 , ("config", Json.Encode.string c)
                                                 , ("persist", Json.Encode.bool d)
+                                                , ("replace", Json.Encode.bool e)
                                                 ])
                 ]
         Data.Cluster.SignalRestart b ->

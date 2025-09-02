@@ -59,7 +59,7 @@ init f =
                 }
                 (not haveCreds) f.riakNodeUrl f.riakAdminUser f.riakAdminPassword
                 -- Cluster
-                "(awaiting refresh)" Name True Nothing False
+                "(awaiting refresh)" Name True Nothing False False
                 False ""  ""
                 "" "" "(replacement)"
                 False

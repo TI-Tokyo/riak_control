@@ -335,8 +335,8 @@ update msg m =
             , Cmd.none
             )
 
-        PutNodeConfig a b c ->
-            (m, Request.Cluster.putNodeConfig m a b c)
+        PutNodeConfig a b c d ->
+            (m, Request.Cluster.putNodeConfig m a b c d)
         PuttedNodeConfig (Ok ()) ->
             let
                 s_ = m.s
@@ -356,18 +356,21 @@ update msg m =
                 n = s_.nodeConfigShownFor |> Maybe.withDefault ""
             in
                 ({m | s = {s_ | nodeConfigs = Dict.insert n a s_.nodeConfigs}}, Cmd.none)
-        PersistNodeConfigChanged ->
+        NodeConfigPersistChanged ->
             let s_ = m.s in
-            ({m | s = {s_ | nodeConfigMakePersist = not s_.nodeConfigMakePersist}}, Cmd.none)
+            ({m | s = {s_ | nodeConfigPersist = not s_.nodeConfigPersist}}, Cmd.none)
+        NodeConfigReplaceChanged ->
+            let s_ = m.s in
+            ({m | s = {s_ | nodeConfigReplace = not s_.nodeConfigReplace}}, Cmd.none)
         NodeConfigDialogConfirmed ->
             let
                 s_ = m.s
                 node = Maybe.withDefault "" m.s.nodeConfigShownFor
                 cfg = Maybe.withDefault "" (Dict.get node m.s.nodeConfigs)
-                persist = m.s.nodeConfigMakePersist
             in
                 ( {m | s = {s_ | nodeConfigShownFor = Nothing}}
-                , perform (\_ -> PutNodeConfig node cfg persist) Time.now
+                , perform (\_ -> PutNodeConfig node cfg m.s.nodeConfigPersist m.s.nodeConfigReplace)
+                    Time.now
                 )
         NodeConfigDialogCancelled ->
             let s_ = m.s in

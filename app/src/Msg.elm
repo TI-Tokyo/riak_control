@@ -96,11 +96,12 @@ type Msg
 
     | GetNodeConfig String
     | GotNodeConfig (Result Http.Error Data.Cluster.ConfigResult)
-    | PutNodeConfig String String Bool
+    | PutNodeConfig String String Bool Bool
     | PuttedNodeConfig (Result Http.Error ())
 
     | NodeConfigChanged String
-    | PersistNodeConfigChanged
+    | NodeConfigPersistChanged
+    | NodeConfigReplaceChanged
     | NodeConfigDialogConfirmed
     | NodeConfigDialogCancelled
 
