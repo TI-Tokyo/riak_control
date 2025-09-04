@@ -194,8 +194,9 @@ type alias ConfigResult =
     { result : String }
 
 type ConfigAction
-    = GetNodeConfig String
-    | PutNodeConfig String String Bool Bool
+    = GetNodeAppEnv String
+    | GetNodeAdvancedConfig String
+    | PutNodeAdvancedConfig String String
     | SignalRestart String
 
 

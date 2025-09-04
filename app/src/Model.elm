@@ -56,7 +56,8 @@ type alias Config =
 
 type alias State =
     { cluster : Cluster
-    , nodeConfigs : Dict.Dict String String
+    , nodeAdvancedConfigs : Dict.Dict String String
+    , nodeAppEnvs : Dict.Dict String String
     , rollingRestartQueue : List Data.Cluster.RestartingNode
     , nodeBeingRestartedNow : Maybe Data.Cluster.RestartingNode
     , users : List User
@@ -79,9 +80,8 @@ type alias State =
     , notReadyMessage : String
     , clusterMemberSortBy : SortByField
     , clusterMemberSortOrder : SortOrder
-    , nodeConfigShownFor : Maybe String
-    , nodeConfigPersist : Bool
-    , nodeConfigReplace : Bool
+    , nodeAppEnvShownFor : Maybe String
+    , nodeAdvancedConfigShownFor : Maybe String
     --
     , addNodeDialogShown : Bool
     , newNodeToJoin : String

@@ -318,63 +318,76 @@ update msg m =
             , Cmd.none
             )
 
-        GetNodeConfig a ->
-            (m, Request.Cluster.getNodeConfig m a)
-        GotNodeConfig (Ok r) ->
+        GetNodeAppEnv a ->
+            (m, Request.Cluster.getNodeAppEnv m a)
+        GotNodeAppEnv (Ok r) ->
             let
                 s_ = m.s
-                newNodeConfigs = Dict.insert s_.nodeMenuOpenedFor r.result s_.nodeConfigs
+                newNodeAppEnvs = Dict.insert s_.nodeMenuOpenedFor r.result s_.nodeAppEnvs
             in
                 ( {m | s = {s_ | nodeMenuOpenedFor = ""
-                               , nodeConfigs = newNodeConfigs
-                               , nodeConfigShownFor = Just s_.nodeMenuOpenedFor}}
+                               , nodeAppEnvs = newNodeAppEnvs
+                               , nodeAppEnvShownFor = Just s_.nodeMenuOpenedFor}}
                 , Cmd.none
                 )
-        GotNodeConfig (Err err) ->
-            ( handleHttpError m "Failed to get node config: " err
+        GotNodeAppEnv (Err err) ->
+            ( handleHttpError m "Failed to get node app envs: " err
+            , Cmd.none
+            )
+        NodeAppEnvDialogDismissed ->
+            let s_ = m.s in
+            ({m | s = {s_ | nodeAppEnvShownFor = Nothing}}, Cmd.none)
+
+
+        GetNodeAdvancedConfig a ->
+            (m, Request.Cluster.getNodeAdvancedConfig m a)
+        GotNodeAdvancedConfig (Ok r) ->
+            let
+                s_ = m.s
+                newNodeAdvancedConfigs = Dict.insert s_.nodeMenuOpenedFor r.result s_.nodeAdvancedConfigs
+            in
+                ( {m | s = {s_ | nodeMenuOpenedFor = ""
+                               , nodeAdvancedConfigs = newNodeAdvancedConfigs
+                               , nodeAdvancedConfigShownFor = Just s_.nodeMenuOpenedFor}}
+                , Cmd.none
+                )
+        GotNodeAdvancedConfig (Err err) ->
+            ( handleHttpError m "Failed to get node advanced.config: " err
             , Cmd.none
             )
 
-        PutNodeConfig a b c d ->
-            (m, Request.Cluster.putNodeConfig m a b c d)
-        PuttedNodeConfig (Ok ()) ->
-            let
-                s_ = m.s
-            in
-                ( {m | s = {s_ | nodeMenuOpenedFor = ""
-                               , nodeConfigShownFor = Nothing}}
-                , Cmd.none
-                )
-        PuttedNodeConfig (Err err) ->
-            ( handleHttpError m "Failed to put node config: " err
+        PutNodeAdvancedConfig a b ->
+            (m, Request.Cluster.putNodeAdvancedConfig m a b)
+        PuttedNodeAdvancedConfig (Ok ()) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | nodeMenuOpenedFor = ""
+                       , nodeAdvancedConfigShownFor = Nothing}}
+            , Cmd.none
+            )
+        PuttedNodeAdvancedConfig (Err err) ->
+            ( handleHttpError m "Failed to put node advanced.config: " err
             , Cmd.none
             )
 
-        NodeConfigChanged a ->
+        NodeAdvancedConfigChanged a ->
             let
                 s_ = m.s
-                n = s_.nodeConfigShownFor |> Maybe.withDefault ""
+                n = s_.nodeAdvancedConfigShownFor |> Maybe.withDefault ""
             in
-                ({m | s = {s_ | nodeConfigs = Dict.insert n a s_.nodeConfigs}}, Cmd.none)
-        NodeConfigPersistChanged ->
-            let s_ = m.s in
-            ({m | s = {s_ | nodeConfigPersist = not s_.nodeConfigPersist}}, Cmd.none)
-        NodeConfigReplaceChanged ->
-            let s_ = m.s in
-            ({m | s = {s_ | nodeConfigReplace = not s_.nodeConfigReplace}}, Cmd.none)
-        NodeConfigDialogConfirmed ->
+                ({m | s = {s_ | nodeAdvancedConfigs = Dict.insert n a s_.nodeAdvancedConfigs}}, Cmd.none)
+        NodeAdvancedConfigDialogConfirmed ->
             let
                 s_ = m.s
-                node = Maybe.withDefault "" m.s.nodeConfigShownFor
-                cfg = Maybe.withDefault "" (Dict.get node m.s.nodeConfigs)
+                node = Maybe.withDefault "" m.s.nodeAdvancedConfigShownFor
+                cfg = Maybe.withDefault "" (Dict.get node m.s.nodeAdvancedConfigs)
             in
-                ( {m | s = {s_ | nodeConfigShownFor = Nothing}}
-                , perform (\_ -> PutNodeConfig node cfg m.s.nodeConfigPersist m.s.nodeConfigReplace)
+                ( {m | s = {s_ | nodeAdvancedConfigShownFor = Nothing}}
+                , perform (\_ -> PutNodeAdvancedConfig node cfg)
                     Time.now
                 )
-        NodeConfigDialogCancelled ->
+        NodeAdvancedConfigDialogCancelled ->
             let s_ = m.s in
-            ({m | s = {s_ | nodeConfigShownFor = Nothing}}, Cmd.none)
+            ({m | s = {s_ | nodeAdvancedConfigShownFor = Nothing}}, Cmd.none)
 
         SignalNodeRestart a ->
             let s_ = m.s in

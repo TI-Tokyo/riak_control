@@ -94,16 +94,18 @@ type Msg
     | PlanNodeForceReplaceDialogCancelled
     | PlanNodeReplaceWithChanged String
 
-    | GetNodeConfig String
-    | GotNodeConfig (Result Http.Error Data.Cluster.ConfigResult)
-    | PutNodeConfig String String Bool Bool
-    | PuttedNodeConfig (Result Http.Error ())
+    | GetNodeAppEnv String
+    | GotNodeAppEnv (Result Http.Error Data.Cluster.ConfigResult)
+    | GetNodeAdvancedConfig String
+    | GotNodeAdvancedConfig (Result Http.Error Data.Cluster.ConfigResult)
+    | PutNodeAdvancedConfig String String
+    | PuttedNodeAdvancedConfig (Result Http.Error ())
 
-    | NodeConfigChanged String
-    | NodeConfigPersistChanged
-    | NodeConfigReplaceChanged
-    | NodeConfigDialogConfirmed
-    | NodeConfigDialogCancelled
+    | NodeAppEnvDialogDismissed
+
+    | NodeAdvancedConfigChanged String
+    | NodeAdvancedConfigDialogConfirmed
+    | NodeAdvancedConfigDialogCancelled
 
     | SignalNodeRestart String
     | SignalledNodeRestart (Result Http.Error ())

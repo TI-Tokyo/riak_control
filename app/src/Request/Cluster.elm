@@ -30,8 +30,9 @@ module Request.Cluster exposing
     , stageDown
     , stageStop
 
-    , getNodeConfig
-    , putNodeConfig
+    , getNodeAppEnv
+    , getNodeAdvancedConfig
+    , putNodeAdvancedConfig
 
     , signalRestart
     )
@@ -124,22 +125,31 @@ stageStop : Model -> String -> Cmd Msg
 stageStop m a =
     actionRequest m (Apply (Data.Cluster.NodeStop a)) PlanNodeStopped
 
-getNodeConfig : Model -> String -> Cmd Msg
-getNodeConfig m a =
+getNodeAppEnv : Model -> String -> Cmd Msg
+getNodeAppEnv m a =
     Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
         |> HttpBuilder.post
-        |> HttpBuilder.withJsonBody (configActionEncoder (Data.Cluster.GetNodeConfig a))
+        |> HttpBuilder.withJsonBody (configActionEncoder (Data.Cluster.GetNodeAppEnv a))
         |> HttpBuilder.withHeaders (stdHeaders m)
-        |> HttpBuilder.withExpect (Http.expectJson GotNodeConfig Data.Json.decodeNodeConfig)
+        |> HttpBuilder.withExpect (Http.expectJson GotNodeAppEnv Data.Json.decodeNodeConfig)
         |> HttpBuilder.request
 
-putNodeConfig : Model -> String -> String -> Bool -> Bool -> Cmd Msg
-putNodeConfig m a b c d =
+getNodeAdvancedConfig : Model -> String -> Cmd Msg
+getNodeAdvancedConfig m a =
     Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
         |> HttpBuilder.post
-        |> HttpBuilder.withJsonBody (configActionEncoder (Data.Cluster.PutNodeConfig a b c d))
+        |> HttpBuilder.withJsonBody (configActionEncoder (Data.Cluster.GetNodeAdvancedConfig a))
         |> HttpBuilder.withHeaders (stdHeaders m)
-        |> HttpBuilder.withExpect (Http.expectWhatever PuttedNodeConfig)
+        |> HttpBuilder.withExpect (Http.expectJson GotNodeAdvancedConfig Data.Json.decodeNodeConfig)
+        |> HttpBuilder.request
+
+putNodeAdvancedConfig : Model -> String -> String -> Cmd Msg
+putNodeAdvancedConfig m a b =
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
+        |> HttpBuilder.post
+        |> HttpBuilder.withJsonBody (configActionEncoder (Data.Cluster.PutNodeAdvancedConfig a b))
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withExpect (Http.expectWhatever PuttedNodeAdvancedConfig)
         |> HttpBuilder.request
 
 signalRestart : Model -> String -> Cmd Msg
@@ -210,18 +220,21 @@ clusterActionEncoder a =
 
 configActionEncoder a =
     case a of
-        Data.Cluster.GetNodeConfig b ->
+        Data.Cluster.GetNodeAppEnv b ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "get_config")
+                [ ("action", Json.Encode.string "get_app_env")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
                 ]
-        Data.Cluster.PutNodeConfig b c d e ->
+        Data.Cluster.GetNodeAdvancedConfig b ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "put_config")
+                [ ("action", Json.Encode.string "get_advanced_config")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+                ]
+        Data.Cluster.PutNodeAdvancedConfig b c ->
+            Json.Encode.object
+                [ ("action", Json.Encode.string "put_advanced_config")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b)
                                                 , ("config", Json.Encode.string c)
-                                                , ("persist", Json.Encode.bool d)
-                                                , ("replace", Json.Encode.bool e)
                                                 ])
                 ]
         Data.Cluster.SignalRestart b ->

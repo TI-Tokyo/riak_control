@@ -60,7 +60,8 @@ makeProperContent m =
         , makeCluster m
         , View.Cluster.Dialog.maybeMakeAddNodeDialog m
         , View.Cluster.Dialog.maybeMakeReplacementDialog m
-        , View.Cluster.Dialog.maybeMakeNodeConfigDialog m
+        , View.Cluster.Dialog.maybeMakeNodeAppEnvDialog m
+        , View.Cluster.Dialog.maybeMakeNodeAdvancedConfigDialog m
         , View.Cluster.Dialog.maybePromptRollingRestartDialog m
         ]
 
@@ -139,7 +140,8 @@ makeCurrentMember m u =
                               , li "Force Replace" (AskPlanNodeForceReplace u.name)
                               , li "Down" (PlanNodeDown u.name)
                               , li "Stop" (PlanNodeStop u.name)
-                              , li "App env" (GetNodeConfig u.name)
+                              , li "App env" (GetNodeAppEnv u.name)
+                              , li "advanced.config" (GetNodeAdvancedConfig u.name)
                               , li "Restart" (SignalNodeRestart u.name)
                               ]
                         ]

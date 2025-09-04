@@ -21,7 +21,8 @@
 module View.Cluster.Dialog exposing
     ( maybeMakeAddNodeDialog
     , maybeMakeReplacementDialog
-    , maybeMakeNodeConfigDialog
+    , maybeMakeNodeAppEnvDialog
+    , maybeMakeNodeAdvancedConfigDialog
     , maybePromptRollingRestartDialog
     )
 
@@ -131,65 +132,63 @@ maybeMakeAddNodeDialog m =
 
 
 
-maybeMakeNodeConfigDialog m =
-    case m.s.nodeConfigShownFor of
+maybeMakeNodeAppEnvDialog m =
+    case m.s.nodeAppEnvShownFor of
         Nothing -> div [] []
         Just a ->
-            let
-                maybeReplaceOption =
-                    if m.s.nodeConfigPersist then
-                        [ FormField.formField
-                              (FormField.config
-                              |> FormField.setLabel (Just "Replace entirely")
-                              )
-                              [ Checkbox.checkbox
-                                    (Checkbox.config
-                                    |> Checkbox.setState (checkBoxStateFromBool m.s.nodeConfigReplace)
-                                    |> Checkbox.setOnChange NodeConfigReplaceChanged
-                                    )
-                              ]
-                        ]
-                    else
-                        []
-            in
-
             div [ style "width" "max(max-content, 80%)"
                 , style "max-height" "60%"
                 ]
                 [ Dialog.confirmation
-                      (Dialog.config |> Dialog.setOpen True |> Dialog.setOnClose NodeConfigDialogCancelled)
+                      (Dialog.config |> Dialog.setOpen True |> Dialog.setOnClose NodeAppEnvDialogDismissed)
                       { title = "Application environments on node " ++ a
+                      , content = [ div [ style "font-size" "small"
+                                        , style "font-family" "monospace"
+                                        , style "white-space" "pre"
+                                        ]
+                                        [ text <| Maybe.withDefault "" (Dict.get a m.s.nodeAppEnvs) ]
+                                  ]
+                      , actions =
+                            [ Button.text
+                                  (Button.config
+                                  |> Button.setOnClick NodeAppEnvDialogDismissed
+                                  ) "Dismiss"
+                            ]
+                      }
+                ]
+
+
+maybeMakeNodeAdvancedConfigDialog m =
+    case m.s.nodeAdvancedConfigShownFor of
+        Nothing -> div [] []
+        Just a ->
+            div [ style "width" "max(max-content, 80%)"
+                , style "max-height" "60%"
+                ]
+                [ Dialog.confirmation
+                      (Dialog.config |> Dialog.setOpen True |> Dialog.setOnClose NodeAdvancedConfigDialogCancelled)
+                      { title = "advanced.config on node " ++ a
                       , content = [ TextArea.filled
                                         (TextArea.config
-                                        |> TextArea.setValue (Dict.get a m.s.nodeConfigs)
+                                        |> TextArea.setValue (Dict.get a m.s.nodeAdvancedConfigs)
                                         |> TextArea.setRows (Just 20)
                                         |> TextArea.setCols (Just 90)
-                                        |> TextArea.setOnInput NodeConfigChanged
+                                        |> TextArea.setOnInput NodeAdvancedConfigChanged
                                         |> TextArea.setAttributes [ attribute "spellCheck" "false"
                                                                   , style "font-size" "small"
                                                                   , style "font-family" "monospace"
                                                                   , style "white-space" "pre"
                                                                   ]
                                         )
-                                  , FormField.formField
-                                        (FormField.config
-                                        |> FormField.setLabel (Just "Persist to advanced.config")
-                                        )
-                                        [ Checkbox.checkbox
-                                              (Checkbox.config
-                                              |> Checkbox.setState (checkBoxStateFromBool m.s.nodeConfigPersist)
-                                              |> Checkbox.setOnChange NodeConfigPersistChanged
-                                              )
-                                        ]
-                                  ] ++ maybeReplaceOption
+                                  ]
                       , actions =
                             [ Button.text
                                   (Button.config
-                                  |> Button.setOnClick NodeConfigDialogCancelled
-                                  ) "Cancel"
+                                  |> Button.setOnClick NodeAdvancedConfigDialogCancelled
+                                  ) "Dismiss"
                             , Button.text
                                   (Button.config
-                                  |> Button.setOnClick NodeConfigDialogConfirmed
+                                  |> Button.setOnClick NodeAdvancedConfigDialogConfirmed
                                   |> Button.setAttributes [ Dialog.defaultAction ]
                                   ) "Apply"
                             ]
