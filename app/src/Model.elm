@@ -31,7 +31,8 @@ module Model exposing
 import Data.Server exposing (..)
 import Data.Cluster exposing (..)
 import Data.Security exposing (..)
-import Data.Ttaae exposing (..)
+import Data.Ttaae
+import Data.Vnode
 
 import Msg
 import View.Common exposing (SortOrder, SortByField)
@@ -133,6 +134,14 @@ type alias State =
     , ttaaeTreeFilterIn : List String
     , ttaaeTreeSortBy : SortByField
     , ttaaeTreeSortOrder : SortOrder
+
+    -- Vnode
+    , vnodeStatus : Dict.Dict String (List Data.Vnode.VnodeStatus)
+    , vnodeStatusShownForNode : String
+    , vnodeStatusFilterValue : String
+    , vnodeStatusFilterIn : List String
+    , vnodeStatusSortBy : SortByField
+    , vnodeStatusSortOrder : SortOrder
     }
 
 

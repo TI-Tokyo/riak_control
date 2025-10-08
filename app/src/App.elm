@@ -75,6 +75,9 @@ init f =
                 -- TictacAAE
                 Dict.empty ""
                 "" [] TtaaeTreeStatus False
+                -- Vnode
+                Dict.empty ""
+                "" [] TtaaeTreeStatus False
         model =
             Model
                 config

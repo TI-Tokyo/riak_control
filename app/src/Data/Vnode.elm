@@ -21,7 +21,8 @@
 module Data.Vnode exposing (..)
 
 type alias VnodeStatus =
-    { backendStatus : BackendStatus
+    { idx : String
+    , backendStatus : BackendStatus
     , vnodeId : String
     , counter : Int
     , counterLease : Int
@@ -29,13 +30,19 @@ type alias VnodeStatus =
     , counterLeasing : Bool
     }
 
-type BackendStatus
+type alias BackendStatus =
+    { mod : String
+    , status : SpecificBackendStatus
+    }
+
+type SpecificBackendStatus
     = Leveled LeveledStatus
 
 type alias LeveledStatus =
-    { nActiveJournalFiles : Int
-    , avgCompactionScore : Int
-    , levelFilesCount : List Int
+    { ledgerCacheSize : Int
+    , nActiveJournalFiles : Int
+    , avgCompactionScore : Float
+    , levelFilesCount : List CountByLevel
     , pencillerInmemCacheSize : Int
     , pencillerWorkBacklogStatus : String
     , pencillerLastMergeTime : String -- Time.Posix
@@ -46,14 +53,24 @@ type alias LeveledStatus =
     , recentFetchMeanLevel : Int
     }
 
+type alias CountByLevel =
+    { level : Int
+    , count : Int
+    }
+
 type alias JournalCompactionResult =
     { filesCompacted : Int
     , score : Float
     }
 
-type VnodeAction
-    = GetVnodeStatus String PreflistParam
+type Request
+    = GetVnodeStatusAction String PreflistSelection
 
-type PreflistParam
+type PreflistSelection
     = All
-    | List String
+    | Specific (List String)
+
+preflistSelectionToStr a =
+    case a of
+        All -> "all"
+        Specific bb -> String.join "," bb

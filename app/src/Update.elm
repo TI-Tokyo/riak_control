@@ -29,10 +29,12 @@ import Request.Admin
 import Request.Cluster
 import Request.Security
 import Request.Ttaae
+import Request.Vnode
 import Data.Server
 import Data.Cluster exposing (emptyCluster)
 import Data.Security exposing (dummyUser, dummyGroup)
 import Data.Ttaae
+import Data.Vnode
 import Data.Json
 import View.Common
 import Util
@@ -505,6 +507,35 @@ update msg m =
         TtaaeTreeShowForNodeChanged a ->
             let s_ = m.s in
             ({m | s = {s_ | ttaaeReportShownForNode = a}}, Request.Ttaae.getReport m a)
+
+
+        -- Vnode
+        ------------------------------
+        GetVnodeStatus ->
+            (m, Request.Vnode.getVnodeStatus m m.s.vnodeStatusShownForNode)
+        GotVnodeStatus (Ok r) ->
+            let
+                s_ = m.s
+                prevVnodeStatus = s_.vnodeStatus
+            in
+                ( {m | s = {s_ | vnodeStatus = Dict.insert s_.vnodeStatusShownForNode r prevVnodeStatus}}
+                , Cmd.none
+                )
+        GotVnodeStatus (Err err) ->
+            ( handleHttpError m "Failed to get vnode status: " err
+            , Cmd.none
+            )
+
+        VnodeStatusSortByFieldChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | vnodeStatusSortBy = View.Common.stringToSortBy a}}, Cmd.none)
+        VnodeStatusSortOrderChanged ->
+            let s_ = m.s in
+            ({m | s = {s_ | vnodeStatusSortOrder = not s_.vnodeStatusSortOrder}}, Cmd.none)
+
+        VnodeStatusShowForNodeChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | vnodeStatusShownForNode = a}}, Request.Vnode.getVnodeStatus m a)
 
 
         -- User

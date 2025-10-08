@@ -31,6 +31,7 @@ import Data.Server exposing
     )
 import Data.Cluster exposing (Cluster, CurrentMember)
 import Data.Ttaae
+import Data.Vnode
 import Task
 import Http
 import Time
@@ -124,6 +125,14 @@ type Msg
     | TtaaeTreeSortByFieldChanged String
     | TtaaeTreeSortOrderChanged
     | TtaaeTreeShowForNodeChanged String
+
+    -- Vnode
+    | GetVnodeStatus
+    | GotVnodeStatus (Result Http.Error (List Data.Vnode.VnodeStatus))
+
+    | VnodeStatusSortByFieldChanged String
+    | VnodeStatusSortOrderChanged
+    | VnodeStatusShowForNodeChanged String
 
     -- Users
     | ListUsers

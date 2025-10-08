@@ -32,12 +32,15 @@ module Data.Json exposing
     , decodePermissionList
 
     , decodeTtaaeReport
+
+    , decodeVnodeStatusList
     )
 
 import Data.Server exposing (..)
 import Data.Cluster exposing (..)
 import Data.Security exposing (..)
-import Data.Ttaae
+import Data.Ttaae as Ttaae
+import Data.Vnode as Vnode
 import Util
 
 import Json.Decode as D exposing (succeed, list, string, int, float, bool, map, dict, nullable, oneOf, null)
@@ -169,12 +172,12 @@ decodePermissionList =
 
 
 -- TictacAAE
-decodeTtaaeReport : D.Decoder (Dict String (List Data.Ttaae.TtaaeTree))
+decodeTtaaeReport : D.Decoder (Dict String (List Ttaae.TtaaeTree))
 decodeTtaaeReport =
     dict (list ttaaeTree)
 
 ttaaeTree =
-    succeed Data.Ttaae.TtaaeTree
+    succeed Ttaae.TtaaeTree
         |> required "partition" string
         |> required "status" ttaeTreeStatus
         |> required "last_rebuild" string
@@ -183,4 +186,54 @@ ttaaeTree =
         |> required "controller_pid" string
 
 ttaeTreeStatus =
-    map Data.Ttaae.ttaeTreeStatusFromStr string
+    map Ttaae.ttaeTreeStatusFromStr string
+
+
+-- Vnode ------------------------------
+
+decodeVnodeStatusList : D.Decoder (List Vnode.VnodeStatus)
+decodeVnodeStatusList =
+    list vnodeStatus
+
+vnodeStatus =
+    succeed Vnode.VnodeStatus
+        |> required "idx" string
+        |> required "backend_status" backendStatus
+        |> required "vnode_id" string
+        |> required "counter" int
+        |> required "counter_lease" int
+        |> required "counter_lease_size" int
+        |> required "counter_leasing" bool
+
+backendStatus =
+    succeed Vnode.BackendStatus
+        |> required "mod" string
+        |> required "status" specificBackendStatus
+
+specificBackendStatus =
+    oneOf [ map Vnode.Leveled leveledStatus ]
+
+leveledStatus =
+    succeed Vnode.LeveledStatus
+        |> required "ledger_cache_size" int
+        |> required "n_active_journal_files" int
+        |> required "avg_compaction_score" float
+        |> required "level_files_count" (list countByLevel)
+        |> required "penciller_inmem_cache_size" int
+        |> required "penciller_work_backlog_status" string
+        |> required "penciller_last_merge_time" string
+        |> required "journal_last_compaction_time" string
+        |> required "journal_last_compaction_result" journalCompactionResult
+        |> required "metadata_objsize_ratio" float
+        |> required "recent_putgethead_counts" (list int)
+        |> required "recent_fetch_mean_level" int
+
+countByLevel =
+    succeed Vnode.CountByLevel
+        |> required "level" int
+        |> required "count" int
+
+journalCompactionResult =
+    succeed Vnode.JournalCompactionResult
+        |> required "filesCompacted" int
+        |> required "score" float
