@@ -30,6 +30,7 @@ type SortByField
     | TtaaeTreeNextRebuild
     | TtaaeTreeLastRebuild
     | TtaaeTreeTotalDirtySegments
+    | VnodeStatusLedgerCache
     | Unsorted
 
 type alias SortOrder = Bool
@@ -48,6 +49,7 @@ selectSortByString a =
         TtaaeTreeNextRebuild -> "Next rebuild"
         TtaaeTreeLastRebuild -> "Last rebuild"
         TtaaeTreeTotalDirtySegments -> "Total dirty segments"
+        VnodeStatusLedgerCache -> "Ledger Cache"
         Unsorted -> "None"
 
 stringToSortBy a =
@@ -61,5 +63,6 @@ stringToSortBy a =
         "Next rebuild" -> TtaaeTreeNextRebuild
         "Last rebuild" -> TtaaeTreeLastRebuild
         "Total dirty segments" -> TtaaeTreeTotalDirtySegments
+        "Ledger Cache" -> VnodeStatusLedgerCache
         _ -> Unsorted
 

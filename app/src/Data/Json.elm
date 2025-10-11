@@ -199,7 +199,7 @@ vnodeStatus =
     succeed Vnode.VnodeStatus
         |> required "idx" string
         |> required "backend_status" backendStatus
-        |> required "vnode_id" string
+        |> required "vnodeid" string
         |> required "counter" int
         |> required "counter_lease" int
         |> required "counter_lease_size" int
@@ -215,7 +215,7 @@ specificBackendStatus =
 
 leveledStatus =
     succeed Vnode.LeveledStatus
-        |> required "ledger_cache_size" int
+        |> required "ledger_cache_size" ledgerCacheSize
         |> required "n_active_journal_files" int
         |> required "avg_compaction_score" float
         |> required "level_files_count" (list countByLevel)
@@ -228,6 +228,11 @@ leveledStatus =
         |> required "recent_putgethead_counts" (list int)
         |> required "recent_fetch_mean_level" int
 
+ledgerCacheSize =
+    succeed Vnode.LedgerCacheSize
+        |> required "size" int
+        |> required "memory" int
+
 countByLevel =
     succeed Vnode.CountByLevel
         |> required "level" int
@@ -235,5 +240,5 @@ countByLevel =
 
 journalCompactionResult =
     succeed Vnode.JournalCompactionResult
-        |> required "filesCompacted" int
+        |> required "files_compacted" int
         |> required "score" float

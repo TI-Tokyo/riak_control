@@ -43,6 +43,7 @@ import Dict exposing (Dict)
 type Tab
     = General
     | Cluster
+    | Vnode
     | Ttaae
     | Users
     | Groups

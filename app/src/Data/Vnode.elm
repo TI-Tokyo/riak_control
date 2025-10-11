@@ -39,7 +39,7 @@ type SpecificBackendStatus
     = Leveled LeveledStatus
 
 type alias LeveledStatus =
-    { ledgerCacheSize : Int
+    { ledgerCacheSize : LedgerCacheSize
     , nActiveJournalFiles : Int
     , avgCompactionScore : Float
     , levelFilesCount : List CountByLevel
@@ -51,6 +51,11 @@ type alias LeveledStatus =
     , metadataObjsizeRatio : Float
     , recentPutgetheadCounts : List Int
     , recentFetchMeanLevel : Int
+    }
+
+type alias LedgerCacheSize =
+    { size : Int
+    , memory : Int
     }
 
 type alias CountByLevel =

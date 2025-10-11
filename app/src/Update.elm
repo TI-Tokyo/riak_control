@@ -145,9 +145,20 @@ update msg m =
         GetCluster ->
             (m, Request.Cluster.getCluster m)
         GotCluster (Ok a) ->
-            let s_ = m.s in
-            ({m | s = { s_ | cluster = a
-                           , notReadyMessage = ""}}, Cmd.none)
+            let
+                s_ = m.s
+                prevT = s_.ttaaeReportShownForNode
+                prevV = s_.vnodeStatusShownForNode
+                thisNode = connectedNode a
+            in
+                ( {m | s = {s_ | cluster = a
+                               , notReadyMessage = ""
+                               , ttaaeReportShownForNode = if prevT == "" then thisNode else prevT
+                               , vnodeStatusShownForNode = if prevV == "" then thisNode else prevV
+                               }
+                  }
+                , Cmd.none
+                )
         GotCluster (Err (Http.BadStatus 425)) ->
             let s_ = m.s in
             ({m | s = {s_ | cluster = Data.Cluster.emptyCluster
@@ -481,17 +492,8 @@ update msg m =
         GetTtaaeReport ->
             (m, Request.Ttaae.getReport m m.s.ttaaeReportShownForNode)
         GotTtaaeReport (Ok r) ->
-            let
-                s_ = m.s
-                prevShownFor = s_.ttaaeReportShownForNode
-                thisNode = m.s.cluster.current
-                           |> List.filterMap (\{isMe, name} -> if isMe then Just name else Nothing)
-                           |> List.head
-                           |> Maybe.withDefault ""
-            in
-                ({m | s = {s_ | ttaaeReport = r
-                              , ttaaeReportShownForNode =
-                               if prevShownFor == "" then thisNode else prevShownFor}}, Cmd.none)
+            let s_ = m.s in
+            ({m | s = {s_ | ttaaeReport = r}}, Cmd.none)
         GotTtaaeReport (Err err) ->
             ( handleHttpError m "Failed to get ttaae report: " err
             , Cmd.none
@@ -850,7 +852,7 @@ update msg m =
         -- system
         Tick a ->
             if m.s.activeTab == Msg.Cluster || m.s.rollingRestartQueue /= [] then
-                ({ m | t = a}, Request.Cluster.getCluster m)
+                ({m | t = a}, Request.Cluster.getCluster m)
             else
                 (m, Cmd.none)
 
@@ -861,6 +863,7 @@ refreshTabMsg m t =
         Msg.Users -> Request.Security.listUsers m
         Msg.Groups -> Request.Security.listGroups m
         Msg.Ttaae -> Request.Ttaae.getReport m m.s.ttaaeReportShownForNode
+        Msg.Vnode -> Request.Vnode.getVnodeStatus m m.s.vnodeStatusShownForNode
 
 refreshAll m =
     Cmd.batch [ Request.Admin.getServerInfo m
@@ -917,3 +920,10 @@ handleClusterActionResult m a r =
 
 refreshCluster =
     perform (\_ -> GetCluster) Time.now
+
+
+connectedNode c =
+    c.current
+        |> List.filterMap (\{isMe, name} -> if isMe then Just name else Nothing)
+        |> List.head
+        |> Maybe.withDefault ""

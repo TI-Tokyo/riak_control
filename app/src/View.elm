@@ -25,6 +25,8 @@ import View.Cluster
 import View.Cluster.AppBarContent
 import View.Ttaae
 import View.Ttaae.AppBarContent
+import View.Vnode
+import View.Vnode.AppBarContent
 import View.User
 import View.User.AppBarContent
 import View.Group
@@ -94,6 +96,7 @@ listWhat m =
         Msg.General -> GetServerInfo
         Msg.Cluster -> GetCluster
         Msg.Ttaae -> GetTtaaeReport
+        Msg.Vnode -> GetVnodeStatus
         Msg.Users -> ListUsers
         Msg.Groups -> ListGroups
 
@@ -120,6 +123,11 @@ makeDrawer m =
                                 |> ListItem.setOnClick (TabClicked Msg.Cluster)
                                 )
                                 [ itemWithCount "Cluster" m.s.cluster.current ]
+                          , ListItem.listItem
+                                (ListItem.config
+                                |> ListItem.setOnClick (TabClicked Msg.Vnode)
+                                )
+                                [ text "Vnode" ]
                           , ListItem.listItem
                                 (ListItem.config
                                 |> ListItem.setOnClick (TabClicked Msg.Ttaae)
@@ -150,6 +158,7 @@ makeContents m =
         Msg.General -> View.General.makeContent m
         Msg.Cluster -> View.Cluster.makeContent m
         Msg.Ttaae -> View.Ttaae.makeContent m
+        Msg.Vnode -> View.Vnode.makeContent m
         Msg.Users -> View.User.makeContent m
         Msg.Groups -> View.Group.makeContent m
 
@@ -158,6 +167,7 @@ makeFilterControls m =
         Msg.General -> div [] []
         Msg.Cluster -> div View.Style.filterAndSort (View.Cluster.AppBarContent.makeFilterControls m)
         Msg.Ttaae -> div View.Style.filterAndSort (View.Ttaae.AppBarContent.makeFilterControls m)
+        Msg.Vnode -> div View.Style.filterAndSort (View.Vnode.AppBarContent.makeFilterControls m)
         Msg.Users -> div View.Style.filterAndSort (View.User.AppBarContent.makeFilterControls m)
         Msg.Groups -> div View.Style.filterAndSort (View.Group.AppBarContent.makeFilterControls m)
 
@@ -166,5 +176,6 @@ activeTabName m =
         Msg.General -> "General"
         Msg.Cluster -> "Cluster"
         Msg.Ttaae -> "TictacAAE"
+        Msg.Vnode -> "Vnode"
         Msg.Users -> "Users"
         Msg.Groups -> "Groups"
