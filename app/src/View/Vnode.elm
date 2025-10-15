@@ -37,6 +37,7 @@ import Material.List.Item as ListItem
 import Material.DataTable as DataTable
 import Material.Typography as Typography
 import Dict
+import Numeral
 
 
 makeContent m =
@@ -50,14 +51,14 @@ makeProperContent m =
         row = \{idx, vnodeId, backendStatus, counter, counterLease, counterLeaseSize, counterLeasing} ->
                   DataTable.row []
                       ([ cell idx
-                      , cell vnodeId
-                      , cell (humanReadable backendStatus.mod)
-                      ] ++ (backendStatusToCells backendStatus.status) ++
-                      [ cellr (String.fromInt counter)
-                      , cellr (String.fromInt counterLease)
-                      , cellr (String.fromInt counterLeaseSize)
-                      , cell (boolToStr counterLeasing)
-                      ])
+                       , cell vnodeId
+                       , cell (humanReadable backendStatus.mod)
+                       ] ++ (backendStatusToCells backendStatus.status) ++
+                       [ cellr (String.fromInt counter)
+                       , cellr (String.fromInt counterLease)
+                       , cellr (String.fromInt counterLeaseSize)
+                       , cell (boolToStr counterLeasing)
+                       ])
         report = Dict.get m.s.vnodeStatusShownForNode m.s.vnodeStatus
                |> Maybe.withDefault [] |> sort m
     in
@@ -82,19 +83,22 @@ makeProperContent m =
 backendStatusToCells s =
     case s of
         Vnode.Leveled a ->
-            [ cell (ledgerCacheSizeToStr a.ledgerCacheSize)
-            , cellr (String.fromInt a.nActiveJournalFiles)
-            , cellr (String.fromFloat a.avgCompactionScore)
-            , cell (countByLevelToStr a.levelFilesCount)
-            , cellr (String.fromInt a.pencillerInmemCacheSize)
-            , cell (a.pencillerWorkBacklogStatus)
-            , cell (a.pencillerLastMergeTime)
-            , cell (a.journalLastCompactionTime)
+            [ cellr (String.fromInt a.ledgerCacheSize |> naIf "-1")
+            , cellr (String.fromInt a.nActiveJournalFiles |> naIf "-1")
+            , cellr (Numeral.format "0.00" a.avgCompactionScore |> naIf "-1.00")
+            , cellr (Numeral.format "0.00" a.bestCompactionScore |> naIf "-1.00")
+            , cell (countByLevelToStr a.levelFilesCount |> naIf "")
+            , cellr (String.fromInt a.pencillerInmemCacheSize |> naIf "-1")
+            , cell (pencillerWorkBacklogStatusToStr a.pencillerWorkBacklogStatus)
+            , cell a.pencillerLastMergeTime
+            , cell a.journalLastCompactionTime
             , cell (journalLastCompactionResultToStr a.journalLastCompactionResult)
-            , cellr (String.fromFloat a.metadataObjsizeRatio)
+            , cellr (Numeral.format "0.00" a.metadataObjsizeRatio |> naIf "-1.00")
             , cell (String.join "/" (List.map String.fromInt a.recentPutgetheadCounts))
-            , cellr (String.fromInt a.recentFetchMeanLevel)
+            , cellr (String.fromInt a.recentFetchMeanLevel |> naIf "-1")
             ]
+naIf a b =
+    if a == b then "n/a" else b
 
 ledgerCacheSizeToStr {size, memory} =
     (String.fromInt size) ++ "(" ++ (String.fromInt memory) ++ ")"
@@ -106,12 +110,16 @@ countByLevelToStr ll =
 journalLastCompactionResultToStr {filesCompacted, score} =
     (String.fromInt filesCompacted) ++ ":" ++ (String.fromFloat score)
 
+pencillerWorkBacklogStatusToStr {workItems, backlog, l0Full} =
+    (String.fromInt workItems) ++ " " ++ (boolToStr backlog) ++ " " ++ (boolToStr l0Full)
+
 backendStatusToColName s =
     case s of
         "riak_kv_leveled_backend" ->
             [ cell "Ledger Cache"
             , cell "# Active Journal Files"
             , cell "Avg Compaction Score"
+            , cell "Best Compaction Score"
             , cell "Level Files Count"
             , cell "Penciller Inmem Cache"
             , cell "Penciller Work Backlog Status"
@@ -127,14 +135,29 @@ backendStatusToColName s =
 
 sort m aa =
     let
+        sCmp f =
+            \a b ->
+                case (a.backendStatus.status, b.backendStatus.status) of
+                (Vnode.Leveled s1, Vnode.Leveled s2) ->
+                    if f s1 > f s2 then
+                        GT
+                    else if f s1 < f s2 then
+                             LT
+                         else
+                             EQ
         aa0 =
             case m.s.vnodeStatusSortBy of
+                VnodeStatusLedgerCacheSize -> List.sortWith (sCmp .ledgerCacheSize) aa
+                VnodeStatusNActiveJournalFiles -> List.sortWith (sCmp .nActiveJournalFiles) aa
                 _ -> aa
     in
         if m.s.vnodeStatusSortOrder then aa0 else List.reverse aa0
 
-cell a = DataTable.cell [ style "text-align" "left" ] [ text a ]
-cellr a = DataTable.cell [ style "text-align" "right" ] [ text a ]
+cell a = DataTable.cell ([ style "text-align" "left" ] ++ (maybeGrey a)) [ text a ]
+cellr a = DataTable.cell ([ style "text-align" "right" ] ++ (maybeGrey a)) [ text a ]
+
+maybeGrey a =
+    if a == "n/a" then [ style "color" "#ababab" ] else []
 
 boolToStr a =
     case a of

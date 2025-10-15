@@ -40,7 +40,7 @@ import Material.Select.Item as SelectItem
 
 makeFilterControls m =
     let
-        n = View.Common.selectSortByString VnodeStatusLedgerCache
+        n = View.Common.selectSortByString VnodeStatusLedgerCacheSize
         (k0, kx) =
             case List.map .name m.s.cluster.current of
                 (n0 :: nn) ->
@@ -71,7 +71,8 @@ makeFilterControls m =
               (List.map
                    (\i -> let j = View.Common.selectSortByString i in
                           SelectItem.selectItem (SelectItem.config {value = j}) j)
-                   [VnodeStatusLedgerCache])
+                   [ VnodeStatusNActiveJournalFiles
+                   ])
         , Button.text (Button.config |> Button.setOnClick VnodeStatusSortOrderChanged)
             (View.Common.sortOrderText m.s.vnodeStatusSortOrder)
         ]

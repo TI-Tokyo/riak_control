@@ -77,7 +77,7 @@ init f =
                 "" [] TtaaeTreeStatus False
                 -- Vnode
                 Dict.empty ""
-                "" [] TtaaeTreeStatus False
+                "" [] VnodeStatusLedgerCacheSize False
         model =
             Model
                 config

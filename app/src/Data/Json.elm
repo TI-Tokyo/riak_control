@@ -215,28 +215,30 @@ specificBackendStatus =
 
 leveledStatus =
     succeed Vnode.LeveledStatus
-        |> required "ledger_cache_size" ledgerCacheSize
-        |> required "n_active_journal_files" int
-        |> required "avg_compaction_score" float
-        |> required "level_files_count" (list countByLevel)
-        |> required "penciller_inmem_cache_size" int
-        |> required "penciller_work_backlog_status" string
-        |> required "penciller_last_merge_time" string
-        |> required "journal_last_compaction_time" string
-        |> required "journal_last_compaction_result" journalCompactionResult
-        |> required "metadata_objsize_ratio" float
-        |> required "recent_putgethead_counts" (list int)
-        |> required "recent_fetch_mean_level" int
-
-ledgerCacheSize =
-    succeed Vnode.LedgerCacheSize
-        |> required "size" int
-        |> required "memory" int
+        |> optional "ledger_cache_size" int -1
+        |> optional "n_active_journal_files" int -1
+        |> optional "avg_compaction_score" float -1.0
+        |> optional "best_compaction_score" float -1
+        |> optional "level_files_count" (list countByLevel) []
+        |> optional "penciller_inmem_cache_size" int -1
+        |> optional "penciller_work_backlog_status" pencillerWorkBacklogStatus {workItems = -1, backlog = False, l0Full = False}
+        |> optional "penciller_last_merge_time" string "n/a"
+        |> optional "journal_last_compaction_time" string "n/a"
+        |> optional "journal_last_compaction_result" journalCompactionResult {filesCompacted = -1, score = -1.0}
+        |> optional "metadata_objsize_ratio" float -1.0
+        |> optional "recent_putgethead_counts" (list int) []
+        |> optional "recent_fetch_mean_level" int -1
 
 countByLevel =
     succeed Vnode.CountByLevel
         |> required "level" int
         |> required "count" int
+
+pencillerWorkBacklogStatus =
+    succeed Vnode.PencillerWorkBacklogStatus
+        |> required "work_items" int
+        |> required "backlog" bool
+        |> required "l0_full" bool
 
 journalCompactionResult =
     succeed Vnode.JournalCompactionResult

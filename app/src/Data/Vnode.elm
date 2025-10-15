@@ -39,12 +39,13 @@ type SpecificBackendStatus
     = Leveled LeveledStatus
 
 type alias LeveledStatus =
-    { ledgerCacheSize : LedgerCacheSize
+    { ledgerCacheSize : Int
     , nActiveJournalFiles : Int
     , avgCompactionScore : Float
+    , bestCompactionScore : Float
     , levelFilesCount : List CountByLevel
     , pencillerInmemCacheSize : Int
-    , pencillerWorkBacklogStatus : String
+    , pencillerWorkBacklogStatus : PencillerWorkBacklogStatus
     , pencillerLastMergeTime : String -- Time.Posix
     , journalLastCompactionTime : String -- Time.Posix
     , journalLastCompactionResult : JournalCompactionResult
@@ -53,14 +54,15 @@ type alias LeveledStatus =
     , recentFetchMeanLevel : Int
     }
 
-type alias LedgerCacheSize =
-    { size : Int
-    , memory : Int
-    }
-
 type alias CountByLevel =
     { level : Int
     , count : Int
+    }
+
+type alias PencillerWorkBacklogStatus =
+    { workItems : Int
+    , backlog : Bool
+    , l0Full : Bool
     }
 
 type alias JournalCompactionResult =
