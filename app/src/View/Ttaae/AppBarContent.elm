@@ -40,7 +40,7 @@ import Material.Select.Item as SelectItem
 
 makeFilterControls m =
     let
-        n = View.Common.selectSortByString TtaaeTreeStatus
+        n = View.Common.selectSortByString SortTtaaeTreeStatus
         (k0, kx) =
             case List.map .name m.s.cluster.current of
                 (n0 :: nn) ->
@@ -71,10 +71,10 @@ makeFilterControls m =
               (List.map
                    (\i -> let j = View.Common.selectSortByString i in
                           SelectItem.selectItem (SelectItem.config {value = j}) j)
-                   [ TtaaeTreeStatus
-                   , TtaaeTreeLastRebuild
-                   , TtaaeTreeNextRebuild
-                   , TtaaeTreeTotalDirtySegments
+                   [ SortTtaaeTreeStatus
+                   , SortTtaaeTreeLastRebuild
+                   , SortTtaaeTreeNextRebuild
+                   , SortTtaaeTreeTotalDirtySegments
                    ])
         , Button.text (Button.config |> Button.setOnClick TtaaeTreeSortOrderChanged)
             (View.Common.sortOrderText m.s.ttaaeTreeSortOrder)

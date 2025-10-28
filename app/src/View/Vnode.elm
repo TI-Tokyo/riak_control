@@ -86,15 +86,13 @@ backendStatusToCells s =
             [ cellr (String.fromInt a.ledgerCacheSize |> naIf "-1")
             , cellr (String.fromInt a.nActiveJournalFiles |> naIf "-1")
             , cellr (Numeral.format "0.00" a.avgCompactionScore |> naIf "-1.00")
-            , cellr (Numeral.format "0.00" a.bestCompactionScore |> naIf "-1.00")
             , cell (countByLevelToStr a.levelFilesCount |> naIf "")
             , cellr (String.fromInt a.pencillerInmemCacheSize |> naIf "-1")
             , cell (pencillerWorkBacklogStatusToStr a.pencillerWorkBacklogStatus)
             , cell a.pencillerLastMergeTime
             , cell a.journalLastCompactionTime
             , cell (journalLastCompactionResultToStr a.journalLastCompactionResult)
-            , cellr (Numeral.format "0.00" a.metadataObjsizeRatio |> naIf "-1.00")
-            , cell (String.join "/" (List.map String.fromInt a.recentPutgetheadCounts))
+            , cell (String.join "/" (List.map String.fromInt [a.getSampleCount, a.headSampleCount, a.putSampleCount]))
             , cellr (String.fromInt a.recentFetchMeanLevel |> naIf "-1")
             ]
 naIf a b =
@@ -108,10 +106,16 @@ countByLevelToStr ll =
     in List.map f ll |> String.join " "
 
 journalLastCompactionResultToStr {filesCompacted, score} =
-    (String.fromInt filesCompacted) ++ ":" ++ (String.fromFloat score)
+    if filesCompacted == -1 then
+        "n/a"
+    else
+        (String.fromInt filesCompacted) ++ ":" ++ (Numeral.format "0.00" score)
 
 pencillerWorkBacklogStatusToStr {workItems, backlog, l0Full} =
-    (String.fromInt workItems) ++ " " ++ (boolToStr backlog) ++ " " ++ (boolToStr l0Full)
+    if workItems == -1 then
+        "n/a"
+    else
+        (String.fromInt workItems) ++ " " ++ (boolToStr backlog) ++ " " ++ (boolToStr l0Full)
 
 backendStatusToColName s =
     case s of
@@ -119,15 +123,13 @@ backendStatusToColName s =
             [ cell "Ledger Cache"
             , cell "# Active Journal Files"
             , cell "Avg Compaction Score"
-            , cell "Best Compaction Score"
             , cell "Level Files Count"
             , cell "Penciller Inmem Cache"
             , cell "Penciller Work Backlog Status"
             , cell "Penciller Last Merge Time"
             , cell "Journal Last Compaction Time"
             , cell "Journal Last Compaction Result"
-            , cell "Metadata to Objsize Ratio"
-            , cell "Recent PUT/GET/HEAD Counts"
+            , cell "GET/HEAD/PUT Count"
             , cell "Recent Fetch Mean Level"
             ]
         _ ->
@@ -145,10 +147,30 @@ sort m aa =
                              LT
                          else
                              EQ
+        lfcCmp =
+            let lfc = List.foldl (\{count} q -> count + q) 0 in
+            \a b ->
+                case (a.backendStatus.status, b.backendStatus.status) of
+                (Vnode.Leveled s1, Vnode.Leveled s2) ->
+                    let (k1, k2) = (lfc s1.levelFilesCount, lfc s2.levelFilesCount) in
+                    if k1 > k2 then
+                        GT
+                    else if k1 < k2 then
+                             LT
+                         else
+                             EQ
         aa0 =
             case m.s.vnodeStatusSortBy of
-                VnodeStatusLedgerCacheSize -> List.sortWith (sCmp .ledgerCacheSize) aa
-                VnodeStatusNActiveJournalFiles -> List.sortWith (sCmp .nActiveJournalFiles) aa
+                SortVnodeBEStatusLedgerCacheSize -> List.sortWith (sCmp .ledgerCacheSize) aa
+                SortVnodeBEStatusNActiveJournalFiles -> List.sortWith (sCmp .nActiveJournalFiles) aa
+                SortVnodeBEStatusPencillerLastMergeTime -> List.sortWith (sCmp .pencillerLastMergeTime) aa
+                SortVnodeBEStatusJournalLastCompactionTime -> List.sortWith (sCmp .journalLastCompactionTime) aa
+                SortVnodeBEStatusLevelFilesCountTotal -> List.sortWith lfcCmp aa
+                SortVnodeBEStatusGetCount -> List.sortWith (sCmp .getSampleCount) aa
+                SortVnodeBEStatusHeadCount -> List.sortWith (sCmp .headSampleCount) aa
+                SortVnodeBEStatusPutCount -> List.sortWith (sCmp .putSampleCount) aa
+                SortVnodeStatusCounter -> List.sortBy .counter aa
+                SortVnodeStatusCounterLease -> List.sortBy .counterLease aa
                 _ -> aa
     in
         if m.s.vnodeStatusSortOrder then aa0 else List.reverse aa0

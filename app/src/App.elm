@@ -59,25 +59,25 @@ init f =
                 }
                 (not haveCreds) f.riakNodeUrl f.riakAdminUser f.riakAdminPassword
                 -- Cluster
-                "(awaiting refresh)" Name True Nothing Nothing
+                "(awaiting refresh)" SortName True Nothing Nothing
                 False ""  ""
                 "" "" "(replacement)"
                 False
                 -- User
-                "" ["Name"] Name True
+                "" ["Name"] SortName True
                 False "(newUserName)" "(newUserPassword)" Nothing Nothing
                 Nothing Nothing [] []
                 -- Group
-                "" ["Name"] Name True
+                "" ["Name"] SortName True
                 False "" Nothing Nothing
                 -- shared
                 Nothing Nothing  [] "" ""
                 -- TictacAAE
                 Dict.empty ""
-                "" [] TtaaeTreeStatus False
+                "" [] SortTtaaeTreeStatus False
                 -- Vnode
                 Dict.empty ""
-                "" [] VnodeStatusLedgerCacheSize False
+                "" [] SortUnsorted False
         model =
             Model
                 config

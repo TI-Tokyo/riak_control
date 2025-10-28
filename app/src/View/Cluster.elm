@@ -280,11 +280,11 @@ sortCurrent m aa =
     let
         aa0 =
             case m.s.clusterMemberSortBy of
-                Name -> List.sortBy .name aa
-                MemTotal -> List.sortBy .memTotal aa
-                MemErlang -> List.sortBy .memErlang aa
-                MemUsed -> List.sortBy .memUsed aa
---                Uptime -> List.sortBy (.systemInfo >> .uptime) aa
+                SortName -> List.sortBy .name aa
+                SortMemTotal -> List.sortBy .memTotal aa
+                SortMemErlang -> List.sortBy .memErlang aa
+                SortMemUsed -> List.sortBy .memUsed aa
+                SortUptime -> List.sortBy (.systemInfo >> .uptime) aa
                 _ -> aa
     in
         if m.s.clusterMemberSortOrder then aa0 else List.reverse aa0
@@ -293,7 +293,7 @@ sortPlanned m aa =
     let
         aa0 =
             case m.s.clusterMemberSortBy of
-                Name -> List.sortBy .name aa
+                SortName -> List.sortBy .name aa
                 _ -> aa
     in
         if m.s.clusterMemberSortOrder then aa0 else List.reverse aa0

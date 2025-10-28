@@ -42,16 +42,21 @@ type alias LeveledStatus =
     { ledgerCacheSize : Int
     , nActiveJournalFiles : Int
     , avgCompactionScore : Float
-    , bestCompactionScore : Float
     , levelFilesCount : List CountByLevel
     , pencillerInmemCacheSize : Int
     , pencillerWorkBacklogStatus : PencillerWorkBacklogStatus
     , pencillerLastMergeTime : String -- Time.Posix
     , journalLastCompactionTime : String -- Time.Posix
     , journalLastCompactionResult : JournalCompactionResult
-    , metadataObjsizeRatio : Float
-    , recentPutgetheadCounts : List Int
     , recentFetchMeanLevel : Int
+    , getSampleCount : Int
+    , getBodyTime : Int
+    , headSampleCount : Int
+    , headRspTime : Int
+    , putSampleCount : Int
+    , putPrepTime : Int
+    , putInkTime : Int
+    , putMemTime : Int
     }
 
 type alias CountByLevel =

@@ -41,7 +41,7 @@ import Material.ChipSet.Filter as FilterChipSet
 
 
 makeFilterControls m =
-    let n = View.Common.selectSortByString Name in
+    let n = View.Common.selectSortByString SortName in
     [ TextField.outlined
           (TextField.config
           |> TextField.setLabel (Just "Filter by")

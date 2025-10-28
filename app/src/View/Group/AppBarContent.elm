@@ -41,7 +41,7 @@ import Material.ChipSet.Filter as FilterChipSet
 
 
 makeFilterControls m =
-    let n = View.Common.selectSortByString Name in
+    let n = View.Common.selectSortByString SortName in
     [ TextField.outlined
           (TextField.config
           |> TextField.setLabel (Just "Filter by")
@@ -59,7 +59,7 @@ makeFilterControls m =
           (List.map
                (\i -> let j = View.Common.selectSortByString i in
                       SelectItem.selectItem (SelectItem.config {value = j}) j)
-               [Name])
+               [])
     , Button.text (Button.config |> Button.setOnClick GroupSortOrderChanged)
             (View.Common.sortOrderText m.s.groupSortOrder)
     ]

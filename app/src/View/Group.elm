@@ -82,7 +82,7 @@ sort m aa =
     let
         aa0 =
             case m.s.groupSortBy of
-                Name -> List.sortBy .name aa
+                SortName -> List.sortBy .name aa
                 _ -> aa
     in
         if m.s.groupSortOrder then aa0 else List.reverse aa0

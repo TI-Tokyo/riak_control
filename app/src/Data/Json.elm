@@ -218,16 +218,21 @@ leveledStatus =
         |> optional "ledger_cache_size" int -1
         |> optional "n_active_journal_files" int -1
         |> optional "avg_compaction_score" float -1.0
-        |> optional "best_compaction_score" float -1
         |> optional "level_files_count" (list countByLevel) []
         |> optional "penciller_inmem_cache_size" int -1
         |> optional "penciller_work_backlog_status" pencillerWorkBacklogStatus {workItems = -1, backlog = False, l0Full = False}
         |> optional "penciller_last_merge_time" string "n/a"
         |> optional "journal_last_compaction_time" string "n/a"
         |> optional "journal_last_compaction_result" journalCompactionResult {filesCompacted = -1, score = -1.0}
-        |> optional "metadata_objsize_ratio" float -1.0
-        |> optional "recent_putgethead_counts" (list int) []
         |> optional "recent_fetch_mean_level" int -1
+        |> optional "get_sample_count" int -1
+        |> optional "get_body_time" int -1
+        |> optional "head_sample_count" int -1
+        |> optional "head_rsp_time" int -1
+        |> optional "put_sample_count" int -1
+        |> optional "put_prep_time" int -1
+        |> optional "put_ink_time" int -1
+        |> optional "put_mem_time" int -1
 
 countByLevel =
     succeed Vnode.CountByLevel
