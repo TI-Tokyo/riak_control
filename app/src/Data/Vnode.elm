@@ -48,7 +48,7 @@ type alias LeveledStatus =
     , pencillerLastMergeTime : String -- Time.Posix
     , journalLastCompactionTime : String -- Time.Posix
     , journalLastCompactionResult : JournalCompactionResult
-    , recentFetchMeanLevel : Int
+
     , getSampleCount : Int
     , getBodyTime : Int
     , headSampleCount : Int
@@ -57,6 +57,8 @@ type alias LeveledStatus =
     , putPrepTime : Int
     , putInkTime : Int
     , putMemTime : Int
+
+    , fetchCountByLevel : FetchCountByLevel
     }
 
 type alias CountByLevel =
@@ -73,6 +75,31 @@ type alias PencillerWorkBacklogStatus =
 type alias JournalCompactionResult =
     { filesCompacted : Int
     , score : Float
+    }
+
+type alias FetchCountByLevel =
+    { notFound : CTStat
+    , mem : CTStat
+    , zero : CTStat
+    , one : CTStat
+    , two : CTStat
+    , three : CTStat
+    , lower : CTStat
+    }
+
+type alias CTStat =
+    { count : Int
+    , time : Int
+    }
+
+dummyFetchCountByLevel =
+    { notFound = {count = -1, time = -1}
+    , mem = {count = -1, time = -1}
+    , zero = {count = -1, time = -1}
+    , one = {count = -1, time = -1}
+    , two = {count = -1, time = -1}
+    , three = {count = -1, time = -1}
+    , lower = {count = -1, time = -1}
     }
 
 type Request

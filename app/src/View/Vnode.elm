@@ -93,7 +93,7 @@ backendStatusToCells s =
             , cell a.journalLastCompactionTime
             , cell (journalLastCompactionResultToStr a.journalLastCompactionResult)
             , cell (String.join "/" (List.map String.fromInt [a.getSampleCount, a.headSampleCount, a.putSampleCount]))
-            , cellr (String.fromInt a.recentFetchMeanLevel |> naIf "-1")
+            , cellr (fetchCountByLevelToStr a.fetchCountByLevel)
             ]
 naIf a b =
     if a == b then "n/a" else b
@@ -117,6 +117,19 @@ pencillerWorkBacklogStatusToStr {workItems, backlog, l0Full} =
     else
         (String.fromInt workItems) ++ " " ++ (boolToStr backlog) ++ " " ++ (boolToStr l0Full)
 
+
+fetchCountByLevelToStr {notFound, mem, zero, one, two, three, lower} =
+    if notFound.count + mem.count + zero.count + one.count + two.count + three.count + lower.count == 0 then
+        "n/a"
+    else
+        "notf: "++(String.fromInt notFound.count)++", "++(String.fromInt notFound.time)++" | "++
+        "mem: "++(String.fromInt mem.count)++", "++(String.fromInt mem.time)++" | "++
+        "L0: "++(String.fromInt zero.count)++", "++(String.fromInt zero.time)++" | "++
+        "L1: "++(String.fromInt one.count)++", "++(String.fromInt one.time)++" | "++
+        "L2: "++(String.fromInt two.count)++", "++(String.fromInt two.time)++" | "++
+        "L3: "++(String.fromInt three.count)++", "++(String.fromInt three.time)++" | "++
+        "L4+: "++(String.fromInt lower.count)++", "++(String.fromInt lower.time)
+
 backendStatusToColName s =
     case s of
         "riak_kv_leveled_backend" ->
@@ -130,7 +143,7 @@ backendStatusToColName s =
             , cell "Journal Last Compaction Time"
             , cell "Journal Last Compaction Result"
             , cell "GET/HEAD/PUT Count"
-            , cell "Recent Fetch Mean Level"
+            , cell "Recent Fetch Count by Level"
             ]
         _ ->
             []
@@ -191,4 +204,4 @@ humanReadable a =
         "riak_kv_leveled_backend" -> "leveled"
         "riak_kv_leveldb_backend" -> "leveldb"
         "riak_kv_bitcask_backend" -> "bitcask"
-        _ -> ""
+        _ -> a

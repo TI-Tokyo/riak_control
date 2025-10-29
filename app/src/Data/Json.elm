@@ -224,7 +224,6 @@ leveledStatus =
         |> optional "penciller_last_merge_time" string "n/a"
         |> optional "journal_last_compaction_time" string "n/a"
         |> optional "journal_last_compaction_result" journalCompactionResult {filesCompacted = -1, score = -1.0}
-        |> optional "recent_fetch_mean_level" int -1
         |> optional "get_sample_count" int -1
         |> optional "get_body_time" int -1
         |> optional "head_sample_count" int -1
@@ -233,6 +232,7 @@ leveledStatus =
         |> optional "put_prep_time" int -1
         |> optional "put_ink_time" int -1
         |> optional "put_mem_time" int -1
+        |> optional "fetch_count_by_level" fetchCountByLevel Vnode.dummyFetchCountByLevel
 
 countByLevel =
     succeed Vnode.CountByLevel
@@ -249,3 +249,18 @@ journalCompactionResult =
     succeed Vnode.JournalCompactionResult
         |> required "files_compacted" int
         |> required "score" float
+
+fetchCountByLevel =
+    succeed Vnode.FetchCountByLevel
+        |> required "not_found" ctStat
+        |> required "mem" ctStat
+        |> required "0" ctStat
+        |> required "1" ctStat
+        |> required "2" ctStat
+        |> required "3" ctStat
+        |> required "lower" ctStat
+
+ctStat =
+    succeed Vnode.CTStat
+        |> required "count" int
+        |> required "time" int
