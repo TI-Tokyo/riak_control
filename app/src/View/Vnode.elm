@@ -51,13 +51,13 @@ makeProperContent m =
         row = \{idx, vnodeId, backendStatus, counter, counterLease, counterLeaseSize, counterLeasing} ->
                   DataTable.row []
                       ([ cell idx
-                       , cell vnodeId
                        , cell (humanReadable backendStatus.mod)
                        ] ++ (backendStatusToCells backendStatus.status) ++
                        [ cellr (String.fromInt counter)
                        , cellr (String.fromInt counterLease)
                        , cellr (String.fromInt counterLeaseSize)
                        , cell (boolToStr counterLeasing)
+                       , cell vnodeId
                        ])
         report = Dict.get m.s.vnodeStatusShownForNode m.s.vnodeStatus
                |> Maybe.withDefault [] |> sort m
@@ -67,13 +67,13 @@ makeProperContent m =
                   { thead =
                         [ DataTable.row []
                               ([ cell "Partition"
-                               , cell "Vnode ID"
                                , cell "Backend"
                                ] ++ (backendStatusToColName "riak_kv_leveled_backend") ++
                                [ cell "Counter"
                                , cell "Counter Lease"
                                , cell "Counter Lease Size"
                                , cell "Counter Leasing"
+                               , cell "Vnode ID"
                                ])
                         ]
                   , tbody = List.map row report
