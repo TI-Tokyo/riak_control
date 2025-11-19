@@ -26,6 +26,7 @@ const { Elm } = require("./Main.elm");
 const app = Elm.Main.init({
     node: document.getElementById('root'),
     flags: {
+        riakControlServerUrl: "http://127.0.0.1:8091",
         riakNodeUrl: "https://127.0.0.1:11018",
         riakAdminUser: "murzyk",
         riakAdminPassword: "kolochava"

@@ -56,6 +56,9 @@ type Msg
     | GetServerInfo
     | GotServerInfo (Result Http.Error ServerInfo)
 
+    | PostScript String
+    | ScriptPosted (Result Http.Error ())
+
     -- Cluster
     | GetCluster
     | GotCluster (Result Http.Error Cluster)

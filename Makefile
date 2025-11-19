@@ -18,7 +18,7 @@ rel: compile
 	@rm -rf rel/out || :
 	@mkdir -p rel/out/www rel/out/bin
 	@cp -a app/build/* rel/out/www
-	@cp -a bin/riak-control rel/out/bin
+	@cp -a bin/riak-control bin/server.py rel/out/bin
 	@echo "Release generated in rel/out"
 
 package:

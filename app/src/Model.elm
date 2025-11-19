@@ -49,7 +49,8 @@ type alias Model =
     }
 
 type alias Config =
-    { riakNodeUrl : String
+    { riakControlServerUrl : String
+    , riakNodeUrl : String
     , riakAdminUser : String
     , riakAdminPassword : String
     , refreshEvery : Float

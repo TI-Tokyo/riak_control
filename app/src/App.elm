@@ -32,7 +32,8 @@ import Time
 import Material.Snackbar as Snackbar
 
 type alias Flags =
-    { riakNodeUrl : String
+    { riakControlServerUrl : String
+    , riakNodeUrl : String
     , riakAdminUser : String
     , riakAdminPassword : String
     }
@@ -44,6 +45,7 @@ init f =
         haveCreds = f.riakAdminPassword /= ""
         config =
             Config
+                f.riakControlServerUrl
                 f.riakNodeUrl f.riakAdminUser f.riakAdminPassword
                 3000
         state =

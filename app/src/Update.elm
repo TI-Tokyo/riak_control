@@ -25,6 +25,7 @@ module Update exposing
 
 import Model exposing (..)
 import Msg exposing (Msg(..))
+import Request.Install
 import Request.Admin
 import Request.Cluster
 import Request.Security
@@ -63,7 +64,22 @@ update msg m =
             , Cmd.none
             )
 
-        -- ServerInfo
+        -- General: InstallOptions
+        ------------------------------
+        PostScript s ->
+            (m, Request.Install.postScript m s)
+        ScriptPosted (Ok ()) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Script posted")) m.s.msgQueue}}
+            , Cmd.none
+            )
+        ScriptPosted (Err err) ->
+            ( handleHttpError m "Failed to post or exec script: " err
+            , Cmd.none
+            )
+
+        -- General: ServerInfo
         ------------------------------
         Ping ->
             let

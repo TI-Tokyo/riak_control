@@ -37,8 +37,22 @@ import Material.Typography as Typography
 
 makeContent m =
     Html.div View.Style.topContent
-        [ div [] [ makeServerInfo m ]
+        [ div [] [ makeServerInfoOrInstallOptions m ]
         , div [style "width" "max(max-content, 80%)"] (configDialog m)
+        ]
+
+makeServerInfoOrInstallOptions m =
+    if m.s.serverInfo.riakVersion == "---" then
+        makeInstallOptions m
+    else
+        makeServerInfo m
+
+makeInstallOptions m =
+    Html.div [ style "align-content" "center"
+             ]
+        [ Button.text
+              (Button.config |> Button.setOnClick (PostScript "fortune"))
+              "POST something"
         ]
 
 makeServerInfo m =

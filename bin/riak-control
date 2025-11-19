@@ -2,8 +2,10 @@
 
 PORT=${RIAK_CONTROL_PORT:-8091}
 
+script_dir=$(dirname $0)
+
 a=$set_me_from_distro_packaging
 a1=${a:-$RIAK_CONTROL_DOCROOT}
-D=${a1:-$(basename)/../www}
+D=${a1:-$script_dir/../www}
 
-(cd "$D" && python3 -m http.server $PORT)
+python3 $script_dir/server.py --port $PORT --docroot "$D"
