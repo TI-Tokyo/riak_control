@@ -20,7 +20,8 @@
 
 module View exposing (view)
 
-import View.General
+import View.Boot
+import View.Connection
 import View.Cluster
 import View.Cluster.AppBarContent
 import View.Ttaae
@@ -93,7 +94,8 @@ makeTopAppBar m =
 
 listWhat m =
     case m.s.activeTab of
-        Msg.General -> GetServerInfo
+        Msg.Boot -> NoOp
+        Msg.Connection -> GetServerInfo
         Msg.Cluster -> GetCluster
         Msg.Ttaae -> GetTtaaeReport
         Msg.Vnode -> GetVnodeStatus
@@ -114,11 +116,16 @@ makeDrawer m =
                     [ List.list List.config
                           ( ListItem.listItem
                                 (ListItem.config
-                                |> ListItem.setOnClick (TabClicked Msg.General)
+                                |> ListItem.setOnClick (TabClicked Msg.Boot)
                                 )
-                                [ text "General" ]
+                                [ text "Boot" ]
                           )
                           [ ListItem.listItem
+                                (ListItem.config
+                                |> ListItem.setOnClick (TabClicked Msg.Connection)
+                                )
+                                [ text "Connection" ]
+                          , ListItem.listItem
                                 (ListItem.config
                                 |> ListItem.setOnClick (TabClicked Msg.Cluster)
                                 )
@@ -155,7 +162,8 @@ itemWithCount s a =
 
 makeContents m =
     case m.s.activeTab of
-        Msg.General -> View.General.makeContent m
+        Msg.Boot -> View.Boot.makeContent m
+        Msg.Connection -> View.Connection.makeContent m
         Msg.Cluster -> View.Cluster.makeContent m
         Msg.Ttaae -> View.Ttaae.makeContent m
         Msg.Vnode -> View.Vnode.makeContent m
@@ -164,7 +172,8 @@ makeContents m =
 
 makeFilterControls m =
     case m.s.activeTab of
-        Msg.General -> div [] []
+        Msg.Boot -> div [] []
+        Msg.Connection -> div [] []
         Msg.Cluster -> div View.Style.filterAndSort (View.Cluster.AppBarContent.makeFilterControls m)
         Msg.Ttaae -> div View.Style.filterAndSort (View.Ttaae.AppBarContent.makeFilterControls m)
         Msg.Vnode -> div View.Style.filterAndSort (View.Vnode.AppBarContent.makeFilterControls m)
@@ -173,7 +182,8 @@ makeFilterControls m =
 
 activeTabName m =
     case m.s.activeTab of
-        Msg.General -> "General"
+        Msg.Boot -> "Boot"
+        Msg.Connection -> "Connection"
         Msg.Cluster -> "Cluster"
         Msg.Ttaae -> "TictacAAE"
         Msg.Vnode -> "Vnode"

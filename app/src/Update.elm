@@ -25,7 +25,7 @@ module Update exposing
 
 import Model exposing (..)
 import Msg exposing (Msg(..))
-import Request.Install
+import Request.Boot
 import Request.Admin
 import Request.Cluster
 import Request.Security
@@ -64,10 +64,14 @@ update msg m =
             , Cmd.none
             )
 
-        -- General: InstallOptions
+        -- Boot
         ------------------------------
+        CurrentBootScriptChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | currentBootScript = a}}, Cmd.none)
+
         PostScript s ->
-            (m, Request.Install.postScript m s)
+            (m, Request.Boot.postScript m m.s.currentBootScript)
         ScriptPosted (Ok ()) ->
             let s_ = m.s in
             ( {m | s = {s_ | msgQueue = Snackbar.addMessage
@@ -79,7 +83,7 @@ update msg m =
             , Cmd.none
             )
 
-        -- General: ServerInfo
+        -- Connection
         ------------------------------
         Ping ->
             let
@@ -390,7 +394,7 @@ update msg m =
         PuttedNodeAdvancedConfig (Ok ()) ->
             let s_ = m.s in
             ( {m | s = {s_ | nodeMenuOpenedFor = ""
-                       , nodeAdvancedConfigShownFor = Nothing}}
+                           , nodeAdvancedConfigShownFor = Nothing}}
             , Cmd.none
             )
         PuttedNodeAdvancedConfig (Err err) ->
@@ -871,10 +875,14 @@ update msg m =
                 ({m | t = a}, Request.Cluster.getCluster m)
             else
                 (m, Cmd.none)
+        NoOp ->
+            (m, Cmd.none)
+
 
 refreshTabMsg m t =
     case t of
-        Msg.General -> Request.Admin.getServerInfo m
+        Msg.Boot -> Cmd.none
+        Msg.Connection -> Request.Admin.getServerInfo m
         Msg.Cluster -> Request.Cluster.getCluster m
         Msg.Users -> Request.Security.listUsers m
         Msg.Groups -> Request.Security.listGroups m

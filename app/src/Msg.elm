@@ -41,7 +41,8 @@ import Dict exposing (Dict)
 
 
 type Tab
-    = General
+    = Boot
+    | Connection
     | Cluster
     | Vnode
     | Ttaae
@@ -49,15 +50,18 @@ type Tab
     | Groups
 
 type Msg
-    -- General
+    -- Boot
     ----------
-    = Ping
+    = CurrentBootScriptChanged String
+    | PostScript String
+    | ScriptPosted (Result Http.Error ())
+
+    -- Connection
+    ----------
+    | Ping
     | TimedPong (Result Http.Error Int)
     | GetServerInfo
     | GotServerInfo (Result Http.Error ServerInfo)
-
-    | PostScript String
-    | ScriptPosted (Result Http.Error ())
 
     -- Cluster
     | GetCluster
@@ -231,6 +235,7 @@ type Msg
 
     | NewTime Time.Posix
     | Tick Time.Posix
+    | NoOp
 
 
 getNewTime : Cmd Msg

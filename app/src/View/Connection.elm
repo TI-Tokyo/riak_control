@@ -18,83 +18,49 @@
 --
 -- ---------------------------------------------------------------------
 
-module View.General exposing (makeContent)
+module View.Connection exposing (makeContent)
 
 import Model exposing (Model)
 import Msg exposing (Msg(..))
-import View.Common
-import View.Shared
 import View.Style
-import Util
 
 import Html exposing (Html, text, div, pre)
 import Html.Attributes exposing (attribute, style)
-import Material.Card as Card
 import Material.Button as Button
 import Material.Dialog as Dialog
 import Material.TextField as TextField
 import Material.Typography as Typography
 
 makeContent m =
-    Html.div View.Style.topContent
-        [ div [] [ makeServerInfoOrInstallOptions m ]
+    div View.Style.topContent
+        [ div [] [ makeServerInfo m ]
         , div [style "width" "max(max-content, 80%)"] (configDialog m)
         ]
 
-makeServerInfoOrInstallOptions m =
-    if m.s.serverInfo.riakVersion == "---" then
-        makeInstallOptions m
-    else
-        makeServerInfo m
-
-makeInstallOptions m =
-    Html.div [ style "align-content" "center"
-             ]
-        [ Button.text
-              (Button.config |> Button.setOnClick (PostScript "fortune"))
-              "POST something"
-        ]
-
 makeServerInfo m =
-    Html.div [ style "align-content" "center"
-             ]
-        [ Html.div [ style "width" "min-content" ]
-              [ serverInfoDetails m ]
+    div []
+        [ serverInfoDetails m
         ]
 
 serverInfoDetails m =
-    Card.card Card.config
-        { blocks =
-              ( Card.block <|
-                    div View.Style.cardInnerHeader
-                        [ text "Riak node" ]
-              , [ Card.block <|
-                    div View.Style.cardInnerContent
-                        [ text (cardContent m) ]
-                ]
-              )
-        , actions = cardActions
-        }
+    div []
+        [ serverInfoDetailsContent m
+        , serverInfoDetailsActions
+        ]
 
-cardContent m =
-    "Riak node url: " ++ m.c.riakNodeUrl ++ "\n" ++
-    " Riak version: " ++ m.s.serverInfo.riakVersion ++ " on " ++ m.s.serverInfo.systemVersion ++"\n" ++
-    "       Uptime: " ++ m.s.serverInfo.uptimeStr
+serverInfoDetailsContent m =
+    div View.Style.cardInnerContent
+        [ text
+              ("Connected to: " ++ m.c.riakNodeUrl ++ "\n" ++
+               "Riak version: " ++ m.s.serverInfo.riakVersion ++ " on " ++ m.s.serverInfo.systemVersion ++"\n" ++
+               "      Uptime: " ++ m.s.serverInfo.uptimeStr)
+        ]
 
-cardActions =
-    Just <|
-        Card.actions
-            { buttons =
-                  [ Card.button (Button.config
-                                |> Button.setOnClick ShowConfigDialog
-                                ) "Change"
-                  , Card.button (Button.config
-                                |> Button.setOnClick Ping
-                                ) "Ping"
-                  ]
-            , icons =
-                []
-            }
+serverInfoDetailsActions =
+    div []
+        [ Button.text (Button.config |> Button.setOnClick ShowConfigDialog) "Change"
+        , Button.text (Button.config |> Button.setOnClick Ping) "Ping"
+        ]
 
 
 configDialog m =
@@ -106,10 +72,10 @@ configDialog m =
               )
               { title = "Riak node url and admin creds"
               , content =
-                    [ Html.div [ style "display" "grid"
-                               , style "grid-template-columns" "1"
-                               , style "row-gap" "0.3em"
-                               ]
+                    [ div [ style "display" "grid"
+                          , style "grid-template-columns" "1"
+                          , style "row-gap" "0.3em"
+                          ]
                           [ TextField.filled
                                 (TextField.config
                                 |> TextField.setAttributes [ attribute "spellCheck" "false" ]

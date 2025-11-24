@@ -70,7 +70,9 @@ type alias State =
     , activeTab : Msg.Tab
     , topDrawerOpen : Bool
 
-    -- general
+    -- boot options
+    , currentBootScript : String
+    -- connection
     , serverInfo : ServerInfo
     --
     , configDialogShown : Bool

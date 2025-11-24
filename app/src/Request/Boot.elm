@@ -18,7 +18,7 @@
 --
 -- ---------------------------------------------------------------------
 
-module Request.Install exposing
+module Request.Boot exposing
     ( postScript
     )
 
