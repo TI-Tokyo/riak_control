@@ -28,6 +28,7 @@ module Model exposing
     , clusterIsStable
     )
 
+import Data.Boot
 import Data.Server exposing (..)
 import Data.Cluster exposing (..)
 import Data.Security exposing (..)
@@ -50,6 +51,8 @@ type alias Model =
 
 type alias Config =
     { riakControlServerUrl : String
+    , riakControlServerUser : String
+    , riakControlServerPassword : String
     , riakNodeUrl : String
     , riakAdminUser : String
     , riakAdminPassword : String
@@ -71,7 +74,15 @@ type alias State =
     , topDrawerOpen : Bool
 
     -- boot options
-    , currentBootScript : String
+    , sshScriptTemplateSpecs : List Data.Boot.ScriptTemplate
+    , sshTargetHosts : List String
+    , sshScriptTemplateId : String
+    , sshScriptTemplateParams : List (String, String)
+
+    , sshStoredKeys : List Data.Boot.SshKey
+    , sshSelectedKeyId : String
+    , sshSelectedKeyBody : String
+
     -- connection
     , serverInfo : ServerInfo
     --

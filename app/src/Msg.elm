@@ -24,6 +24,7 @@ module Msg exposing
     , getNewTime
     )
 
+import Data.Boot
 import Data.Security exposing (User, Group, Grant)
 import Data.Server exposing
     ( ServerInfo
@@ -32,6 +33,7 @@ import Data.Server exposing
 import Data.Cluster exposing (Cluster, CurrentMember)
 import Data.Ttaae
 import Data.Vnode
+
 import Task
 import Http
 import Time
@@ -52,10 +54,22 @@ type Tab
 type Msg
     -- Boot
     ----------
-    = CurrentBootScriptChanged String
-    | PostScript String
-    | ScriptPosted (Result Http.Error ())
+    = GetSshScriptTemplateList
+    | GotSshScriptTemplateList (Result Http.Error (List Data.Boot.ScriptTemplate))
+    | GetSshKeyList
+    | GotSshKeyList (Result Http.Error (List Data.Boot.SshKey))
+    | StoreSshKey
+    | SshKeyStored (Result Http.Error ())
+    | DeleteSshKey
+    | SshKeyDeleted
+    | ExecSshScript
+    | SshScriptExecuted (Result Http.Error ())
 
+    | SshSelectedKeyIdChanged String
+    | SshSelectedKeyBodyChanged String
+    | SshTargetHostsChanged String
+    | SshScriptTemplateParamChanged String String
+    | SshScriptIdChanged String
     -- Connection
     ----------
     | Ping

@@ -46,6 +46,7 @@ init f =
         config =
             Config
                 f.riakControlServerUrl
+                f.riakControlServerUser f.riakControlServerPassword
                 f.riakNodeUrl f.riakAdminUser f.riakAdminPassword
                 3000
         state =
@@ -54,12 +55,10 @@ init f =
                 Dict.empty Dict.empty [] Nothing
                 [] [] []
                 Snackbar.initialQueue Msg.Connection True
-                ("#!/bin/sh\n" ++
-                 "# your script to execute on riak_control server, along the lines:\n" ++
-                 "# wget riak.deb\n" ++
-                 "# apt-get install riak\n" ++
-                 "# sed 's/info/debug/' /etc/riak/riak.conf\n" ++
-                 "# riak start")
+                -- boot
+                [] [] "wget_and_install_riak" []
+                [] "<selected-ssh-key-id>" "<ssh-key-to-store>"
+                -- config
                 { riakVersion = "---"
                 , systemVersion = "---"
                 , uptime = 0

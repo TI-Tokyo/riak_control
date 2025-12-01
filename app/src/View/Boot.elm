@@ -22,36 +22,54 @@ module View.Boot exposing (makeContent)
 
 import Model exposing (Model)
 import Msg exposing (Msg(..))
+import Data.Boot
 import View.Style
 
 import Html exposing (Html, text, div, pre)
 import Html.Attributes exposing (attribute, style, class)
 import Material.Button as Button
 import Material.Dialog as Dialog
-import Material.TextArea as TextArea
+import Material.TextField as TextField
 import Material.Typography as Typography
 
 
 makeContent m =
     div View.Style.topContent
-        [ div [] [ makeBootOption m ]
+        [ maybeMakeAddKeyDialog m
+        , maybeMakeDeleteKeyDialog m
+        , makeScriptTemplateWithParams m
         ]
 
 makeBootOption m =
     div [ style "flex-flow" "column nowrap" ]
-        [ TextArea.outlined
-              (TextArea.config
-              |> TextArea.setAttributes [ attribute "spellCheck" "false"
-                                        , class "mono-font"
-                                        , style "white-space" "pre"
-                                        ]
-              |> TextArea.setLabel Nothing
-              |> TextArea.setValue (Just m.s.currentBootScript)
-              |> TextArea.setOnInput CurrentBootScriptChanged
-              |> TextArea.setRows (Just 33)
-              |> TextArea.setCols (Just 88)
+        [ div [ style "flex-flow" "row nowrap"]
+              [ TextField.filled
+                    (TextField.config
+                    |> TextField.setLabel (Just "Key name")
+                    |> TextField.setValue (Just m.s.sshSelectedKeyId)
+                    |> TextArea.setOnInput SshSelectedKeyIdChanged
+                    )
+              , TextField.filled
+                    (TextField.config
+                    |> TextField.setLabel (Just "Key")
+                    |> TextField.setValue (Just m.s.sshSelectedKeyBody)
+                    |> TextArea.setOnInput SshSelectedKeyIdChanged
+                    )
+              , Button.text
+                    (Button.config |> Button.setOnClick StoreSshKey)
+                    "Store"
+              , Button.text
+                    (Button.config |> Button.setOnClick DeleteSshKey)
+                    "Delete"
+
+              ]
+        , TextField.filled
+              (TextField.config
+              |> TextField.setLabel (Just "Key name")
+              |> TextField.setValue (Just m.s.sshSelectedKeyId)
+              |> TextArea.setOnInput SshSelectedKeyIdChanged
               )
         , Button.text
-              (Button.config |> Button.setOnClick (PostScript "fortune"))
+              (Button.config |> Button.setOnClick SshExecScript)
               "Execute"
         ]

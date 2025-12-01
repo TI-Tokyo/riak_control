@@ -66,20 +66,95 @@ update msg m =
 
         -- Boot
         ------------------------------
-        CurrentBootScriptChanged a ->
+        GetSshScriptTemplateList ->
+            (m, Request.Boot.getSshScriptTemplateList m)
+        GotSshScriptTemplateList (Ok aa) ->
             let s_ = m.s in
-            ({m | s = {s_ | currentBootScript = a}}, Cmd.none)
-
-        PostScript s ->
-            (m, Request.Boot.postScript m m.s.currentBootScript)
-        ScriptPosted (Ok ()) ->
-            let s_ = m.s in
-            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
-                            (Snackbar.message ("Script posted")) m.s.msgQueue}}
+            ({m | s = {s_ | sshScriptTemplateSpecs = aa}}, Cmd.none)
+        GotSshScriptTemplateList (Error err) ->
+            ( handleHttpError m "Failed to get a list of script templates: " err
             , Cmd.none
             )
-        ScriptPosted (Err err) ->
-            ( handleHttpError m "Failed to post or exec script: " err
+
+        GetSshKeyList ->
+            (m, Request.Boot.getSshKeyList m)
+        GotSshKeyList (Ok aa) ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshStoredKeys = aa}}, Cmd.none)
+        GotSshKeyList (Error err) ->
+            ( handleHttpError m "Failed to get a list of stored ssh keys: " err
+            , Cmd.none
+            )
+
+        StoreSshKey ->
+            let
+                pp = { id = m.s.sshSelectedKeyId
+                     , body = m.s.sshKeyBodyToStore
+                     }
+            in
+                (m, Request.Boot.storeSshKey m pp)
+        SshKeyStored (Ok ()) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Stored ssh key " ++ m.s.sshSelectedKeyId)) m.s.msgQueue}}
+            , Cmd.none
+            )
+        SshKeyStored (Err err) ->
+            ( handleHttpError m "Failed to store ssh key: " err
+            , Cmd.none
+            )
+
+        DeleteSshKey ->
+            let
+                pp = { id = m.s.sshSelectedKeyId }
+            in
+                (m, Request.Boot.deleteSshKey m pp)
+        SshKeyDeleted (Ok ()) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Deleted ssh key " ++ m.s.sshSelectedKeyId)) m.s.msgQueue}}
+            , Cmd.none
+            )
+        SshKeyDeleted (Err err) ->
+            ( handleHttpError m "Failed to delete ssh key: " err
+            , Cmd.none
+            )
+
+        SshSelectedKeyIdChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshSelectedKeyId = a}}, Cmd.none)
+        SshSelectedKeyBodyChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshSelectedKeyBody = a}}, Cmd.none)
+
+        SshScriptIdChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshScriptTemplateId = a}}, Cmd.none)
+
+        SshScriptTemplateParamChanged a s ->
+            let
+                s_ = m.s
+                f = \(p, s0) -> if p == a then (p, s) else (p, s0)
+                pp = List.map f m.s.sshScriptTemplateParams
+            in
+                ({m | s = {s_ | sshScriptTemplateParams = pp}}, Cmd.none)
+
+        ExecSshScript ->
+            let
+                pp = { hosts = m.s.sshTargetHostList
+                     , scriptId = m.s.sshScriptTemplateId
+                     , params = m.s.sshScriptTemplateParams
+                     }
+            in
+                (m, Request.Boot.execSshScript m pp)
+        SshScriptExecuted (Ok ()) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Script executed")) m.s.msgQueue}}
+            , Cmd.none
+            )
+        SshScriptExecuted (Err err) ->
+            ( handleHttpError m "Failed to execute script: " err
             , Cmd.none
             )
 
