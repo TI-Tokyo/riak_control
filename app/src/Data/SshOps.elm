@@ -58,3 +58,10 @@ type alias SshKey =
     , created : String
     , body : String
     }
+
+
+dummyScriptTemplate =
+    { name = ""
+    , body = ""
+    , params = []
+    }

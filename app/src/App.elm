@@ -56,7 +56,7 @@ init f =
                 [] [] []
                 Snackbar.initialQueue Msg.Connection True
                 -- boot
-                [] [] "(script template id)" "(selected ssh key id)" []
+                [] [] "(script template id)" "(selected user)" "(selected ssh key id)" []
                 []
                 False "(new key id)" "(new key body)"
                 False "(key id to delete)"

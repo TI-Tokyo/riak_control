@@ -25,7 +25,7 @@ module Update exposing
 
 import Model exposing (..)
 import Msg exposing (Msg(..))
-import Request.Boot
+import Request.SshOps
 import Request.Admin
 import Request.Cluster
 import Request.Security
@@ -64,10 +64,10 @@ update msg m =
             , Cmd.none
             )
 
-        -- Boot
+        -- SshOps
         ------------------------------
         GetSshScriptTemplateList ->
-            (m, Request.Boot.getSshScriptTemplateList m)
+            (m, Request.SshOps.getSshScriptTemplateList m)
         GotSshScriptTemplateList (Ok aa) ->
             let s_ = m.s in
             ({m | s = {s_ | sshScriptTemplateSpecs = aa}}, Cmd.none)
@@ -77,7 +77,7 @@ update msg m =
             )
 
         GetSshKeyList ->
-            (m, Request.Boot.getSshKeyList m)
+            (m, Request.SshOps.getSshKeyList m)
         GotSshKeyList (Ok aa) ->
             let s_ = m.s in
             ({m | s = {s_ | sshStoredKeys = aa}}, Cmd.none)
@@ -92,7 +92,7 @@ update msg m =
                      , body = m.s.sshKeyBodyToStore
                      }
             in
-                (m, Request.Boot.storeSshKey m pp)
+                (m, Request.SshOps.storeSshKey m pp)
         SshKeyStored (Ok ()) ->
             let s_ = m.s in
             ( {m | s = {s_ | msgQueue = Snackbar.addMessage
@@ -108,7 +108,7 @@ update msg m =
             let
                 pp = { id = m.s.sshSelectedKeyId }
             in
-                (m, Request.Boot.deleteSshKey m pp)
+                (m, Request.SshOps.deleteSshKey m pp)
         SshKeyDeleted (Ok ()) ->
             let s_ = m.s in
             ( {m | s = {s_ | msgQueue = Snackbar.addMessage
@@ -146,7 +146,7 @@ update msg m =
                      , params = m.s.sshScriptTemplateParams
                      }
             in
-                (m, Request.Boot.execSshScript m pp)
+                (m, Request.SshOps.execSshScript m pp)
         SshScriptExecuted (Ok ()) ->
             let s_ = m.s in
             ( {m | s = {s_ | msgQueue = Snackbar.addMessage
@@ -956,7 +956,7 @@ update msg m =
 
 refreshTabMsg m t =
     case t of
-        Msg.Boot -> Cmd.none
+        Msg.SshOps -> Request.SshOps.getSshScriptTemplateList
         Msg.Connection -> Request.Admin.getServerInfo m
         Msg.Cluster -> Request.Cluster.getCluster m
         Msg.Users -> Request.Security.listUsers m

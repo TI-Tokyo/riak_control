@@ -22,7 +22,7 @@ module View.SshOps exposing (makeContent)
 
 import Model exposing (Model)
 import Msg exposing (Msg(..))
-import Data.Boot
+import Data.SshOps
 import View.Style
 import View.SshOps.Dialog exposing (..)
 
@@ -59,11 +59,17 @@ makeScriptTemplateWithParams m =
                         (TextField.config
                         |> TextField.setLabel (Just "Target hosts")
                         |> TextField.setValue (Just (String.join ", " m.s.sshTargetHostList))
-                        |> TextArea.setOnInput SshTargetHostListChanged
+                        |> TextField.setOnInput SshTargetHostListChanged
+                        )
+                  , TextField.filled
+                        (TextField.config
+                        |> TextField.setLabel (Just "User")
+                        |> TextField.setValue (Just m.s.sshTargetHostList)
+                        |> TextField.setOnInput SshSelectedUserForExecChanged
                         )
                   , Select.outlined
                         (Select.config
-                        |> Select.setLabel Nothing
+                        |> Select.setLabel (Just "SSH key")
                         |> Select.setSelected (Just m.s.sshSelectedKeyId)
                         |> Select.setOnChange SshSelectedKeyIdForExecChanged
                         )
@@ -73,7 +79,7 @@ makeScriptTemplateWithParams m =
                              kk)
                   , Select.outlined
                         (Select.config
-                        |> Select.setLabel Nothing
+                        |> Select.setLabel (Just "Script")
                         |> Select.setSelected (Just m.s.sshSelectedScriptTemplateId)
                         |> Select.setOnChange SshSelectedScriptTemplateIdForExecChanged
                         )
@@ -87,6 +93,19 @@ makeScriptTemplateWithParams m =
               "Execute"
             ]
 
+makeScriptTemplateParams m =
+    let
+        t = Model.scriptTemplateBy m name m.s.sshSelectedScriptTemplateId
+        f =
+            \(n, v) ->
+                TextField.filled
+                    (TextField.config
+                    |> TextField.setLabel (Just n)
+                    |> TextField.setValue (Just v)
+                    |> TextField.setOnInput (SshScriptTemplateParamChanged n)
+                    )
+    in
+        div [] (List.map f t.params)
 
 makeStoredKeysPart m =
     div [] []

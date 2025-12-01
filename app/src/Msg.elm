@@ -81,6 +81,7 @@ type Msg
     | SshDeleteKeyDialogConfirmed
 
     | SshTargetHostListChanged String
+    | SshSelectedUserForExecChanged String
     | SshSelectedKeyIdForExecChanged String
     | SshSelectedScriptTemplateIdForExecChanged String
 

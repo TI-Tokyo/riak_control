@@ -22,6 +22,7 @@ module Model exposing
     ( Model
     , Config
     , State
+    , scriptTemplateBy
     , userBy
     , groupBy
     , nodeBy
@@ -77,6 +78,7 @@ type alias State =
     , sshScriptTemplateSpecs : List Data.SshOps.ScriptTemplate
     , sshTargetHosts : List String
     , sshSelectedScriptTemplateId : String
+    , sshSelectedUser : String
     , sshSelectedKeyId : String
     , sshScriptTemplateParams : List (String, String)
 
@@ -161,6 +163,13 @@ type alias State =
     , vnodeStatusSortBy : SortByField
     , vnodeStatusSortOrder : SortOrder
     }
+
+
+scriptTemplateBy : Model -> (Data.SshOps.ScriptTemplate -> String) -> String -> Data.SshOps.ScriptTemplate
+scriptTemplateBy m by a =
+    case List.filter (\x -> a == by x) m.s.sshScriptTemplateSpecs of
+        [] -> Data.SshOps.dummyScriptTemplate
+        u :: _ -> u
 
 
 userBy : Model -> (User -> String) -> String -> User
