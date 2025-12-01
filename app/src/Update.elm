@@ -25,6 +25,7 @@ module Update exposing
 
 import Model exposing (..)
 import Msg exposing (Msg(..))
+import Request.Boot
 import Request.Admin
 import Request.Cluster
 import Request.Security
@@ -63,7 +64,101 @@ update msg m =
             , Cmd.none
             )
 
-        -- ServerInfo
+        -- Boot
+        ------------------------------
+        GetSshScriptTemplateList ->
+            (m, Request.Boot.getSshScriptTemplateList m)
+        GotSshScriptTemplateList (Ok aa) ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshScriptTemplateSpecs = aa}}, Cmd.none)
+        GotSshScriptTemplateList (Error err) ->
+            ( handleHttpError m "Failed to get a list of script templates: " err
+            , Cmd.none
+            )
+
+        GetSshKeyList ->
+            (m, Request.Boot.getSshKeyList m)
+        GotSshKeyList (Ok aa) ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshStoredKeys = aa}}, Cmd.none)
+        GotSshKeyList (Error err) ->
+            ( handleHttpError m "Failed to get a list of stored ssh keys: " err
+            , Cmd.none
+            )
+
+        StoreSshKey ->
+            let
+                pp = { id = m.s.sshSelectedKeyId
+                     , body = m.s.sshKeyBodyToStore
+                     }
+            in
+                (m, Request.Boot.storeSshKey m pp)
+        SshKeyStored (Ok ()) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Stored ssh key " ++ m.s.sshSelectedKeyId)) m.s.msgQueue}}
+            , Cmd.none
+            )
+        SshKeyStored (Err err) ->
+            ( handleHttpError m "Failed to store ssh key: " err
+            , Cmd.none
+            )
+
+        DeleteSshKey ->
+            let
+                pp = { id = m.s.sshSelectedKeyId }
+            in
+                (m, Request.Boot.deleteSshKey m pp)
+        SshKeyDeleted (Ok ()) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Deleted ssh key " ++ m.s.sshSelectedKeyId)) m.s.msgQueue}}
+            , Cmd.none
+            )
+        SshKeyDeleted (Err err) ->
+            ( handleHttpError m "Failed to delete ssh key: " err
+            , Cmd.none
+            )
+
+        SshSelectedKeyIdChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshSelectedKeyId = a}}, Cmd.none)
+        SshSelectedKeyBodyChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshSelectedKeyBody = a}}, Cmd.none)
+
+        SshScriptIdChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshScriptTemplateId = a}}, Cmd.none)
+
+        SshScriptTemplateParamChanged a s ->
+            let
+                s_ = m.s
+                f = \(p, s0) -> if p == a then (p, s) else (p, s0)
+                pp = List.map f m.s.sshScriptTemplateParams
+            in
+                ({m | s = {s_ | sshScriptTemplateParams = pp}}, Cmd.none)
+
+        ExecSshScript ->
+            let
+                pp = { hosts = m.s.sshTargetHostList
+                     , scriptId = m.s.sshScriptTemplateId
+                     , params = m.s.sshScriptTemplateParams
+                     }
+            in
+                (m, Request.Boot.execSshScript m pp)
+        SshScriptExecuted (Ok ()) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Script executed")) m.s.msgQueue}}
+            , Cmd.none
+            )
+        SshScriptExecuted (Err err) ->
+            ( handleHttpError m "Failed to execute script: " err
+            , Cmd.none
+            )
+
+        -- Connection
         ------------------------------
         Ping ->
             let
@@ -374,7 +469,7 @@ update msg m =
         PuttedNodeAdvancedConfig (Ok ()) ->
             let s_ = m.s in
             ( {m | s = {s_ | nodeMenuOpenedFor = ""
-                       , nodeAdvancedConfigShownFor = Nothing}}
+                           , nodeAdvancedConfigShownFor = Nothing}}
             , Cmd.none
             )
         PuttedNodeAdvancedConfig (Err err) ->
@@ -855,10 +950,14 @@ update msg m =
                 ({m | t = a}, Request.Cluster.getCluster m)
             else
                 (m, Cmd.none)
+        NoOp ->
+            (m, Cmd.none)
+
 
 refreshTabMsg m t =
     case t of
-        Msg.General -> Request.Admin.getServerInfo m
+        Msg.Boot -> Cmd.none
+        Msg.Connection -> Request.Admin.getServerInfo m
         Msg.Cluster -> Request.Cluster.getCluster m
         Msg.Users -> Request.Security.listUsers m
         Msg.Groups -> Request.Security.listGroups m

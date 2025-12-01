@@ -1,0 +1,92 @@
+-- ---------------------------------------------------------------------
+--
+-- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+--
+-- This file is provided to you under the Apache License,
+-- Version 2.0 (the "License"); you may not use this file
+-- except in compliance with the License.  You may obtain
+-- a copy of the License at
+--
+--   http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing,
+-- software distributed under the License is distributed on an
+-- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+-- KIND, either express or implied.  See the License for the
+-- specific language governing permissions and limitations
+-- under the License.
+--
+-- ---------------------------------------------------------------------
+
+module View.SshOps exposing (makeContent)
+
+import Model exposing (Model)
+import Msg exposing (Msg(..))
+import Data.Boot
+import View.Style
+import View.SshOps.Dialog exposing (..)
+
+import Html exposing (Html, text, div, pre)
+import Html.Attributes exposing (attribute, style, class)
+import Material.Button as Button
+import Material.TextField as TextField
+import Material.Select as Select
+import Material.Select.Item as SelectItem
+import Material.Typography as Typography
+
+
+makeContent m =
+    div View.Style.topContent
+        [ makeScriptTemplateWithParams m
+        , makeStoredKeysPart m
+        ] ++ (maybeMakeAddKeyDialog m)
+          ++ (maybeMakeDeleteKeyDialog m)
+
+makeScriptTemplateWithParams m =
+    let
+        (k0, kk) =
+            case m.s.sshStoredKeys of
+                x0 :: xx -> (x0, xx)
+                [] -> ("(no stored keys)", [])
+        (t0, tt) =
+            case m.s.sshScriptTemplateSpecs of
+                x0 :: xx -> (x0, xx)
+                [] -> ("(no script templates)", [])
+    in
+        div [ style "flex-flow" "column nowrap" ]
+            [ div [ style "flex-flow" "row nowrap"]
+                  [ TextField.filled
+                        (TextField.config
+                        |> TextField.setLabel (Just "Target hosts")
+                        |> TextField.setValue (Just (String.join ", " m.s.sshTargetHostList))
+                        |> TextArea.setOnInput SshTargetHostListChanged
+                        )
+                  , Select.outlined
+                        (Select.config
+                        |> Select.setLabel Nothing
+                        |> Select.setSelected (Just m.s.sshSelectedKeyId)
+                        |> Select.setOnChange SshSelectedKeyIdForExecChanged
+                        )
+                        (SelectItem.selectItem (SelectItem.config { value = k0.id }) k0.id)
+                        (List.map
+                             (\{id} -> SelectItem.selectItem (SelectItem.config {value = id}) id)
+                             kk)
+                  , Select.outlined
+                        (Select.config
+                        |> Select.setLabel Nothing
+                        |> Select.setSelected (Just m.s.sshSelectedScriptTemplateId)
+                        |> Select.setOnChange SshSelectedScriptTemplateIdForExecChanged
+                        )
+                        (SelectItem.selectItem (SelectItem.config { value = t0.name }) t0.name)
+                        (List.map
+                             (\{name} -> SelectItem.selectItem (SelectItem.config {value = name}) name)
+                             tt)
+                  ] ++ (makeScriptTemplateParams m)
+            , Button.text
+                  (Button.config |> Button.setOnClick SshExecScript)
+              "Execute"
+            ]
+
+
+makeStoredKeysPart m =
+    div [] []

@@ -81,6 +81,10 @@ module.exports = {
                     to: "images"
                 },
                 {
+                    from: path.join(__dirname, "../assets/css/custom.css"),
+                    to: "css/custom.css"
+                },
+                {
                     from: "./src/index.html",
                     to: "."
                 },

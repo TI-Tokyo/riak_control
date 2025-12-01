@@ -32,7 +32,8 @@ import Time
 import Material.Snackbar as Snackbar
 
 type alias Flags =
-    { riakNodeUrl : String
+    { riakControlServerUrl : String
+    , riakNodeUrl : String
     , riakAdminUser : String
     , riakAdminPassword : String
     }
@@ -44,6 +45,8 @@ init f =
         haveCreds = f.riakAdminPassword /= ""
         config =
             Config
+                f.riakControlServerUrl
+                f.riakControlServerUser f.riakControlServerPassword
                 f.riakNodeUrl f.riakAdminUser f.riakAdminPassword
                 3000
         state =
@@ -51,7 +54,13 @@ init f =
                 Data.Cluster.emptyCluster
                 Dict.empty Dict.empty [] Nothing
                 [] [] []
-                Snackbar.initialQueue Msg.General True
+                Snackbar.initialQueue Msg.Connection True
+                -- boot
+                [] [] "(script template id)" "(selected ssh key id)" []
+                []
+                False "(new key id)" "(new key body)"
+                False "(key id to delete)"
+                -- config
                 { riakVersion = "---"
                 , systemVersion = "---"
                 , uptime = 0

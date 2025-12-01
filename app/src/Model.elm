@@ -28,6 +28,7 @@ module Model exposing
     , clusterIsStable
     )
 
+import Data.SshOps
 import Data.Server exposing (..)
 import Data.Cluster exposing (..)
 import Data.Security exposing (..)
@@ -49,7 +50,10 @@ type alias Model =
     }
 
 type alias Config =
-    { riakNodeUrl : String
+    { riakControlServerUrl : String
+    , riakControlServerUser : String
+    , riakControlServerPassword : String
+    , riakNodeUrl : String
     , riakAdminUser : String
     , riakAdminPassword : String
     , refreshEvery : Float
@@ -69,7 +73,21 @@ type alias State =
     , activeTab : Msg.Tab
     , topDrawerOpen : Bool
 
-    -- general
+    -- boot options
+    , sshScriptTemplateSpecs : List Data.SshOps.ScriptTemplate
+    , sshTargetHosts : List String
+    , sshSelectedScriptTemplateId : String
+    , sshSelectedKeyId : String
+    , sshScriptTemplateParams : List (String, String)
+
+    , sshStoredKeys : List Data.SshOps.SshKey
+    , sshAddKeyDialogShown : Bool
+    , sshNewKeyId : String
+    , sshNewKeyBody : String
+    , sshDeleteKeyDialogShown : Bool
+    , ssKeyIdToDelete : String
+
+    -- connection
     , serverInfo : ServerInfo
     --
     , configDialogShown : Bool
