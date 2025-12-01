@@ -20,7 +20,7 @@
 
 module View exposing (view)
 
-import View.Boot
+import View.SshOps
 import View.Connection
 import View.Cluster
 import View.Cluster.AppBarContent
@@ -94,7 +94,7 @@ makeTopAppBar m =
 
 listWhat m =
     case m.s.activeTab of
-        Msg.Boot -> NoOp
+        Msg.SshOps -> GetSshScriptTemplateList
         Msg.Connection -> GetServerInfo
         Msg.Cluster -> GetCluster
         Msg.Ttaae -> GetTtaaeReport
@@ -116,9 +116,9 @@ makeDrawer m =
                     [ List.list List.config
                           ( ListItem.listItem
                                 (ListItem.config
-                                |> ListItem.setOnClick (TabClicked Msg.Boot)
+                                |> ListItem.setOnClick (TabClicked Msg.SshOps)
                                 )
-                                [ text "Boot" ]
+                                [ text "Boot options" ]
                           )
                           [ ListItem.listItem
                                 (ListItem.config
@@ -162,7 +162,7 @@ itemWithCount s a =
 
 makeContents m =
     case m.s.activeTab of
-        Msg.Boot -> View.Boot.makeContent m
+        Msg.SshOps -> View.SshOps.makeContent m
         Msg.Connection -> View.Connection.makeContent m
         Msg.Cluster -> View.Cluster.makeContent m
         Msg.Ttaae -> View.Ttaae.makeContent m
@@ -172,7 +172,7 @@ makeContents m =
 
 makeFilterControls m =
     case m.s.activeTab of
-        Msg.Boot -> div [] []
+        Msg.SshOps -> div [] []
         Msg.Connection -> div [] []
         Msg.Cluster -> div View.Style.filterAndSort (View.Cluster.AppBarContent.makeFilterControls m)
         Msg.Ttaae -> div View.Style.filterAndSort (View.Ttaae.AppBarContent.makeFilterControls m)
@@ -182,7 +182,7 @@ makeFilterControls m =
 
 activeTabName m =
     case m.s.activeTab of
-        Msg.Boot -> "Boot"
+        Msg.SshOps -> "Boot options"
         Msg.Connection -> "Connection"
         Msg.Cluster -> "Cluster"
         Msg.Ttaae -> "TictacAAE"

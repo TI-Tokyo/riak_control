@@ -28,7 +28,7 @@ module Model exposing
     , clusterIsStable
     )
 
-import Data.Boot
+import Data.SshOps
 import Data.Server exposing (..)
 import Data.Cluster exposing (..)
 import Data.Security exposing (..)
@@ -74,14 +74,18 @@ type alias State =
     , topDrawerOpen : Bool
 
     -- boot options
-    , sshScriptTemplateSpecs : List Data.Boot.ScriptTemplate
+    , sshScriptTemplateSpecs : List Data.SshOps.ScriptTemplate
     , sshTargetHosts : List String
-    , sshScriptTemplateId : String
+    , sshSelectedScriptTemplateId : String
+    , sshSelectedKeyId : String
     , sshScriptTemplateParams : List (String, String)
 
-    , sshStoredKeys : List Data.Boot.SshKey
-    , sshSelectedKeyId : String
-    , sshSelectedKeyBody : String
+    , sshStoredKeys : List Data.SshOps.SshKey
+    , sshAddKeyDialogShown : Bool
+    , sshNewKeyId : String
+    , sshNewKeyBody : String
+    , sshDeleteKeyDialogShown : Bool
+    , ssKeyIdToDelete : String
 
     -- connection
     , serverInfo : ServerInfo

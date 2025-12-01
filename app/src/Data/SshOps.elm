@@ -18,7 +18,7 @@
 --
 -- ---------------------------------------------------------------------
 
-module Data.Boot exposing (..)
+module Data.SshOps exposing (..)
 
 type Command
     = GetScriptTemplateList

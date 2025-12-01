@@ -24,7 +24,7 @@ module Msg exposing
     , getNewTime
     )
 
-import Data.Boot
+import Data.SshOps
 import Data.Security exposing (User, Group, Grant)
 import Data.Server exposing
     ( ServerInfo
@@ -43,7 +43,7 @@ import Dict exposing (Dict)
 
 
 type Tab
-    = Boot
+    = SshOps
     | Connection
     | Cluster
     | Vnode
@@ -52,12 +52,12 @@ type Tab
     | Groups
 
 type Msg
-    -- Boot
+    -- SshOps
     ----------
     = GetSshScriptTemplateList
-    | GotSshScriptTemplateList (Result Http.Error (List Data.Boot.ScriptTemplate))
+    | GotSshScriptTemplateList (Result Http.Error (List Data.SshOps.ScriptTemplate))
     | GetSshKeyList
-    | GotSshKeyList (Result Http.Error (List Data.Boot.SshKey))
+    | GotSshKeyList (Result Http.Error (List Data.SshOps.SshKey))
     | StoreSshKey
     | SshKeyStored (Result Http.Error ())
     | DeleteSshKey
@@ -70,6 +70,20 @@ type Msg
     | SshTargetHostsChanged String
     | SshScriptTemplateParamChanged String String
     | SshScriptIdChanged String
+
+    | SshNewKeyIdChanged String
+    | SshNewKeyBodyChanged String
+    | SshAddKeyDialogCancelled
+    | SshAddKeyDialogConfirmed
+
+    | SshSelectedKeyIdForDeletionChanged
+    | SshDeleteKeyDialogCancelled
+    | SshDeleteKeyDialogConfirmed
+
+    | SshTargetHostListChanged String
+    | SshSelectedKeyIdForExecChanged String
+    | SshSelectedScriptTemplateIdForExecChanged String
+
     -- Connection
     ----------
     | Ping

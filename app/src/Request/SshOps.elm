@@ -18,7 +18,7 @@
 --
 -- ---------------------------------------------------------------------
 
-module Request.Boot exposing
+module Request.SshOps exposing
     ( getSshScriptTemplateList
     , storeSshKey
     , deleteSshKey
@@ -26,7 +26,7 @@ module Request.Boot exposing
     )
 
 import Model exposing (Model)
-import Data.Boot exposing (..)
+import Data.SshOps exposing (..)
 import Data.Json
 import Msg exposing (Msg(..))
 import Util

@@ -56,8 +56,10 @@ init f =
                 [] [] []
                 Snackbar.initialQueue Msg.Connection True
                 -- boot
-                [] [] "wget_and_install_riak" []
-                [] "<selected-ssh-key-id>" "<ssh-key-to-store>"
+                [] [] "(script template id)" "(selected ssh key id)" []
+                []
+                False "(new key id)" "(new key body)"
+                False "(key id to delete)"
                 -- config
                 { riakVersion = "---"
                 , systemVersion = "---"
