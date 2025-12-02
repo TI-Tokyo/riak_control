@@ -956,7 +956,7 @@ update msg m =
 
 refreshTabMsg m t =
     case t of
-        Msg.SshOps -> Request.SshOps.getSshScriptTemplateList
+        Msg.SshOps -> Request.SshOps.listSshScriptTemplates
         Msg.Connection -> Request.Admin.getServerInfo m
         Msg.Cluster -> Request.Cluster.getCluster m
         Msg.Users -> Request.Security.listUsers m

@@ -19,7 +19,8 @@
 -- ---------------------------------------------------------------------
 
 module Request.SshOps exposing
-    ( getSshScriptTemplateList
+    ( listSshStoredKeys
+    , listSshScriptTemplates
     , storeSshKey
     , deleteSshKey
     , execSshScript
@@ -40,18 +41,32 @@ import Json.Encode
 import Base64
 
 
-getScriptSshTemplateList : Model -> Cmd Msg
-getScriptSshTemplateList m =
+listSshStoredKeys : Model -> Cmd Msg
+listSshStoredKeys m =
     Url.Builder.crossOrigin m.c.riakControlServerUrl [] []
         |> HttpBuilder.post
         |> HttpBuilder.withHeaders (stdHeaders m)
-        |> HttpBuilder.withJsonBody getScriptTemplateListEncoder
-        |> HttpBuilder.withExpect (Http.expectJson GotScriptTemplateList Data.Json.decodeScriptTemplateList)
+        |> HttpBuilder.withJsonBody listSshKeysEncoder
+        |> HttpBuilder.withExpect (Http.expectJson GotSshKeyList Data.Json.decodeSshStoredKeyList)
         |> HttpBuilder.request
 
-getScriptTemplateListEncoder =
+listSshKeysEncoder =
     Json.Encode.object
-        [ ("command", Json.Encode.string "get_script_template_list") ]
+        [ ("command", Json.Encode.string "list_ssh_keys") ]
+
+
+listSshScriptTemplates : Model -> Cmd Msg
+listSshScriptTemplates m =
+    Url.Builder.crossOrigin m.c.riakControlServerUrl [] []
+        |> HttpBuilder.post
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withJsonBody listSshScriptTemplatesEncoder
+        |> HttpBuilder.withExpect (Http.expectJson GotSshScriptTemplateList Data.Json.decodeSshScriptTemplateList)
+        |> HttpBuilder.request
+
+listSshScriptTemplatesEncoder =
+    Json.Encode.object
+        [ ("command", Json.Encode.string "list_script_templates") ]
 
 
 storeSshKey : Model -> StoreKeyCmdParams -> Cmd Msg
@@ -63,10 +78,10 @@ storeSshKey m pp =
         |> HttpBuilder.withExpect (Http.expectWhatever SshKeyStored)
         |> HttpBuilder.request
 
-storeSshKeyCommandEncoder {id, body} =
+storeSshKeyCommandEncoder {name, body} =
     Json.Encode.object
         [ ("command", Json.Encode.string "store_ssh_key")
-        , ("id", Json.Encode.string id)
+        , ("name", Json.Encode.string name)
         , ("body", Json.Encode.string body)
         ]
 
@@ -79,13 +94,13 @@ deleteSshKey m pp =
         |> HttpBuilder.withExpect (Http.expectWhatever SshKeyStored)
         |> HttpBuilder.request
 
-deleteSshKeyCommandEncoder {id} =
+deleteSshKeyCommandEncoder {name} =
     Json.Encode.object
         [ ("command", Json.Encode.string "delete_ssh_key")
-        , ("id", Json.Encode.string id)
+        , ("name", Json.Encode.string name)
         ]
 
-execSshScript : Model -> SshCmdParams -> Cmd Msg
+execSshScript : Model -> ExecScriptCmdParams -> Cmd Msg
 execSshScript m pp =
     Url.Builder.crossOrigin m.c.riakControlServerUrl [] []
         |> HttpBuilder.post
@@ -94,14 +109,16 @@ execSshScript m pp =
         |> HttpBuilder.withExpect (Http.expectWhatever SshScriptExecuted)
         |> HttpBuilder.request
 
-sshCommandEncoder {hosts, scriptId, params} =
+sshCommandEncoder {hosts, user, sshKeyName, scriptName, params} =
     let
-        pp = List.map (\(k, v) -> (k, Json.Encode.string v)) pp
+        pp = List.map (\{name, value} -> (name, Json.Encode.string value)) params
     in
         Json.Encode.object
             [ ("command", Json.Encode.string "ssh_exec_script")
-            , ("hosts", Json.Encode.list (Json.Encode.string hosts))
-            , ("script_id", Json.Encode.string scriptId)
+            , ("hosts", (Json.Encode.list Json.Encode.string hosts))
+            , ("script_name", Json.Encode.string scriptName)
+            , ("user", Json.Encode.string user)
+            , ("ssh_key_name", Json.Encode.string sshKeyName)
             , ("params", Json.Encode.object pp)
             ]
 

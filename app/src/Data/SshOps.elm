@@ -22,20 +22,27 @@ module Data.SshOps exposing (..)
 
 type Command
     = GetScriptTemplateList
-    | SshCommand SshCmdParams
+    | ExecScriptCommand ExecScriptCmdParams
     | StoreKeyCommand StoreKeyCmdParams
     | DeleteKeyCommand DeleteKeyCmdParams
 
 type alias ScriptTemplate =
     { name : String
     , body : String
-    , params : List (String, String)
+    , params : List TemplateParameter
     }
 
-type alias SshCmdParams =
+type alias TemplateParameter =
+    { name : String
+    , value : String
+    }
+
+type alias ExecScriptCmdParams =
     { hosts : List HostWithCreds
-    , scriptId : String  -- a template, from a lib stored on the server
-    , params : List (String, String)
+    , user : String
+    , sshKeyName : String
+    , scriptName : String
+    , params : List TemplateParameter
     }
 
 type alias HostWithCreds =
@@ -45,20 +52,26 @@ type alias HostWithCreds =
     }
 
 type alias StoreKeyCmdParams =
-    { id : String
+    { name : String
     , body : String
     }
 
 type alias DeleteKeyCmdParams =
-    { id : String
+    { name : String
     }
 
 type alias SshKey =
-    { id : String
+    { name : String
     , created : String
     , body : String
     }
 
+
+dummySshKey =
+    { name = ""
+    , body = ""
+    , created = ""
+    }
 
 dummyScriptTemplate =
     { name = ""

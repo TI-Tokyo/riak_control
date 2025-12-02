@@ -19,8 +19,8 @@
 -- ---------------------------------------------------------------------
 
 module View.SshOps.Dialog exposing
-    ( maybeMakeAddKeyDialog m
-    , maybeMakeDeleteKeyDialog m
+    ( maybeMakeAddKeyDialog
+    , maybeMakeDeleteKeyDialog
     )
 
 import Model exposing (Model)
@@ -56,16 +56,16 @@ maybeMakeAddKeyDialog m =
                                 ]
                                 [ TextField.filled
                                       (TextField.config
-                                      |> TextField.setLabel (Just "Id")
+                                      |> TextField.setLabel (Just "Name")
                                       |> TextField.setRequired True
-                                      |> TextField.setOnChange SshNewKeyIdChanged
+                                      |> TextField.setOnChange SshNewKeyNameChanged
                                       |> TextField.setAttributes [ attribute "spellCheck" "false" ]
                                       )
                                 , TextField.filled
                                       (TextField.config
                                       |> TextField.setLabel (Just "Key")
                                       |> TextField.setRequired True
-                                      |> TextField.setOnChange SshNewKeyIdChanged
+                                      |> TextField.setOnChange SshNewKeyBodyChanged
                                       |> TextField.setAttributes [ attribute "spellCheck" "false" ]
                                       )
                                 ]
@@ -93,7 +93,7 @@ maybeMakeDeleteKeyDialog m =
             (n0, nn) =
                 case m.s.sshStoredKeys of
                     x0 :: xx -> (x0, xx)
-                    [] -> ("(no stored keys)", [])
+                    [] -> (Data.SshOps.dummySshKey, [])
         in
             [ Dialog.confirmation
                   (Dialog.config
@@ -105,12 +105,12 @@ maybeMakeDeleteKeyDialog m =
                         [ Select.outlined
                               (Select.config
                               |> Select.setLabel Nothing
-                              |> Select.setSelected (Just m.s.sshKeyIdToDelete)
-                              |> Select.setOnChange SshSelectedKeyIdForDeletionChanged
+                              |> Select.setSelected (Just m.s.sshKeyNameToDelete)
+                              |> Select.setOnChange SshSelectedKeyNameForDeletionChanged
                               )
-                              (SelectItem.selectItem (SelectItem.config { value = n0.id }) n0.id)
+                              (SelectItem.selectItem (SelectItem.config { value = n0.name }) n0.name)
                               (List.map
-                                   (\{id} -> SelectItem.selectItem (SelectItem.config {value = id}) id)
+                                   (\{name} -> SelectItem.selectItem (SelectItem.config {value = name}) name)
                                    nn)
                         ]
                   , actions =

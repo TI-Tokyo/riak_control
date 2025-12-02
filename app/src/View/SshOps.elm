@@ -37,21 +37,21 @@ import Material.Typography as Typography
 
 makeContent m =
     div View.Style.topContent
-        [ makeScriptTemplateWithParams m
-        , makeStoredKeysPart m
-        ] ++ (maybeMakeAddKeyDialog m)
-          ++ (maybeMakeDeleteKeyDialog m)
+        ([ makeScriptTemplateWithParams m
+         , makeStoredKeysPart m
+         ] ++ (maybeMakeAddKeyDialog m)
+           ++ (maybeMakeDeleteKeyDialog m))
 
 makeScriptTemplateWithParams m =
     let
         (k0, kk) =
             case m.s.sshStoredKeys of
                 x0 :: xx -> (x0, xx)
-                [] -> ("(no stored keys)", [])
+                [] -> (Data.SshOps.dummySshKey, [])
         (t0, tt) =
             case m.s.sshScriptTemplateSpecs of
                 x0 :: xx -> (x0, xx)
-                [] -> ("(no script templates)", [])
+                [] -> (Data.SshOps.dummyScriptTemplate, [])
     in
         div [ style "flex-flow" "column nowrap" ]
             [ div [ style "flex-flow" "row nowrap"]
@@ -70,18 +70,18 @@ makeScriptTemplateWithParams m =
                   , Select.outlined
                         (Select.config
                         |> Select.setLabel (Just "SSH key")
-                        |> Select.setSelected (Just m.s.sshSelectedKeyId)
-                        |> Select.setOnChange SshSelectedKeyIdForExecChanged
+                        |> Select.setSelected (Just m.s.sshSelectedKeyName)
+                        |> Select.setOnChange SshSelectedKeyNameForExecChanged
                         )
-                        (SelectItem.selectItem (SelectItem.config { value = k0.id }) k0.id)
+                        (SelectItem.selectItem (SelectItem.config { value = k0.name }) k0.name)
                         (List.map
-                             (\{id} -> SelectItem.selectItem (SelectItem.config {value = id}) id)
+                             (\{name} -> SelectItem.selectItem (SelectItem.config {value = name}) name)
                              kk)
                   , Select.outlined
                         (Select.config
                         |> Select.setLabel (Just "Script")
-                        |> Select.setSelected (Just m.s.sshSelectedScriptTemplateId)
-                        |> Select.setOnChange SshSelectedScriptTemplateIdForExecChanged
+                        |> Select.setSelected (Just m.s.sshSelectedScriptTemplateName)
+                        |> Select.setOnChange SshSelectedScriptTemplateNameForExecChanged
                         )
                         (SelectItem.selectItem (SelectItem.config { value = t0.name }) t0.name)
                         (List.map
@@ -95,7 +95,7 @@ makeScriptTemplateWithParams m =
 
 makeScriptTemplateParams m =
     let
-        t = Model.scriptTemplateBy m name m.s.sshSelectedScriptTemplateId
+        t = Model.scriptTemplateBy m name m.s.sshSelectedScriptTemplateName
         f =
             \(n, v) ->
                 TextField.filled

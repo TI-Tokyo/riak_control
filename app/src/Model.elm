@@ -77,17 +77,17 @@ type alias State =
     -- boot options
     , sshScriptTemplateSpecs : List Data.SshOps.ScriptTemplate
     , sshTargetHosts : List String
-    , sshSelectedScriptTemplateId : String
+    , sshSelectedScriptTemplateName : String
     , sshSelectedUser : String
-    , sshSelectedKeyId : String
+    , sshSelectedKeyName : String
     , sshScriptTemplateParams : List (String, String)
 
     , sshStoredKeys : List Data.SshOps.SshKey
     , sshAddKeyDialogShown : Bool
-    , sshNewKeyId : String
+    , sshNewKeyName : String
     , sshNewKeyBody : String
     , sshDeleteKeyDialogShown : Bool
-    , ssKeyIdToDelete : String
+    , ssKeyNameToDelete : String
 
     -- connection
     , serverInfo : ServerInfo

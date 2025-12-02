@@ -19,7 +19,10 @@
 -- ---------------------------------------------------------------------
 
 module Data.Json exposing
-    ( decodeServerInfo
+    ( decodeSshScriptTemplateList
+    , decodeSshStoredKeyList
+
+    , decodeServerInfo
 
     , decodeCluster
     , decodeClusterActionResult
@@ -36,6 +39,7 @@ module Data.Json exposing
     , decodeVnodeStatusList
     )
 
+import Data.SshOps exposing (..)
 import Data.Server exposing (..)
 import Data.Cluster exposing (..)
 import Data.Security exposing (..)
@@ -51,7 +55,33 @@ import Time
 import Dict exposing (Dict)
 
 
--- General ------------------------------
+-- SshOps ------------------------------
+
+decodeSshStoredKeyList : D.Decoder (List SshKey)
+decodeSshStoredKeyList =
+    list decodeSshStoredKey
+
+decodeSshStoredKey =
+    succeed SshKey
+        |> required "name" string
+        |> required "body" string
+        |> required "created" string
+
+
+decodeSshScriptTemplateList : D.Decoder (List ScriptTemplate)
+decodeSshScriptTemplateList =
+    list decodeSshScriptTemplate
+
+decodeSshScriptTemplate =
+    let tp = succeed TemplateParameter |> required "name" string |> required "value" string in
+    succeed ScriptTemplate
+        |> required "name" string
+        |> required "body" string
+        |> required "params" (list tp)
+
+
+
+-- Connection ------------------------------
 
 decodeServerInfo : D.Decoder ServerInfo
 decodeServerInfo =
