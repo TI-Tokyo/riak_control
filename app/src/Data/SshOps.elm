@@ -20,6 +20,8 @@
 
 module Data.SshOps exposing (..)
 
+import Regex
+
 type Command
     = GetScriptTemplateList
     | ExecScriptCommand ExecScriptCmdParams
@@ -76,3 +78,32 @@ dummyScriptTemplate =
     , body = ""
     , params = []
     }
+
+
+targetHostsFromStr s =
+    let
+        ip = "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+        fqdn = "(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\\.)+[a-zA-Z]{2,63}$)"
+        host = "("++ip++"|"++fqdn++")"
+        user = "([a-zA-Z0-9]+)"
+        sshKey = "(\\([a-zA-Z0-9]+)\\)"
+        reStr = user++"@"++host++" +"++sshKey
+        re = Maybe.withDefault Regex.never <| Regex.fromString reStr
+        comma = Maybe.withDefault Regex.never <| Regex.fromString " *, *"
+        convert =
+            \ss ->
+                case Regex.find re ss of
+                    [m1, m2, m3] ->
+                        Just { user = m1.match
+                             , url = m2.match
+                             , sshKeyName = m3.match
+                             }
+                    _ ->
+                        Nothing
+    in
+        Regex.split comma s |> List.filterMap convert
+
+targetHostsToStr hh =
+    List.map (\{url, user, sshKeyName} ->
+                  user++"@"++url++" ("++sshKeyName++")"
+             ) hh |> String.join ", "

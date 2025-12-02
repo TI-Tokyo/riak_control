@@ -33,6 +33,8 @@ import Material.Snackbar as Snackbar
 
 type alias Flags =
     { riakControlServerUrl : String
+    , riakControlServerUser : String
+    , riakControlServerPassword : String
     , riakNodeUrl : String
     , riakAdminUser : String
     , riakAdminPassword : String
@@ -45,8 +47,7 @@ init f =
         haveCreds = f.riakAdminPassword /= ""
         config =
             Config
-                f.riakControlServerUrl
-                f.riakControlServerUser f.riakControlServerPassword
+                f.riakControlServerUrl f.riakControlServerUser f.riakControlServerPassword
                 f.riakNodeUrl f.riakAdminUser f.riakAdminPassword
                 3000
         state =
@@ -56,7 +57,7 @@ init f =
                 [] [] []
                 Snackbar.initialQueue Msg.Connection True
                 -- boot
-                [] [] "(script template id)" "(selected user)" "(selected ssh key id)" []
+                [] [] "(script template id)" []
                 []
                 False "(new key id)" "(new key body)"
                 False "(key id to delete)"

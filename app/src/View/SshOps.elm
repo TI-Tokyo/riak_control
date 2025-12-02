@@ -52,18 +52,14 @@ makeScriptTemplateWithParams m =
             case m.s.sshScriptTemplateSpecs of
                 x0 :: xx -> (x0, xx)
                 [] -> (Data.SshOps.dummyScriptTemplate, [])
-        formattedHosts =
-            List.map (\{url, user, sshKeyName} ->
-                          url++"("++user++":"++sshKeyName++")"
-                     ) m.s.sshTargetHosts |> String.join ", "
     in
         div [ style "flex-flow" "column nowrap" ]
             [ div [ style "flex-flow" "row nowrap"]
                   ([ TextField.filled
                          (TextField.config
                          |> TextField.setLabel (Just "Target hosts")
-                         |> TextField.setValue (Just formattedHosts)
-                         |> TextField.setOnInput SshTargetHostListChanged
+                         |> TextField.setValue (Just (Data.SshOps.targetHostsToStr m.s.sshTargetHosts))
+                         |> TextField.setOnInput SshTargetHostsChanged
                          )
                    , Select.outlined
                          (Select.config

@@ -78,8 +78,6 @@ type alias State =
     , sshScriptTemplateSpecs : List Data.SshOps.ScriptTemplate
     , sshTargetHosts : List Data.SshOps.HostWithCreds
     , sshSelectedScriptTemplateName : String
-    , sshSelectedUser : String
-    , sshSelectedKeyName : String
     , sshScriptTemplateParams : List Data.SshOps.TemplateParameter
 
     , sshStoredKeys : List Data.SshOps.SshKey

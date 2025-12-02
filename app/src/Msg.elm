@@ -65,23 +65,18 @@ type Msg
     | ExecSshScript
     | SshScriptExecuted (Result Http.Error ())
 
-    | SshSelectedKeyNameChanged String
-    | SshSelectedKeyBodyChanged String
     | SshTargetHostsChanged String
     | SshScriptTemplateParamChanged String String
-    | SshScriptNameChanged String
+    | SshSelectedScriptTemplateNameForExecChanged String
 
     | SshNewKeyNameChanged String
     | SshNewKeyBodyChanged String
     | SshAddKeyDialogCancelled
     | SshAddKeyDialogConfirmed
 
-    | SshSelectedKeyNameForDeletionChanged String
+    | SshKeyNameForDeletionChanged String
     | SshDeleteKeyDialogCancelled
     | SshDeleteKeyDialogConfirmed
-
-    | SshTargetHostListChanged String
-    | SshSelectedScriptTemplateNameForExecChanged String
 
     -- Connection
     ----------

@@ -31,6 +31,7 @@ import Request.Cluster
 import Request.Security
 import Request.Ttaae
 import Request.Vnode
+import Data.SshOps
 import Data.Server
 import Data.Cluster exposing (emptyCluster)
 import Data.Security exposing (dummyUser, dummyGroup)
@@ -88,15 +89,15 @@ update msg m =
 
         StoreSshKey ->
             let
-                pp = { id = m.s.sshSelectedKeyName
-                     , body = m.s.sshKeyBodyToStore
+                pp = { name = m.s.sshNewKeyName
+                     , body = m.s.sshNewKeyBody
                      }
             in
                 (m, Request.SshOps.storeSshKey m pp)
         SshKeyStored (Ok ()) ->
             let s_ = m.s in
             ( {m | s = {s_ | msgQueue = Snackbar.addMessage
-                            (Snackbar.message ("Stored ssh key " ++ m.s.sshSelectedKeyName)) m.s.msgQueue}}
+                            (Snackbar.message ("Stored ssh key " ++ m.s.sshNewKeyName)) m.s.msgQueue}}
             , Cmd.none
             )
         SshKeyStored (Err err) ->
@@ -106,13 +107,13 @@ update msg m =
 
         DeleteSshKey ->
             let
-                pp = { id = m.s.sshSelectedKeyName }
+                pp = { name = m.s.sshKeyNameToDelete }
             in
                 (m, Request.SshOps.deleteSshKey m pp)
         SshKeyDeleted (Ok ()) ->
             let s_ = m.s in
             ( {m | s = {s_ | msgQueue = Snackbar.addMessage
-                            (Snackbar.message ("Deleted ssh key " ++ m.s.sshSelectedKeyName)) m.s.msgQueue}}
+                            (Snackbar.message ("Deleted ssh key " ++ m.s.sshKeyNameToDelete)) m.s.msgQueue}}
             , Cmd.none
             )
         SshKeyDeleted (Err err) ->
@@ -120,30 +121,60 @@ update msg m =
             , Cmd.none
             )
 
-        SshSelectedKeyNameChanged a ->
+        SshNewKeyNameChanged a ->
             let s_ = m.s in
-            ({m | s = {s_ | sshSelectedKeyName = a}}, Cmd.none)
-        SshSelectedKeyBodyChanged a ->
+            ({m | s = {s_ | sshNewKeyName = a}}, Cmd.none)
+        SshNewKeyBodyChanged a ->
             let s_ = m.s in
-            ({m | s = {s_ | sshSelectedKeyBody = a}}, Cmd.none)
+            ({m | s = {s_ | sshNewKeyBody = a}}, Cmd.none)
 
-        SshScriptNameChanged a ->
+        SshAddKeyDialogCancelled ->
             let s_ = m.s in
-            ({m | s = {s_ | sshScriptTemplateName = a}}, Cmd.none)
+            ({m | s = {s_ | sshAddKeyDialogShown = False}}, Cmd.none)
+
+        SshAddKeyDialogConfirmed ->
+            let
+                s_ = m.s
+                pp = { name = m.s.sshNewKeyName, body = m.s.sshNewKeyBody }
+            in
+                ({m | s = {s_ | sshAddKeyDialogShown = False}}, Request.SshOps.storeSshKey m pp)
+
+        SshKeyNameForDeletionChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshKeyNameToDelete = a}}, Cmd.none)
+
+        SshDeleteKeyDialogCancelled ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshDeleteKeyDialogShown = False}}, Cmd.none)
+
+        SshDeleteKeyDialogConfirmed ->
+            let
+                s_ = m.s
+                pp = { name = m.s.sshNewKeyName }
+            in
+                ({m | s = {s_ | sshAddKeyDialogShown = False}}, Request.SshOps.deleteSshKey m pp)
+
+        SshSelectedScriptTemplateNameForExecChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshSelectedScriptTemplateName = a}}, Cmd.none)
+
+        SshTargetHostsChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshTargetHosts = Data.SshOps.targetHostsFromStr a}}, Cmd.none)
 
         SshScriptTemplateParamChanged a s ->
             let
                 s_ = m.s
-                f = \(p, s0) -> if p == a then (p, s) else (p, s0)
+                f = \{name, value} -> if name == a then {name = name, value = s} else {name = name, value = value}
                 pp = List.map f m.s.sshScriptTemplateParams
             in
                 ({m | s = {s_ | sshScriptTemplateParams = pp}}, Cmd.none)
 
         ExecSshScript ->
             let
-                pp = { hosts = m.s.sshTargetHostList
-                     , scriptName = m.s.sshScriptTemplateName
-                     , params = m.s.sshScriptTemplateParams
+                pp = { hosts = m.s.sshTargetHosts
+                     , scriptTemplateName = m.s.sshSelectedScriptTemplateName
+                     , scriptTemplateParams = m.s.sshScriptTemplateParams
                      }
             in
                 (m, Request.SshOps.execSshScript m pp)
@@ -956,7 +987,7 @@ update msg m =
 
 refreshTabMsg m t =
     case t of
-        Msg.SshOps -> Request.SshOps.listSshScriptTemplates
+        Msg.SshOps -> Request.SshOps.listSshScriptTemplates m
         Msg.Connection -> Request.Admin.getServerInfo m
         Msg.Cluster -> Request.Cluster.getCluster m
         Msg.Users -> Request.Security.listUsers m

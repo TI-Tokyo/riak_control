@@ -106,7 +106,7 @@ maybeMakeDeleteKeyDialog m =
                               (Select.config
                               |> Select.setLabel Nothing
                               |> Select.setSelected (Just m.s.sshKeyNameToDelete)
-                              |> Select.setOnChange SshSelectedKeyNameForDeletionChanged
+                              |> Select.setOnChange SshKeyNameForDeletionChanged
                               )
                               (SelectItem.selectItem (SelectItem.config { value = n0.name }) n0.name)
                               (List.map
