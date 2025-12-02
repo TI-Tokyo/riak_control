@@ -67,28 +67,28 @@ update msg m =
         -- SshOps
         ------------------------------
         GetSshScriptTemplateList ->
-            (m, Request.SshOps.getSshScriptTemplateList m)
+            (m, Request.SshOps.listSshScriptTemplates m)
         GotSshScriptTemplateList (Ok aa) ->
             let s_ = m.s in
             ({m | s = {s_ | sshScriptTemplateSpecs = aa}}, Cmd.none)
-        GotSshScriptTemplateList (Error err) ->
+        GotSshScriptTemplateList (Err err) ->
             ( handleHttpError m "Failed to get a list of script templates: " err
             , Cmd.none
             )
 
         GetSshKeyList ->
-            (m, Request.SshOps.getSshKeyList m)
+            (m, Request.SshOps.listSshStoredKeys m)
         GotSshKeyList (Ok aa) ->
             let s_ = m.s in
             ({m | s = {s_ | sshStoredKeys = aa}}, Cmd.none)
-        GotSshKeyList (Error err) ->
+        GotSshKeyList (Err err) ->
             ( handleHttpError m "Failed to get a list of stored ssh keys: " err
             , Cmd.none
             )
 
         StoreSshKey ->
             let
-                pp = { id = m.s.sshSelectedKeyId
+                pp = { id = m.s.sshSelectedKeyName
                      , body = m.s.sshKeyBodyToStore
                      }
             in
@@ -96,7 +96,7 @@ update msg m =
         SshKeyStored (Ok ()) ->
             let s_ = m.s in
             ( {m | s = {s_ | msgQueue = Snackbar.addMessage
-                            (Snackbar.message ("Stored ssh key " ++ m.s.sshSelectedKeyId)) m.s.msgQueue}}
+                            (Snackbar.message ("Stored ssh key " ++ m.s.sshSelectedKeyName)) m.s.msgQueue}}
             , Cmd.none
             )
         SshKeyStored (Err err) ->
@@ -106,13 +106,13 @@ update msg m =
 
         DeleteSshKey ->
             let
-                pp = { id = m.s.sshSelectedKeyId }
+                pp = { id = m.s.sshSelectedKeyName }
             in
                 (m, Request.SshOps.deleteSshKey m pp)
         SshKeyDeleted (Ok ()) ->
             let s_ = m.s in
             ( {m | s = {s_ | msgQueue = Snackbar.addMessage
-                            (Snackbar.message ("Deleted ssh key " ++ m.s.sshSelectedKeyId)) m.s.msgQueue}}
+                            (Snackbar.message ("Deleted ssh key " ++ m.s.sshSelectedKeyName)) m.s.msgQueue}}
             , Cmd.none
             )
         SshKeyDeleted (Err err) ->
@@ -120,16 +120,16 @@ update msg m =
             , Cmd.none
             )
 
-        SshSelectedKeyIdChanged a ->
+        SshSelectedKeyNameChanged a ->
             let s_ = m.s in
-            ({m | s = {s_ | sshSelectedKeyId = a}}, Cmd.none)
+            ({m | s = {s_ | sshSelectedKeyName = a}}, Cmd.none)
         SshSelectedKeyBodyChanged a ->
             let s_ = m.s in
             ({m | s = {s_ | sshSelectedKeyBody = a}}, Cmd.none)
 
-        SshScriptIdChanged a ->
+        SshScriptNameChanged a ->
             let s_ = m.s in
-            ({m | s = {s_ | sshScriptTemplateId = a}}, Cmd.none)
+            ({m | s = {s_ | sshScriptTemplateName = a}}, Cmd.none)
 
         SshScriptTemplateParamChanged a s ->
             let
@@ -142,7 +142,7 @@ update msg m =
         ExecSshScript ->
             let
                 pp = { hosts = m.s.sshTargetHostList
-                     , scriptId = m.s.sshScriptTemplateId
+                     , scriptName = m.s.sshScriptTemplateName
                      , params = m.s.sshScriptTemplateParams
                      }
             in

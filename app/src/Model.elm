@@ -76,18 +76,18 @@ type alias State =
 
     -- boot options
     , sshScriptTemplateSpecs : List Data.SshOps.ScriptTemplate
-    , sshTargetHosts : List String
+    , sshTargetHosts : List Data.SshOps.HostWithCreds
     , sshSelectedScriptTemplateName : String
     , sshSelectedUser : String
     , sshSelectedKeyName : String
-    , sshScriptTemplateParams : List (String, String)
+    , sshScriptTemplateParams : List Data.SshOps.TemplateParameter
 
     , sshStoredKeys : List Data.SshOps.SshKey
     , sshAddKeyDialogShown : Bool
     , sshNewKeyName : String
     , sshNewKeyBody : String
     , sshDeleteKeyDialogShown : Bool
-    , ssKeyNameToDelete : String
+    , sshKeyNameToDelete : String
 
     -- connection
     , serverInfo : ServerInfo

@@ -61,7 +61,7 @@ type Msg
     | StoreSshKey
     | SshKeyStored (Result Http.Error ())
     | DeleteSshKey
-    | SshKeyDeleted
+    | SshKeyDeleted (Result Http.Error ())
     | ExecSshScript
     | SshScriptExecuted (Result Http.Error ())
 
@@ -81,8 +81,6 @@ type Msg
     | SshDeleteKeyDialogConfirmed
 
     | SshTargetHostListChanged String
-    | SshSelectedUserForExecChanged String
-    | SshSelectedKeyNameForExecChanged String
     | SshSelectedScriptTemplateNameForExecChanged String
 
     -- Connection

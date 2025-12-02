@@ -39,16 +39,14 @@ type alias TemplateParameter =
 
 type alias ExecScriptCmdParams =
     { hosts : List HostWithCreds
-    , user : String
-    , sshKeyName : String
-    , scriptName : String
-    , params : List TemplateParameter
+    , scriptTemplateName : String
+    , scriptTemplateParams : List TemplateParameter
     }
 
 type alias HostWithCreds =
-    { host : String
+    { url : String
     , user : String
-    , keyId : String
+    , sshKeyName : String
     }
 
 type alias StoreKeyCmdParams =

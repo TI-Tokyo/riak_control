@@ -52,60 +52,48 @@ makeScriptTemplateWithParams m =
             case m.s.sshScriptTemplateSpecs of
                 x0 :: xx -> (x0, xx)
                 [] -> (Data.SshOps.dummyScriptTemplate, [])
+        formattedHosts =
+            List.map (\{url, user, sshKeyName} ->
+                          url++"("++user++":"++sshKeyName++")"
+                     ) m.s.sshTargetHosts |> String.join ", "
     in
         div [ style "flex-flow" "column nowrap" ]
             [ div [ style "flex-flow" "row nowrap"]
-                  [ TextField.filled
-                        (TextField.config
-                        |> TextField.setLabel (Just "Target hosts")
-                        |> TextField.setValue (Just (String.join ", " m.s.sshTargetHostList))
-                        |> TextField.setOnInput SshTargetHostListChanged
-                        )
-                  , TextField.filled
-                        (TextField.config
-                        |> TextField.setLabel (Just "User")
-                        |> TextField.setValue (Just m.s.sshTargetHostList)
-                        |> TextField.setOnInput SshSelectedUserForExecChanged
-                        )
-                  , Select.outlined
-                        (Select.config
-                        |> Select.setLabel (Just "SSH key")
-                        |> Select.setSelected (Just m.s.sshSelectedKeyName)
-                        |> Select.setOnChange SshSelectedKeyNameForExecChanged
-                        )
-                        (SelectItem.selectItem (SelectItem.config { value = k0.name }) k0.name)
-                        (List.map
-                             (\{name} -> SelectItem.selectItem (SelectItem.config {value = name}) name)
-                             kk)
-                  , Select.outlined
-                        (Select.config
-                        |> Select.setLabel (Just "Script")
-                        |> Select.setSelected (Just m.s.sshSelectedScriptTemplateName)
-                        |> Select.setOnChange SshSelectedScriptTemplateNameForExecChanged
-                        )
-                        (SelectItem.selectItem (SelectItem.config { value = t0.name }) t0.name)
-                        (List.map
-                             (\{name} -> SelectItem.selectItem (SelectItem.config {value = name}) name)
-                             tt)
-                  ] ++ (makeScriptTemplateParams m)
+                  ([ TextField.filled
+                         (TextField.config
+                         |> TextField.setLabel (Just "Target hosts")
+                         |> TextField.setValue (Just formattedHosts)
+                         |> TextField.setOnInput SshTargetHostListChanged
+                         )
+                   , Select.outlined
+                         (Select.config
+                         |> Select.setLabel (Just "Script")
+                         |> Select.setSelected (Just m.s.sshSelectedScriptTemplateName)
+                         |> Select.setOnChange SshSelectedScriptTemplateNameForExecChanged
+                         )
+                         (SelectItem.selectItem (SelectItem.config { value = t0.name }) t0.name)
+                         (List.map
+                              (\{name} -> SelectItem.selectItem (SelectItem.config {value = name}) name)
+                              tt)
+                   ] ++ (makeScriptTemplateParams m))
             , Button.text
-                  (Button.config |> Button.setOnClick SshExecScript)
+                  (Button.config |> Button.setOnClick ExecSshScript)
               "Execute"
             ]
 
 makeScriptTemplateParams m =
     let
-        t = Model.scriptTemplateBy m name m.s.sshSelectedScriptTemplateName
+        t = Model.scriptTemplateBy m .name m.s.sshSelectedScriptTemplateName
         f =
-            \(n, v) ->
+            \{name, value} ->
                 TextField.filled
                     (TextField.config
-                    |> TextField.setLabel (Just n)
-                    |> TextField.setValue (Just v)
-                    |> TextField.setOnInput (SshScriptTemplateParamChanged n)
+                    |> TextField.setLabel (Just name)
+                    |> TextField.setValue (Just value)
+                    |> TextField.setOnInput (SshScriptTemplateParamChanged name)
                     )
     in
-        div [] (List.map f t.params)
+        List.map f t.params
 
 makeStoredKeysPart m =
     div [] []

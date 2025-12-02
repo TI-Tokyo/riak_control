@@ -37,7 +37,7 @@ import Http
 import HttpBuilder
 import HttpBuilder.Task
 import Url.Builder
-import Json.Encode
+import Json.Encode exposing (string, object, list)
 import Base64
 
 
@@ -51,8 +51,8 @@ listSshStoredKeys m =
         |> HttpBuilder.request
 
 listSshKeysEncoder =
-    Json.Encode.object
-        [ ("command", Json.Encode.string "list_ssh_keys") ]
+    object
+        [ ("command", string "list_ssh_keys") ]
 
 
 listSshScriptTemplates : Model -> Cmd Msg
@@ -65,8 +65,8 @@ listSshScriptTemplates m =
         |> HttpBuilder.request
 
 listSshScriptTemplatesEncoder =
-    Json.Encode.object
-        [ ("command", Json.Encode.string "list_script_templates") ]
+    object
+        [ ("command", string "list_script_templates") ]
 
 
 storeSshKey : Model -> StoreKeyCmdParams -> Cmd Msg
@@ -79,10 +79,10 @@ storeSshKey m pp =
         |> HttpBuilder.request
 
 storeSshKeyCommandEncoder {name, body} =
-    Json.Encode.object
-        [ ("command", Json.Encode.string "store_ssh_key")
-        , ("name", Json.Encode.string name)
-        , ("body", Json.Encode.string body)
+    object
+        [ ("command", string "store_ssh_key")
+        , ("name", string name)
+        , ("body", string body)
         ]
 
 deleteSshKey : Model -> DeleteKeyCmdParams -> Cmd Msg
@@ -95,9 +95,9 @@ deleteSshKey m pp =
         |> HttpBuilder.request
 
 deleteSshKeyCommandEncoder {name} =
-    Json.Encode.object
-        [ ("command", Json.Encode.string "delete_ssh_key")
-        , ("name", Json.Encode.string name)
+    object
+        [ ("command", string "delete_ssh_key")
+        , ("name", string name)
         ]
 
 execSshScript : Model -> ExecScriptCmdParams -> Cmd Msg
@@ -109,17 +109,25 @@ execSshScript m pp =
         |> HttpBuilder.withExpect (Http.expectWhatever SshScriptExecuted)
         |> HttpBuilder.request
 
-sshCommandEncoder {hosts, user, sshKeyName, scriptName, params} =
+sshCommandEncoder {hosts, scriptTemplateName, scriptTemplateParams} =
     let
-        pp = List.map (\{name, value} -> (name, Json.Encode.string value)) params
+        pp = List.map
+             (\{name, value} ->
+                  (name, string value))
+                 scriptTemplateParams
+        hh = List.map
+             (\{url, user, sshKeyName} ->
+                  [ ("url", string url)
+                  , ("user", string user)
+                  , ("ssh_key_name", string sshKeyName)
+                  ])
+                 hosts
     in
-        Json.Encode.object
-            [ ("command", Json.Encode.string "ssh_exec_script")
-            , ("hosts", (Json.Encode.list Json.Encode.string hosts))
-            , ("script_name", Json.Encode.string scriptName)
-            , ("user", Json.Encode.string user)
-            , ("ssh_key_name", Json.Encode.string sshKeyName)
-            , ("params", Json.Encode.object pp)
+        object
+            [ ("command", string "exec_script")
+            , ("hosts", list object hh)
+            , ("script_name", string scriptTemplateName)
+            , ("params", object pp)
             ]
 
 
@@ -128,5 +136,5 @@ stdHeaders m =
     [ ("accept", ct)
     , ("content-type", ct)
     , ("authorization",
-        "Basic " ++ (Base64.encode (m.c.riakAdminUser ++ ":" ++ m.c.riakAdminPassword)))
+        "Basic " ++ (Base64.encode (m.c.riakControlServerUser ++ ":" ++ m.c.riakControlServerPassword)))
     ]
