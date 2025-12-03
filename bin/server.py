@@ -20,8 +20,53 @@ import os, argparse
 import functools
 import logging
 import json
+import datetime
 
 from http.server import SimpleHTTPRequestHandler, HTTPServer
+
+def list_ssh_keys(_req):
+    return SSH_KEYS
+
+def store_ssh_key(req):
+    name = req['name']
+    body = req['body']
+    new_key = {'name': name, 'body': body, 'created': datetime.datetime.now().isoformat()}
+    existing_keys = [k.get('name') for k in SSH_KEYS]
+    maybe_replace = lambda a, r: (a['name'] == name) and r or a
+    if name in existing_keys:
+        SSH_KEYS = [maybe_replace(k, new_key) for k in SSH_KEYS]
+    else:
+        SSH_KEYS.append(new_key)
+    return []
+
+def delete_ssh_key(req):
+    name = req['name']
+    maybe_delete = lambda a: (a['name'] == name) and r or a
+    for k in SSH_KEYS:
+        if k['name'] == name:
+            SSH_KEYS.remove(k)
+            break
+    return []
+
+def list_script_templates(_req):
+    return SCRIPT_TEMPLATES
+
+def exec_script(req):
+    print("hey, executing!")
+
+HANDLERS = {'ListSshKeys': list_ssh_keys,
+            'StoreSshKey': store_ssh_key,
+            'DeleteSshKey': delete_ssh_key,
+            'ListScriptTemplates': list_script_templates,
+            'ExecScript': exec_script
+            }
+
+SSH_KEYS = [
+]
+
+SCRIPT_TEMPLATES = [
+]
+
 
 class RiakRequestRequestHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
@@ -29,10 +74,16 @@ class RiakRequestRequestHandler(SimpleHTTPRequestHandler):
         post_data = self.rfile.read(content_length).decode('utf-8')
         logging.info("POST request,\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n",
                 str(self.path), str(self.headers), post_data)
-
-        json.decode(post_data)
-        self._set_response()
-        self.wfile.write("POST request for {}".format(self.path).encode('utf-8'))
+        req = json.loads(post_data)
+        cmd = req.get('command')
+        handler = HANDLERS.get(cmd)
+        if handler is None:
+            resp = "Bad command"
+        else:
+            resp = json.dumps(handler(req))
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(resp.encode('utf-8'))
 
 def run(port, docroot):
     server_address = ("", port)

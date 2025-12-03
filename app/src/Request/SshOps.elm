@@ -52,7 +52,7 @@ listSshStoredKeys m =
 
 listSshKeysEncoder =
     object
-        [ ("command", string "list_ssh_keys") ]
+        [ ("command", string "ListSshKeys") ]
 
 
 listSshScriptTemplates : Model -> Cmd Msg
@@ -66,7 +66,7 @@ listSshScriptTemplates m =
 
 listSshScriptTemplatesEncoder =
     object
-        [ ("command", string "list_script_templates") ]
+        [ ("command", string "ListScriptTemplates") ]
 
 
 storeSshKey : Model -> StoreKeyCmdParams -> Cmd Msg
@@ -80,7 +80,7 @@ storeSshKey m pp =
 
 storeSshKeyCommandEncoder {name, body} =
     object
-        [ ("command", string "store_ssh_key")
+        [ ("command", string "StoreSshKey")
         , ("name", string name)
         , ("body", string body)
         ]
@@ -96,7 +96,7 @@ deleteSshKey m pp =
 
 deleteSshKeyCommandEncoder {name} =
     object
-        [ ("command", string "delete_ssh_key")
+        [ ("command", string "DeleteSshKey")
         , ("name", string name)
         ]
 
@@ -124,7 +124,7 @@ sshCommandEncoder {hosts, scriptTemplateName, scriptTemplateParams} =
                  hosts
     in
         object
-            [ ("command", string "exec_script")
+            [ ("command", string "ExecScript")
             , ("hosts", list object hh)
             , ("script_name", string scriptTemplateName)
             , ("params", object pp)
