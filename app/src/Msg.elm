@@ -69,11 +69,13 @@ type Msg
     | SshScriptTemplateParamChanged String String
     | SshSelectedScriptTemplateNameForExecChanged String
 
+    | ShowAddSshKeyDialog
     | SshNewKeyNameChanged String
     | SshNewKeyBodyChanged String
     | SshAddKeyDialogCancelled
     | SshAddKeyDialogConfirmed
 
+    | ShowDeleteSshKeyDialog
     | SshKeyNameForDeletionChanged String
     | SshDeleteKeyDialogCancelled
     | SshDeleteKeyDialogConfirmed

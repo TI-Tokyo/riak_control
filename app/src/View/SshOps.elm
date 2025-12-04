@@ -37,45 +37,55 @@ import Material.Typography as Typography
 
 makeContent m =
     div View.Style.topContent
-        ([ makeScriptTemplateWithParams m
-         , makeStoredKeysPart m
+        ([ makeMain m
          ] ++ (maybeMakeAddKeyDialog m)
            ++ (maybeMakeDeleteKeyDialog m))
 
-makeScriptTemplateWithParams m =
+makeMain m =
+    div [ style "flex-direction" "column"
+        , style "padding" "2em 1em 2em"
+        ] [ makeSshKeysBlock m
+          , makeScriptTemplateBlock m
+          ]
+
+makeSshKeysBlock m =
+    div [ style "display" "grid", style "grid-template-columns" "auto min-content min-content"
+        ] [ text <| (List.length m.s.sshStoredKeys |> String.fromInt) ++ " key(s) available on server"
+          , Button.text (Button.config |> Button.setOnClick ShowAddSshKeyDialog) "Add"
+          , Button.text (Button.config |> Button.setOnClick ShowDeleteSshKeyDialog) "Remove"
+          ]
+
+makeScriptTemplateBlock m =
     let
-        (k0, kk) =
-            case m.s.sshStoredKeys of
-                x0 :: xx -> (x0, xx)
-                [] -> (Data.SshOps.dummySshKey, [])
         (t0, tt) =
             case m.s.sshScriptTemplateSpecs of
                 x0 :: xx -> (x0, xx)
                 [] -> (Data.SshOps.dummyScriptTemplate, [])
     in
-        div [ style "flex-flow" "column nowrap" ]
-            [ div [ style "flex-flow" "row nowrap"]
-                  ([ TextField.filled
-                         (TextField.config
-                         |> TextField.setLabel (Just "Target hosts")
-                         |> TextField.setValue (Just (Data.SshOps.targetHostsToStr m.s.sshTargetHosts))
-                         |> TextField.setOnInput SshTargetHostsChanged
-                         )
-                   , Select.outlined
-                         (Select.config
-                         |> Select.setLabel (Just "Script")
-                         |> Select.setSelected (Just m.s.sshSelectedScriptTemplateName)
-                         |> Select.setOnChange SshSelectedScriptTemplateNameForExecChanged
-                         )
-                         (SelectItem.selectItem (SelectItem.config { value = t0.name }) t0.name)
-                         (List.map
-                              (\{name} -> SelectItem.selectItem (SelectItem.config {value = name}) name)
-                              tt)
-                   ] ++ (makeScriptTemplateParams m))
-            , Button.text
-                  (Button.config |> Button.setOnClick ExecSshScript)
-              "Execute"
-            ]
+        div [ style "display" "grid"
+            , style "grid-template-columns" "30em auto"
+            ] ([ TextField.filled
+                     (TextField.config
+                     |> TextField.setLabel (Just "Target hosts")
+                     |> TextField.setValue (Just m.s.sshTargetHostsStr)
+                     |> TextField.setOnInput SshTargetHostsChanged
+                     )
+               , Select.outlined
+                     (Select.config
+                     |> Select.setLabel (Just "Script")
+                     |> Select.setSelected (Just m.s.sshSelectedScriptTemplateName)
+                     |> Select.setOnChange SshSelectedScriptTemplateNameForExecChanged
+                     )
+                     (SelectItem.selectItem (SelectItem.config { value = t0.name }) t0.name)
+                     (List.map
+                          (\{name} -> SelectItem.selectItem (SelectItem.config {value = name}) name)
+                          tt)
+               ] ++ (makeScriptTemplateParams m)
+                 ++ [ Button.text
+                          (Button.config |> Button.setOnClick ExecSshScript)
+                          "Execute"
+                    ])
+
 
 makeScriptTemplateParams m =
     let
@@ -90,6 +100,3 @@ makeScriptTemplateParams m =
                     )
     in
         List.map f t.params
-
-makeStoredKeysPart m =
-    div [] []

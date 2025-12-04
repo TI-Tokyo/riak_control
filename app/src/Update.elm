@@ -121,17 +121,18 @@ update msg m =
             , Cmd.none
             )
 
+        ShowAddSshKeyDialog ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshAddKeyDialogShown = True}}, Cmd.none)
         SshNewKeyNameChanged a ->
             let s_ = m.s in
             ({m | s = {s_ | sshNewKeyName = a}}, Cmd.none)
         SshNewKeyBodyChanged a ->
             let s_ = m.s in
             ({m | s = {s_ | sshNewKeyBody = a}}, Cmd.none)
-
         SshAddKeyDialogCancelled ->
             let s_ = m.s in
             ({m | s = {s_ | sshAddKeyDialogShown = False}}, Cmd.none)
-
         SshAddKeyDialogConfirmed ->
             let
                 s_ = m.s
@@ -139,6 +140,9 @@ update msg m =
             in
                 ({m | s = {s_ | sshAddKeyDialogShown = False}}, Request.SshOps.storeSshKey m pp)
 
+        ShowDeleteSshKeyDialog ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshDeleteKeyDialogShown = True}}, Cmd.none)
         SshKeyNameForDeletionChanged a ->
             let s_ = m.s in
             ({m | s = {s_ | sshKeyNameToDelete = a}}, Cmd.none)
@@ -160,7 +164,7 @@ update msg m =
 
         SshTargetHostsChanged a ->
             let s_ = m.s in
-            ({m | s = {s_ | sshTargetHosts = Data.SshOps.targetHostsFromStr a}}, Cmd.none)
+            ({m | s = {s_ | sshTargetHostsStr = a}}, Cmd.none)
 
         SshScriptTemplateParamChanged a s ->
             let
@@ -172,7 +176,7 @@ update msg m =
 
         ExecSshScript ->
             let
-                pp = { hosts = m.s.sshTargetHosts
+                pp = { hosts = Data.SshOps.targetHostsFromStr m.s.sshTargetHostsStr
                      , scriptTemplateName = m.s.sshSelectedScriptTemplateName
                      , scriptTemplateParams = m.s.sshScriptTemplateParams
                      }
@@ -987,7 +991,7 @@ update msg m =
 
 refreshTabMsg m t =
     case t of
-        Msg.SshOps -> Request.SshOps.listSshScriptTemplates m
+        Msg.SshOps -> Request.SshOps.listSshStoredKeys m
         Msg.Connection -> Request.Admin.getServerInfo m
         Msg.Cluster -> Request.Cluster.getCluster m
         Msg.Users -> Request.Security.listUsers m
@@ -996,7 +1000,9 @@ refreshTabMsg m t =
         Msg.Vnode -> Request.Vnode.getVnodeStatus m m.s.vnodeStatusShownForNode
 
 refreshAll m =
-    Cmd.batch [ Request.Admin.getServerInfo m
+    Cmd.batch [ Request.SshOps.listSshStoredKeys m
+              , Request.SshOps.listSshScriptTemplates m
+              , Request.Admin.getServerInfo m
               , Request.Cluster.getCluster m
               , Request.Security.listUsers m
               , Request.Security.listGroups m
