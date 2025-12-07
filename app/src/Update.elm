@@ -67,6 +67,10 @@ update msg m =
 
         -- SshOps
         ------------------------------
+        RefreshBootOptions ->
+            (m, Cmd.batch [ Request.SshOps.listSshScriptTemplates m
+                          , Request.SshOps.listSshStoredKeys m
+                          ])
         GetSshScriptTemplateList ->
             (m, Request.SshOps.listSshScriptTemplates m)
         GotSshScriptTemplateList (Ok aa) ->
@@ -991,7 +995,9 @@ update msg m =
 
 refreshTabMsg m t =
     case t of
-        Msg.SshOps -> Request.SshOps.listSshStoredKeys m
+        Msg.SshOps -> Cmd.batch [ Request.SshOps.listSshStoredKeys m
+                                , Request.SshOps.listSshScriptTemplates m
+                                ]
         Msg.Connection -> Request.Admin.getServerInfo m
         Msg.Cluster -> Request.Cluster.getCluster m
         Msg.Users -> Request.Security.listUsers m

@@ -33,8 +33,8 @@ import Util
 import Html exposing (text, div)
 import Html.Attributes exposing (attribute, style)
 import Material.Button as Button
-import Material.IconButton as IconButton
 import Material.TextField as TextField
+import Material.TextArea as TextArea
 import Material.Select as Select
 import Material.Select.Item as SelectItem
 import Material.Dialog as Dialog
@@ -61,12 +61,13 @@ maybeMakeAddKeyDialog m =
                                       |> TextField.setOnChange SshNewKeyNameChanged
                                       |> TextField.setAttributes [ attribute "spellCheck" "false" ]
                                       )
-                                , TextField.filled
-                                      (TextField.config
-                                      |> TextField.setLabel (Just "Key")
-                                      |> TextField.setRequired True
-                                      |> TextField.setOnChange SshNewKeyBodyChanged
-                                      |> TextField.setAttributes [ attribute "spellCheck" "false" ]
+                                , TextArea.filled
+                                      (TextArea.config
+                                      |> TextArea.setLabel (Just "Key")
+                                      |> TextArea.setOnChange SshNewKeyBodyChanged
+                                      |> TextArea.setAttributes [ attribute "spellCheck" "false" ]
+                                      |> TextArea.setRows (Just 10)
+                                      |> TextArea.setCols (Just 80)
                                       )
                                 ]
                           ]

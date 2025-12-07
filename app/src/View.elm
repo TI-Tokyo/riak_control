@@ -94,7 +94,7 @@ makeTopAppBar m =
 
 listWhat m =
     case m.s.activeTab of
-        Msg.SshOps -> GetSshScriptTemplateList
+        Msg.SshOps -> RefreshBootOptions
         Msg.Connection -> GetServerInfo
         Msg.Cluster -> GetCluster
         Msg.Ttaae -> GetTtaaeReport

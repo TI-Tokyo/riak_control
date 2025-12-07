@@ -54,7 +54,8 @@ type Tab
 type Msg
     -- SshOps
     ----------
-    = GetSshScriptTemplateList
+    = RefreshBootOptions
+    | GetSshScriptTemplateList
     | GotSshScriptTemplateList (Result Http.Error (List Data.SshOps.ScriptTemplate))
     | GetSshKeyList
     | GotSshKeyList (Result Http.Error (List Data.SshOps.SshKey))
