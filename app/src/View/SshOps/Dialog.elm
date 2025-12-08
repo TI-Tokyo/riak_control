@@ -50,24 +50,23 @@ maybeMakeAddKeyDialog m =
               , content =
                     [ div View.Style.dialogContentPart
                           [ div [ style "display" "grid"
-                                , style "grid-template-columns" "repeat(2, 1fr)"
-                                , style "align-items" "left"
-                                , style "margin" "0.6em 0 0 0"
+                                , style "grid-template-rows" "repeat(2, 1fr)"
+                                , style "margin" "1em 0 0 0"
                                 ]
-                                [ TextField.filled
+                                [ TextField.outlined
                                       (TextField.config
                                       |> TextField.setLabel (Just "Name")
                                       |> TextField.setRequired True
                                       |> TextField.setOnChange SshNewKeyNameChanged
                                       |> TextField.setAttributes [ attribute "spellCheck" "false" ]
                                       )
+                                , text "Paste the private key below:"
                                 , TextArea.filled
                                       (TextArea.config
-                                      |> TextArea.setLabel (Just "Key")
                                       |> TextArea.setOnChange SshNewKeyBodyChanged
                                       |> TextArea.setAttributes [ attribute "spellCheck" "false" ]
                                       |> TextArea.setRows (Just 10)
-                                      |> TextArea.setCols (Just 80)
+                                      |> TextArea.setCols (Just 110)
                                       )
                                 ]
                           ]

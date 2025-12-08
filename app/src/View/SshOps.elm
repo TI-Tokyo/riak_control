@@ -49,11 +49,15 @@ makeMain m =
           ]
 
 makeSshKeysBlock m =
-    div [ style "display" "grid", style "grid-template-columns" "auto min-content min-content"
-        ] [ text <| (List.length m.s.sshStoredKeys |> String.fromInt) ++ " key(s) available on server"
-          , Button.text (Button.config |> Button.setOnClick ShowAddSshKeyDialog) "Add"
-          , Button.text (Button.config |> Button.setOnClick ShowDeleteSshKeyDialog) "Remove"
-          ]
+    let
+        kk = String.join ", " <| List.map .name m.s.sshStoredKeys
+        ntotal = List.length m.s.sshStoredKeys
+    in
+        div [ style "display" "grid", style "grid-template-columns" "auto min-content min-content"
+            ] [ text <| "Keys available on server (" ++ (String.fromInt ntotal) ++ "): " ++ kk
+              , Button.text (Button.config |> Button.setOnClick ShowAddSshKeyDialog) "Add"
+              , Button.text (Button.config |> Button.setOnClick ShowDeleteSshKeyDialog) "Remove"
+              ]
 
 makeScriptTemplateBlock m =
     let
@@ -99,4 +103,11 @@ makeScriptTemplateParams m =
                     |> TextField.setOnInput (SshScriptTemplateParamChanged name)
                     )
     in
-        List.map f t.params
+        if t.params /= [] then
+            [ div [ style "display" "grid"
+                  , style "grid-template-columns" "1"
+                  ] ([ text "Script parameters:"
+                     ] ++ (List.map f t.params))
+            ]
+        else
+            []

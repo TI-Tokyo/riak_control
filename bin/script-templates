@@ -1,0 +1,88 @@
+[
+    {
+        "params": [
+            {
+                "value": "kv",
+                "description": "Type of Riak. Valid options are \"kv\", \"cs\" and \"ts\".",
+                "name": "type"
+            },
+            {
+                "value": "",
+                "description": "Nodename. This needs to be name@IP or name@FQDN e.g. dev1@10.2.3.4 or riak@prod01.my.domain.com.",
+                "name": "nodename"
+            },
+            {
+                "value": "",
+                "description": "Joining. If your node is joining a pre-existing cluster, enter the nodename of an existing node to join",
+                "name": "joining"
+            },
+            {
+                "value": "",
+                "description": "Cookie. The pre-shared cookie for all nodes in this cluster. Regular text accepted but no spaces.",
+                "name": "cookie"
+            },
+            {
+                "value": "1024",
+                "description": "Ring size. The number of shards in the database. Needs to be a power of 2. Recommend 1024 for 3.x versions.",
+                "name": "ringsize"
+            },
+            {
+                "value": "3.2.6",
+                "description": "Version. The version number of the type of Riak you are installing e.g. for KV \"3.0.16\" or \"3.2.1\".",
+                "name": "subver"
+            },
+            {
+                "value": "leveled",
+                "description": "Backend. This is the storage backend. Valid options are \"bitcask\", \"leveldb\" and \"leveled\"(KV>2.9.0).",
+                "name": "backend"
+            },
+            {
+                "value": "/var/lib/riak",
+                "description": "Data Directory. This is the path to where Riak stores the actual data.",
+                "name": "datadir"
+            },
+            {
+                "value": "tictac",
+                "description": "The type of Active Anti-Entropy. Valid options are \"legacy\" and \"tictac\" (KV>2.9.0).",
+                "name": "aae"
+            },
+            {
+                "value": "0.0.0.0",
+                "description": "The IP of the interface that Riak will listen on.",
+                "name": "interface"
+            },
+            {
+                "value": "",
+                "description": "Settings for the JVM if you plan to use Yokozuna (KV<3.0.0).",
+                "name": "search"
+            },
+            {
+                "value": "",
+                "description": "override the OS version the script auto detects e.g. \"-o trusty\" when on 2.1.3 with Ubuntu Jammy or \"-o 7\" with rhel 9. This is useful when using an OS for which a package does not exist for your desired version.",
+                "name": "os_override"
+            },
+            {
+                "value": "",
+                "description": "(CS) Admin user name.",
+                "name": "cs_admin_user"
+            },
+            {
+                "value": "",
+                "description": "(CS) Admin user email.",
+                "name": "cs_admin_email"
+            },
+            {
+                "value": "",
+                "description": "(CS) Admin user key.",
+                "name": "cs_admin_key"
+            },
+            {
+                "value": "1",
+                "description": "(CS) Generate admin user key (\"1\" or \"0\").",
+                "name": "cs_admin_generate"
+            }
+        ],
+        "file": "install-riak.sh",
+        "name": "install-from-package"
+    }
+]

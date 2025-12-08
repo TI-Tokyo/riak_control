@@ -102,7 +102,7 @@ update msg m =
             let s_ = m.s in
             ( {m | s = {s_ | msgQueue = Snackbar.addMessage
                             (Snackbar.message ("Stored ssh key " ++ m.s.sshNewKeyName)) m.s.msgQueue}}
-            , Cmd.none
+            , Request.SshOps.listSshStoredKeys m
             )
         SshKeyStored (Err err) ->
             ( handleHttpError m "Failed to store ssh key: " err
@@ -118,7 +118,7 @@ update msg m =
             let s_ = m.s in
             ( {m | s = {s_ | msgQueue = Snackbar.addMessage
                             (Snackbar.message ("Deleted ssh key " ++ m.s.sshKeyNameToDelete)) m.s.msgQueue}}
-            , Cmd.none
+            , Request.SshOps.listSshStoredKeys m
             )
         SshKeyDeleted (Err err) ->
             ( handleHttpError m "Failed to delete ssh key: " err

@@ -16,7 +16,7 @@
 ## specific language governing permissions and limitations
 ## under the License.
 
-import os, argparse
+import os, sys, argparse
 import functools
 import logging
 import json
@@ -77,14 +77,20 @@ HANDLERS = {'ListSshKeys': list_ssh_keys,
 
 
 def load_globals():
+    global PREFIX, SSH_KEYS, SCRIPT_TEMPLATES
     try:
         with open(PREFIX+"/keys") as f:
             SSH_KEYS = json.load(f)
     except:
         SSH_KEYS = []
     try:
-        with open(PREFIX+"/script-templates") as f:
+        pfx = os.path.dirname(sys.argv[0])
+        with open(pfx+"/script-templates") as f:
             SCRIPT_TEMPLATES = json.load(f)
+            for t in SCRIPT_TEMPLATES:
+                if t["file"]:
+                    with open(pfx+"/script-templates.d/"+t["file"]) as ff:
+                        t["body"] = ff.read()
     except:
         SCRIPT_TEMPLATES = []
 
