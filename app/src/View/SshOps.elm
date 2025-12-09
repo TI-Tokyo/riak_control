@@ -66,48 +66,63 @@ makeScriptTemplateBlock m =
                 x0 :: xx -> (x0, xx)
                 [] -> (Data.SshOps.dummyScriptTemplate, [])
     in
-        div [ style "display" "grid"
-            , style "grid-template-columns" "30em auto"
-            ] ([ TextField.filled
-                     (TextField.config
-                     |> TextField.setLabel (Just "Target hosts")
-                     |> TextField.setValue (Just m.s.sshTargetHostsStr)
-                     |> TextField.setOnInput SshTargetHostsChanged
-                     )
-               , Select.outlined
-                     (Select.config
-                     |> Select.setLabel (Just "Script")
-                     |> Select.setSelected (Just m.s.sshSelectedScriptTemplateName)
-                     |> Select.setOnChange SshSelectedScriptTemplateNameForExecChanged
-                     )
-                     (SelectItem.selectItem (SelectItem.config { value = t0.name }) t0.name)
-                     (List.map
-                          (\{name} -> SelectItem.selectItem (SelectItem.config {value = name}) name)
-                          tt)
-               ] ++ (makeScriptTemplateParams m)
-                 ++ [ Button.text
-                          (Button.config |> Button.setOnClick ExecSshScript)
-                          "Execute"
-                    ])
+        div [ style "flex-direction" "rows" ]
+            [ div [ style "display" "grid"
+                  , style "grid-template-columns" "30em auto"
+                  ] [ TextField.filled
+                          (TextField.config
+                          |> TextField.setLabel (Just "Target hosts")
+                          |> TextField.setValue (Just m.s.sshTargetHostsStr)
+                          |> TextField.setOnInput SshTargetHostsChanged
+                          )
+                    , Select.outlined
+                          (Select.config
+                          |> Select.setLabel (Just "Script")
+                          |> Select.setSelected (Just m.s.sshSelectedScriptTemplateName)
+                          |> Select.setOnChange SshSelectedScriptTemplateNameForExecChanged
+                          )
+                          (SelectItem.selectItem (SelectItem.config { value = t0.name }) t0.name)
+                          (List.map
+                               (\{name} -> SelectItem.selectItem (SelectItem.config {value = name}) name)
+                               tt)
+                    ]
+            , makeScriptTemplateParams m
+            , Button.text
+                  (Button.config |> Button.setOnClick ExecSshScript)
+                  "Execute"
+            ]
 
 
 makeScriptTemplateParams m =
     let
         t = Model.scriptTemplateBy m .name m.s.sshSelectedScriptTemplateName
         f =
-            \{name, value} ->
-                TextField.filled
-                    (TextField.config
-                    |> TextField.setLabel (Just name)
-                    |> TextField.setValue (Just value)
-                    |> TextField.setOnInput (SshScriptTemplateParamChanged name)
-                    )
+            \{name, value, description} ->
+                [ div [ style "text-align" "end"
+                      , style "align-self" "center"
+                      , style "font-size" "large"
+                      , style "padding-right" "1em"
+                      , style "font-family" "monospace"
+                      ] [ text name ]
+                , TextField.filled
+                      (TextField.config
+                      |> TextField.setLabel Nothing
+                      |> TextField.setValue (Just value)
+                      |> TextField.setOnInput (SshScriptTemplateParamChanged name)
+                      )
+                , div [ style "grid-column-end" "span 2"
+                      , style "padding-bottom" "2em"
+                      , style "font-size" "small"
+                      , style "color" "#454545"
+                      ] [ text description ]
+                ]
     in
         if t.params /= [] then
-            [ div [ style "display" "grid"
-                  , style "grid-template-columns" "1"
-                  ] ([ text "Script parameters:"
-                     ] ++ (List.map f t.params))
-            ]
+            div []
+                [ div [ style "font-weight" "bold" ] [ text "Script parameters:" ]
+                , div [ style "display" "grid"
+                      , style "grid-template-columns" "auto 1fr"
+                      ] (List.map f t.params |> List.concat)
+                ]
         else
-            []
+            div [] []

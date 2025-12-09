@@ -8,17 +8,17 @@
             },
             {
                 "value": "",
-                "description": "Nodename. This needs to be name@IP or name@FQDN e.g. dev1@10.2.3.4 or riak@prod01.my.domain.com.",
+                "description": "This needs to be name@IP or name@FQDN e.g. dev1@10.2.3.4 or riak@prod01.my.domain.com.",
                 "name": "nodename"
             },
             {
                 "value": "",
-                "description": "Joining. If your node is joining a pre-existing cluster, enter the nodename of an existing node to join",
+                "description": "If your node is joining a pre-existing cluster, enter the nodename of an existing node to join",
                 "name": "joining"
             },
             {
                 "value": "",
-                "description": "Cookie. The pre-shared cookie for all nodes in this cluster. Regular text accepted but no spaces.",
+                "description": "The pre-shared cookie for all nodes in this cluster. Regular text accepted but no spaces.",
                 "name": "cookie"
             },
             {
@@ -28,17 +28,17 @@
             },
             {
                 "value": "3.2.6",
-                "description": "Version. The version number of the type of Riak you are installing e.g. for KV \"3.0.16\" or \"3.2.1\".",
+                "description": "The version number of the type of Riak you are installing e.g. for KV \"3.0.16\" or \"3.2.1\".",
                 "name": "subver"
             },
             {
                 "value": "leveled",
-                "description": "Backend. This is the storage backend. Valid options are \"bitcask\", \"leveldb\" and \"leveled\"(KV>2.9.0).",
+                "description": "The storage backend. Valid options are \"bitcask\", \"leveldb\" and \"leveled\"(KV>2.9.0).",
                 "name": "backend"
             },
             {
                 "value": "/var/lib/riak",
-                "description": "Data Directory. This is the path to where Riak stores the actual data.",
+                "description": "The path where Riak stores the actual data.",
                 "name": "datadir"
             },
             {
@@ -58,7 +58,7 @@
             },
             {
                 "value": "",
-                "description": "override the OS version the script auto detects e.g. \"-o trusty\" when on 2.1.3 with Ubuntu Jammy or \"-o 7\" with rhel 9. This is useful when using an OS for which a package does not exist for your desired version.",
+                "description": "Override the OS version the script auto detects, e.g. \"-o trusty\" when on 2.1.3 with Ubuntu Jammy or \"-o 7\" with rhel 9. This is useful when using an OS for which a package does not exist for your desired version.",
                 "name": "os_override"
             },
             {

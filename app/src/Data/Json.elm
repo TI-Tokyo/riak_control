@@ -73,11 +73,16 @@ decodeSshScriptTemplateList =
     list decodeSshScriptTemplate
 
 decodeSshScriptTemplate =
-    let tp = succeed TemplateParameter |> required "name" string |> required "value" string in
-    succeed ScriptTemplate
-        |> required "name" string
-        |> required "body" string
-        |> required "params" (list tp)
+    let
+        tp = succeed TemplateParameter
+           |> required "name" string
+           |> required "value" string
+           |> required "description" string
+    in
+        succeed ScriptTemplate
+            |> required "name" string
+            |> required "body" string
+            |> required "params" (list tp)
 
 
 

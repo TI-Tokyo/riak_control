@@ -173,7 +173,9 @@ update msg m =
         SshScriptTemplateParamChanged a s ->
             let
                 s_ = m.s
-                f = \{name, value} -> if name == a then {name = name, value = s} else {name = name, value = value}
+                f = \{name, value, description} ->
+                    if name == a then {name = name, value = s, description = description}
+                    else {name = name, value = value, description = description}
                 pp = List.map f m.s.sshScriptTemplateParams
             in
                 ({m | s = {s_ | sshScriptTemplateParams = pp}}, Cmd.none)

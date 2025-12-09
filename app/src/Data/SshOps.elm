@@ -37,6 +37,7 @@ type alias ScriptTemplate =
 type alias TemplateParameter =
     { name : String
     , value : String
+    , description : String
     }
 
 type alias ExecScriptCmdParams =
