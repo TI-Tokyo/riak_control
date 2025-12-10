@@ -79,7 +79,6 @@ type alias State =
     , sshTargetHosts : List Data.SshOps.HostWithCreds
     , sshTargetHostsStr : String
     , sshSelectedScriptTemplateName : String
-    , sshScriptTemplateParams : List Data.SshOps.TemplateParameter
 
     , sshStoredKeys : List Data.SshOps.SshKey
     , sshAddKeyDialogShown : Bool

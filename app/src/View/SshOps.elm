@@ -95,7 +95,7 @@ makeScriptTemplateBlock m =
 
 makeScriptTemplateParams m =
     let
-        t = Model.scriptTemplateBy m .name m.s.sshSelectedScriptTemplateName
+        pp = Model.scriptTemplateBy m .name m.s.sshSelectedScriptTemplateName |> .params
         f =
             \{name, value, description} ->
                 [ div [ style "text-align" "end"
@@ -117,12 +117,12 @@ makeScriptTemplateParams m =
                       ] [ text description ]
                 ]
     in
-        if t.params /= [] then
+        if pp /= [] then
             div []
                 [ div [ style "font-weight" "bold" ] [ text "Script parameters:" ]
                 , div [ style "display" "grid"
                       , style "grid-template-columns" "auto 1fr"
-                      ] (List.map f t.params |> List.concat)
+                      ] (List.map f pp |> List.concat)
                 ]
         else
             div [] []

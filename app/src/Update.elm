@@ -164,7 +164,9 @@ update msg m =
 
         SshSelectedScriptTemplateNameForExecChanged a ->
             let s_ = m.s in
-            ({m | s = {s_ | sshSelectedScriptTemplateName = a}}, Cmd.none)
+            ( {m | s = {s_ | sshSelectedScriptTemplateName = a}}
+            , Cmd.none
+            )
 
         SshTargetHostsChanged a ->
             let s_ = m.s in
@@ -173,21 +175,29 @@ update msg m =
         SshScriptTemplateParamChanged a s ->
             let
                 s_ = m.s
-                f = \{name, value, description} ->
+                pp0 = Model.scriptTemplateBy m .name m.s.sshSelectedScriptTemplateName |> .params
+                f1 = \{name, value, description} ->
                     if name == a then {name = name, value = s, description = description}
                     else {name = name, value = value, description = description}
-                pp = List.map f m.s.sshScriptTemplateParams
+                pp = List.map f1 pp0
+                f2 = \t ->
+                     if t.name == m.s.sshSelectedScriptTemplateName then
+                         {t | params = pp}
+                     else
+                         t
+                tt = List.map f2 m.s.sshScriptTemplateSpecs
             in
-                ({m | s = {s_ | sshScriptTemplateParams = pp}}, Cmd.none)
+                ({m | s = {s_ | sshScriptTemplateSpecs = tt}}, Cmd.none)
 
         ExecSshScript ->
             let
-                pp = { hosts = Data.SshOps.targetHostsFromStr m.s.sshTargetHostsStr
-                     , scriptTemplateName = m.s.sshSelectedScriptTemplateName
-                     , scriptTemplateParams = m.s.sshScriptTemplateParams
-                     }
+                tpp = Model.scriptTemplateBy m .name m.s.sshSelectedScriptTemplateName |> .params
+                rpp = { hosts = Data.SshOps.targetHostsFromStr m.s.sshTargetHostsStr
+                      , scriptTemplateName = m.s.sshSelectedScriptTemplateName
+                      , scriptTemplateParams = tpp
+                      }
             in
-                (m, Request.SshOps.execSshScript m pp)
+                (m, Request.SshOps.execSshScript m rpp)
         SshScriptExecuted (Ok ()) ->
             let s_ = m.s in
             ( {m | s = {s_ | msgQueue = Snackbar.addMessage
