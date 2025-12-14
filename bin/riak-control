@@ -8,4 +8,4 @@ a=$set_me_from_distro_packaging
 a1=${a:-$RIAK_CONTROL_DOCROOT}
 D=${a1:-$script_dir/../www}
 
-python3 $script_dir/server.py --port $PORT --docroot "$D"
+python3 $script_dir/rctl.py --port $PORT --docroot "$D"
