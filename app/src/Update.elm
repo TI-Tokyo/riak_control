@@ -160,7 +160,7 @@ update msg m =
                 s_ = m.s
                 pp = { name = m.s.sshNewKeyName }
             in
-                ({m | s = {s_ | sshAddKeyDialogShown = False}}, Request.SshOps.deleteSshKey m pp)
+                ({m | s = {s_ | sshDeleteKeyDialogShown = False}}, Request.SshOps.deleteSshKey m pp)
 
         SshSelectedScriptTemplateNameForExecChanged a ->
             let s_ = m.s in

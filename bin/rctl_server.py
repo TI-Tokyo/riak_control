@@ -14,19 +14,12 @@
 ## specific language governing permissions and limitations
 ## under the License.
 
-from http.server import SimpleHTTPRequestHandler, HTTPServer
-import re
-import json
+import re, json, datetime
 import functools
 import logging
-import rctl_globals
+from http.server import SimpleHTTPRequestHandler, HTTPServer
 
-HANDLERS = {'ListSshKeys': _list_ssh_keys,
-            'StoreSshKey': _store_ssh_key,
-            'DeleteSshKey': _delete_ssh_key,
-            'ListScriptTemplates': _list_script_templates,
-            'ExecScript': _exec_script
-            }
+import rctl_globals
 
 class RiakRequestRequestHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
@@ -60,39 +53,35 @@ def run(port, docroot):
     httpd.server_close()
 
 def _list_ssh_keys(_req):
-    global SSH_KEYS
-    return SSH_KEYS
+    return rctl_globals.SSH_KEYS
 
 def _store_ssh_key(req):
-    global SSH_KEYS, DATADIR
     name = req['name']
     body = req['body']
     new_key = {'name': name, 'body': body, 'created': datetime.datetime.now().isoformat()}
-    existing_keys = [k.get('name') for k in SSH_KEYS]
+    existing_keys = [k.get('name') for k in rctl_globals.SSH_KEYS]
     maybe_replace = lambda a, r: (a['name'] == name) and r or a
     if name in existing_keys:
-        SSH_KEYS = [maybe_replace(k, new_key) for k in SSH_KEYS]
+        rctl_globals.SSH_KEYS = [maybe_replace(k, new_key) for k in rctl_globals.SSH_KEYS]
     else:
-        SSH_KEYS.append(new_key)
-    with open(DATADIR+"/keys", "w") as f:
-        json.dump(SSH_KEYS, f)
+        rctl_globals.SSH_KEYS.append(new_key)
+    with open(rctl_globals.DATADIR+"/keys", "w") as f:
+        json.dump(rctl_globals.SSH_KEYS, f)
     return []
 
 def _delete_ssh_key(req):
-    global SSH_KEYS, DATADIR
     name = req['name']
     maybe_delete = lambda a: (a['name'] == name) and r or a
-    for k in SSH_KEYS:
+    for k in rctl_globals.SSH_KEYS:
         if k['name'] == name:
-            SSH_KEYS.remove(k)
+            rctl_globals.SSH_KEYS.remove(k)
             break
-    with open(DATADIR+"/keys", "w") as f:
-        json.dump(SSH_KEYS, f)
+    with open(rctl_globals.DATADIR+"/keys", "w") as f:
+        json.dump(rctl_globals.SSH_KEYS, f)
     return []
 
 def _list_script_templates(_req):
-    global SCRIPT_TEMPLATES
-    return SCRIPT_TEMPLATES
+    return rctl_globals.SCRIPT_TEMPLATES
 
 def _exec_script(req):
     try:
@@ -114,4 +103,11 @@ def _parse_hosts(s):
                'url': m.group(2),
                'key': m.group(3)}]
     return o
+
+HANDLERS = {'ListSshKeys': _list_ssh_keys,
+            'StoreSshKey': _store_ssh_key,
+            'DeleteSshKey': _delete_ssh_key,
+            'ListScriptTemplates': _list_script_templates,
+            'ExecScript': _exec_script
+            }
 

@@ -16,35 +16,34 @@
 ## specific language governing permissions and limitations
 ## under the License.
 
-import os, sys, argparse, datetime
+import os, sys, argparse
 import json
-import tempfile
+import logging
 
-import rctl_httpd
+import rctl_server
 import rctl_globals
 
 
-def load_globals():
-    global DATADIR, SSH_KEYS, SCRIPT_TEMPLATES
+def _load_globals():
     try:
-        with open(DATADIR+"/keys") as f:
-            SSH_KEYS = json.load(f)
+        with open(rctl_globals.DATADIR+"/keys") as f:
+            rctl_globals.SSH_KEYS = json.load(f)
     except:
-        SSH_KEYS = []
+        rctl_globals.SSH_KEYS = []
+    print("loaded {} ssh keys".format(len(rctl_globals.SSH_KEYS)))
     try:
-        pfx = ETCDIR
+        pfx = rctl_globals.ETCDIR
         with open(pfx+"/script-templates") as f:
-            SCRIPT_TEMPLATES = json.load(f)
-            for t in SCRIPT_TEMPLATES:
+            rctl_globals.SCRIPT_TEMPLATES = json.load(f)
+            for t in rctl_globals.SCRIPT_TEMPLATES:
                 if t["file"]:
                     with open(pfx+"/script-templates.d/"+t["file"]) as ff:
                         t["body"] = ff.read()
     except:
-        SCRIPT_TEMPLATES = []
+        rctl_globals.SCRIPT_TEMPLATES = []
+    print("loaded {} templates".format(len(rctl_globals.SCRIPT_TEMPLATES)))
 
 def main():
-    global ETCDIR, DATADIR
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--port", default = "8091", help = "Port to listen on")
     parser.add_argument("-r", "--docroot", help = "Document root")
@@ -52,14 +51,14 @@ def main():
     parser.add_argument("-c", "--etcdir", default = os.path.dirname(sys.argv[0]), help = "Path to read script templates from")
     args = parser.parse_args()
 
-    DATADIR = args.datadir
-    ETCDIR = args.etcdir
+    rctl_globals.DATADIR = args.datadir
+    rctl_globals.ETCDIR = args.etcdir
 
-    load_globals()
+    _load_globals()
 
     docroot = os.path.abspath(args.docroot)
     print("docroot:", docroot)
-    rctl_httpd.run(int(args.port), docroot)
+    rctl_server.run(int(args.port), docroot)
 
 if __name__ == "__main__":
     main()

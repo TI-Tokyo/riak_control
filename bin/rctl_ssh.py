@@ -19,11 +19,10 @@ import subprocess
 import rctl_globals
 
 def make_and_exec(url, user, key, template_body, params):
-    global DATADIR
-    idf = tempfile.NamedTemporaryFile(dir = DATADIR)
+    idf = tempfile.NamedTemporaryFile(dir = rctl_globals.DATADIR)
     write(idf, key['body'])
 
-    scriptf = tempfile.NamedTemporaryFile(dir = DATADIR)
+    scriptf = tempfile.NamedTemporaryFile(dir = rctl_globals.DATADIR)
     script_body = _make_script(template['body'], req['params'])
     write(scriptf, script_body)
 
