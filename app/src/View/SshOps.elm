@@ -88,9 +88,15 @@ makeScriptTemplateBlock m =
                     ]
             , makeScriptTemplateParams m
             , Button.text
-                  (Button.config |> Button.setOnClick ExecSshScript)
-                  "Execute"
+                  (Button.config
+                  |> Button.setOnClick ExecSshScript
+                  |> Button.setDisabled (not (goodToExec m))
+                  ) "Execute"
             ]
+
+goodToExec m =
+    m.s.sshTargetHostsStr /= ""
+
 
 
 makeScriptTemplateParams m =

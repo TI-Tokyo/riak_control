@@ -30,18 +30,15 @@ def _load_globals():
             rctl_globals.SSH_KEYS = json.load(f)
     except:
         rctl_globals.SSH_KEYS = []
-    print("loaded {} ssh keys".format(len(rctl_globals.SSH_KEYS)))
-    try:
-        pfx = rctl_globals.ETCDIR
-        with open(pfx+"/script-templates") as f:
-            rctl_globals.SCRIPT_TEMPLATES = json.load(f)
-            for t in rctl_globals.SCRIPT_TEMPLATES:
-                if t["file"]:
-                    with open(pfx+"/script-templates.d/"+t["file"]) as ff:
-                        t["body"] = ff.read()
-    except:
-        rctl_globals.SCRIPT_TEMPLATES = []
-    print("loaded {} templates".format(len(rctl_globals.SCRIPT_TEMPLATES)))
+    logging.info("loaded %d ssh keys", len(rctl_globals.SSH_KEYS))
+    pfx = rctl_globals.ETCDIR
+    with open(pfx+"/script-templates") as f:
+        rctl_globals.SCRIPT_TEMPLATES = json.load(f)
+        for t in rctl_globals.SCRIPT_TEMPLATES:
+            if t.get("file"):
+                with open(pfx+"/script-templates.d/"+t["file"]) as ff:
+                    t["body"] = ff.read()
+    logging.info("loaded %d templates", len(rctl_globals.SCRIPT_TEMPLATES))
 
 def main():
     parser = argparse.ArgumentParser()
@@ -51,13 +48,17 @@ def main():
     parser.add_argument("-c", "--etcdir", default = os.path.dirname(sys.argv[0]), help = "Path to read script templates from")
     args = parser.parse_args()
 
+    logging.basicConfig(filename = "console.log",
+                        format = "%(asctime)s.%(msecs)03d %(levelname)s %(message)s",
+                        datefmt = "%c",
+                        level = logging.INFO)
+
     rctl_globals.DATADIR = args.datadir
     rctl_globals.ETCDIR = args.etcdir
 
     _load_globals()
 
     docroot = os.path.abspath(args.docroot)
-    print("docroot:", docroot)
     rctl_server.run(int(args.port), docroot)
 
 if __name__ == "__main__":

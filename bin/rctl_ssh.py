@@ -14,6 +14,7 @@
 ## specific language governing permissions and limitations
 ## under the License.
 
+import logging
 import tempfile
 import subprocess
 import rctl_globals
@@ -30,6 +31,8 @@ def make_and_exec(url, user, key, template_body, params):
 
     _ssh_exec(url, user, idf, scriptf)
 
+    return []
+
 def _make_script(body, params):
     pp = []
     for p in params:
@@ -45,7 +48,8 @@ def _scp(url, user, idf, f):
         raise "scp failed"
 
 def _ssh_exec(url, user, idf, script):
-    p = subprocess.run(["ssh", user+"@"+url, "-i"+idf, script],
+    logging.info("executing script %s on %s as %s (using key %s)", script, url, user, idf)
+    p = subprocess.run(["ssh", user+"@"+url, "-i"+idf, "./"+script],
                        capture_output = True,
                        encoding ='utf8')
     if p.returncode != 0:

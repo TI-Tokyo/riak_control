@@ -83,6 +83,19 @@
             }
         ],
         "file": "install-riak.sh",
-        "name": "install-from-package"
+        "name": "install-from-package",
+        "description": "A script to download, install, configure and start a riak node, or join an existing cluster."
+    },
+    {
+        "params": [
+            {
+                "name": "fafa",
+                "value": "keke",
+                "description": "faficious kek"
+            }
+        ],
+        "name": "test",
+        "body": "#!/bin/sh\necho $fafa",
+        "description": "A test"
     }
 ]
