@@ -115,17 +115,10 @@ sshCommandEncoder {hosts, scriptTemplateName, scriptTemplateParams} =
              (\{name, value} ->
                   (name, string value))
                  scriptTemplateParams
-        hh = List.map
-             (\{url, user, sshKeyName} ->
-                  [ ("url", string url)
-                  , ("user", string user)
-                  , ("ssh_key_name", string sshKeyName)
-                  ])
-                 hosts
     in
         object
             [ ("command", string "ExecScript")
-            , ("hosts", list object hh)
+            , ("hosts", string hosts)
             , ("script_name", string scriptTemplateName)
             , ("params", object pp)
             ]

@@ -76,7 +76,6 @@ type alias State =
 
     -- boot options
     , sshScriptTemplateSpecs : List Data.SshOps.ScriptTemplate
-    , sshTargetHosts : List Data.SshOps.HostWithCreds
     , sshTargetHostsStr : String
     , sshSelectedScriptTemplateName : String
 

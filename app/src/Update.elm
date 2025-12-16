@@ -192,7 +192,7 @@ update msg m =
         ExecSshScript ->
             let
                 tpp = Model.scriptTemplateBy m .name m.s.sshSelectedScriptTemplateName |> .params
-                rpp = { hosts = Data.SshOps.targetHostsFromStr m.s.sshTargetHostsStr
+                rpp = { hosts = m.s.sshTargetHostsStr
                       , scriptTemplateName = m.s.sshSelectedScriptTemplateName
                       , scriptTemplateParams = tpp
                       }

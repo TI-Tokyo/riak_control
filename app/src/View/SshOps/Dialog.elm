@@ -87,6 +87,7 @@ maybeMakeAddKeyDialog m =
     else
         []
 
+
 maybeMakeDeleteKeyDialog m =
     if m.s.sshDeleteKeyDialogShown then
         let
