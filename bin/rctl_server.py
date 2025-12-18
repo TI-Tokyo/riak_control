@@ -57,7 +57,7 @@ def _list_ssh_keys(_req, send_resp_f, wfile):
     wfile.write(
         json.dumps(
             rctl_globals.SSH_KEYS
-        )
+        ).encode('utf-8')
     )
 
 def _store_ssh_key(req, send_resp_f, wfile = None):
@@ -90,7 +90,7 @@ def _list_script_templates(_req, send_resp_f, wfile):
     wfile.write(
         json.dumps(
             rctl_globals.SCRIPT_TEMPLATES
-            )
+            ).encode('utf-8')
         )
 
 def _exec_script(req, send_resp_f, wfile):
