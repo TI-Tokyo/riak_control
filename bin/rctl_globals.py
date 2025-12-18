@@ -30,3 +30,9 @@ def find_template(name):
     for t in SCRIPT_TEMPLATES:
         if t['name'] == name:
             return t
+
+
+class RctlException(Exception):
+    msg = None
+    def RctlException(a):
+        msg = a

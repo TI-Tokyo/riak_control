@@ -19,7 +19,7 @@ import functools
 import logging
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 
-import rctl_globals
+import rctl_globals, rctl_ssh
 
 class RiakRequestRequestHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
@@ -89,9 +89,11 @@ def _exec_script(req):
         template = rctl_globals.find_template(req['script_name'])
         for h in hh:
             key = rctl_globals.find_key(h['key'])
+            logging.info("exec: script: %s, on %s as %s, key: %s", template['name'], h['url'], h['user'], h['key'])
             rctl_ssh.make_and_exec(h['url'], h['user'], key, template['body'], req['params'])
             return []
-    except:
+    except Exception as e:
+        print("what? ", e)
         return []
 
 def _parse_hosts(s):
