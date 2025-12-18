@@ -34,5 +34,7 @@ def find_template(name):
 
 class RctlException(Exception):
     msg = None
-    def RctlException(a):
-        msg = a
+    status = 0
+    def RctlException(s, m):
+        status = s
+        msg = m

@@ -95,7 +95,7 @@
             }
         ],
         "name": "test",
-        "body": "#!/bin/sh\necho $fafa",
+        "body": "#!/bin/sh\n echo $fafa >~/fafa\n",
         "description": "A test"
     }
 ]

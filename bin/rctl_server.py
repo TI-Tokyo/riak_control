@@ -30,12 +30,12 @@ class RiakRequestRequestHandler(SimpleHTTPRequestHandler):
         req = json.loads(post_data)
         cmd = req.get('command')
         handler = HANDLERS.get(cmd)
+        send_resp_f = lambda c: self._send_response(c)
         if handler is None:
-            resp = "Bad command"
+            self._send_response(400)
+            self.wfile.write(b"Bad command")
         else:
-            resp = json.dumps(handler(req))
-        self._send_response(200)
-        self.wfile.write(resp.encode('utf-8'))
+            handler(req, send_resp_f, self.wfile)
 
     def _send_response(self, code):
         self.send_response(code)
@@ -52,10 +52,15 @@ def run(port, docroot):
         pass
     httpd.server_close()
 
-def _list_ssh_keys(_req):
-    return rctl_globals.SSH_KEYS
+def _list_ssh_keys(_req, send_resp_f, wfile):
+    send_resp_f(200)
+    wfile.write(
+        json.dumps(
+            rctl_globals.SSH_KEYS
+        )
+    )
 
-def _store_ssh_key(req):
+def _store_ssh_key(req, send_resp_f, wfile = None):
     name = req['name']
     body = req['body']
     new_key = {'name': name, 'body': body, 'created': datetime.datetime.now().isoformat()}
@@ -67,9 +72,9 @@ def _store_ssh_key(req):
         rctl_globals.SSH_KEYS.append(new_key)
     with open(rctl_globals.DATADIR+"/keys", "w") as f:
         json.dump(rctl_globals.SSH_KEYS, f)
-    return []
+    send_resp_f(201)
 
-def _delete_ssh_key(req):
+def _delete_ssh_key(req, send_resp_f, wfile = None):
     name = req['name']
     maybe_delete = lambda a: (a['name'] == name) and r or a
     for k in rctl_globals.SSH_KEYS:
@@ -78,32 +83,46 @@ def _delete_ssh_key(req):
             break
     with open(rctl_globals.DATADIR+"/keys", "w") as f:
         json.dump(rctl_globals.SSH_KEYS, f)
-    return []
+    send_resp_f(204)
 
-def _list_script_templates(_req):
-    return rctl_globals.SCRIPT_TEMPLATES
+def _list_script_templates(_req, send_resp_f, wfile):
+    send_resp_f(200)
+    wfile.write(
+        json.dumps(
+            rctl_globals.SCRIPT_TEMPLATES
+            )
+        )
 
-def _exec_script(req):
+def _exec_script(req, send_resp_f, wfile):
     try:
         hh = _parse_hosts(req['hosts'])
         template = rctl_globals.find_template(req['script_name'])
         for h in hh:
             key = rctl_globals.find_key(h['key'])
             logging.info("exec: script: %s, on %s as %s, key: %s", template['name'], h['url'], h['user'], h['key'])
-            rctl_ssh.make_and_exec(h['url'], h['user'], key, template['body'], req['params'])
-            return []
+            rctl_ssh.make_and_exec(h['url'],
+                                   h['user'],
+                                   key,
+                                   template['body'],
+                                   req['params'],
+                                   send_resp_f,
+                                   wfile)
     except Exception as e:
         print("what? ", e)
         return []
 
 def _parse_hosts(s):
     o = []
-    r = r'(\w+)@(\w+)\((\w+)\)'
+    r = r'(\w+)@(\w+)\((\w*)\)'
     for h in re.split(", +", s):
         m = re.search(r, h)
+        if m.group(3) in ["", "none"]:
+            key = None
+        else:
+            key = m.group(3)
         o += [{'user': m.group(1),
                'url': m.group(2),
-               'key': m.group(3)}]
+               'key': key}]
     return o
 
 HANDLERS = {'ListSshKeys': _list_ssh_keys,
