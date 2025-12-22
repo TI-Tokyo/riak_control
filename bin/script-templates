@@ -95,7 +95,7 @@
             }
         ],
         "name": "test",
-        "body": "#!/bin/sh\n echo $fafa >~/fafa\n",
+        "body": "#!/bin/sh\necho $fafa >~/fafa\necho $fafa written to ~/fafa\nsleep 3\necho $fafa written to ~/fafa again\nsleep 1\n",
         "description": "A test"
     }
 ]

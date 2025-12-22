@@ -14,7 +14,7 @@
 ## specific language governing permissions and limitations
 ## under the License.
 
-import re, json, datetime
+import re, json, datetime, base64
 import functools
 import logging
 from http.server import SimpleHTTPRequestHandler, HTTPServer
@@ -35,7 +35,22 @@ class RiakRequestRequestHandler(SimpleHTTPRequestHandler):
             self._send_response(400)
             self.wfile.write(b"Bad command")
         else:
+            self._authorize(req)
             handler(req, send_resp_f, self.wfile)
+
+    def _authorize(self, req):
+        try:
+            auth = self.headers['authorization']
+            creds = auth.split(" ")[1]
+            up = base64.b64decode(creds).decode('utf-8').split(":")
+            if (rctl_globals.CONFIG['admin']['name'] == up[0] and
+                rctl_globals.CONFIG['admin']['password'] == up[1]):
+                pass
+            else:
+                raise rctl_globals.RctlException(403, "Unauthorized")
+        except:
+            raise rctl_globals.RctlException(403, "Unauthorized")
+        pass
 
     def _send_response(self, code):
         self.send_response(code)
@@ -51,6 +66,8 @@ def run(port, docroot):
     except KeyboardInterrupt:
         pass
     httpd.server_close()
+
+
 
 def _list_ssh_keys(_req, send_resp_f, wfile):
     send_resp_f(200)
@@ -99,7 +116,8 @@ def _exec_script(req, send_resp_f, wfile):
         template = rctl_globals.find_template(req['script_name'])
         for h in hh:
             key = rctl_globals.find_key(h['key'])
-            logging.info("exec: script: %s, on %s as %s, key: %s", template['name'], h['url'], h['user'], h['key'])
+            logging.info("exec: script: %s, on %s as %s, key: %s",
+                         template['name'], h['url'], h['user'], h['key'])
             rctl_ssh.make_and_exec(h['url'],
                                    h['user'],
                                    key,
@@ -107,9 +125,11 @@ def _exec_script(req, send_resp_f, wfile):
                                    req['params'],
                                    send_resp_f,
                                    wfile)
+    except rctl_globals.RctlException as e:
+        send_resp_f(e.status, e.msg)
     except Exception as e:
-        print("what? ", e)
-        return []
+        logging.error("%s", e)
+        send_resp_f(500, e)
 
 def _parse_hosts(s):
     o = []
@@ -131,4 +151,3 @@ HANDLERS = {'ListSshKeys': _list_ssh_keys,
             'ListScriptTemplates': _list_script_templates,
             'ExecScript': _exec_script
             }
-

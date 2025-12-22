@@ -17,12 +17,22 @@
 ## under the License.
 
 import os, sys, argparse
-import json
+import base64, json
 import logging
 
-import rctl_server
-import rctl_globals
+import rctl_globals, rctl_config, rctl_server
 
+
+def _load_config():
+    try:
+        with open(rctl_globals.ETCDIR+"/rctl.conf") as f:
+            rctl_globals.CONFIG = json.load(f)
+    except:
+        rctl_globals.CONFIG = rctl_config.default_config()
+        logging.info("Config not found: using defaults (admin user: %s, password: %s)",
+                     rctl_globals.CONFIG['admin']['name'],
+                     base64.b64decode(
+                         rctl_globals.CONFIG['admin']['password']).decode('utf-8'))
 
 def _load_globals():
     try:
@@ -32,6 +42,7 @@ def _load_globals():
         rctl_globals.SSH_KEYS = []
     logging.info("loaded %d ssh keys", len(rctl_globals.SSH_KEYS))
     pfx = rctl_globals.ETCDIR
+
     with open(pfx+"/script-templates") as f:
         rctl_globals.SCRIPT_TEMPLATES = json.load(f)
         for t in rctl_globals.SCRIPT_TEMPLATES:
@@ -56,6 +67,7 @@ def main():
     rctl_globals.DATADIR = args.datadir
     rctl_globals.ETCDIR = args.etcdir
 
+    _load_config()
     _load_globals()
 
     docroot = os.path.abspath(args.docroot)

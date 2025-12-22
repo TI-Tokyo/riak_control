@@ -14,28 +14,12 @@
 ## specific language governing permissions and limitations
 ## under the License.
 
-CONFIG = {}
-SSH_KEYS = []
-SCRIPT_TEMPLATES = []
-DATADIR = "."
-ETCDIR = "."  # to be set in main()
+import base64
 
-def find_key(name):
-    global SSH_KEYS
-    for k in SSH_KEYS:
-        if k['name'] == name:
-            return k
-
-def find_template(name):
-    global SCRIPT_TEMPLATES
-    for t in SCRIPT_TEMPLATES:
-        if t['name'] == name:
-            return t
-
-
-class RctlException(Exception):
-    msg = None
-    status = 0
-    def RctlException(s, m):
-        status = s
-        msg = m
+def default_config():
+    return {
+        "admin": {
+            "name": "murzyk",
+            "password": base64.b64encode(b"kolochava")
+        }
+    }

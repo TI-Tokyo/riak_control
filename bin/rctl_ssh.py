@@ -62,7 +62,7 @@ def _scp(url, user, idf, f):
             idf_args = ["-i", idf]
         else:
             idf_args = []
-        p = subprocess.run(["scp", "-vv"] + idf_args +
+        p = subprocess.run(["scp"] + idf_args +
                            ["-o", "KbdInteractiveAuthentication=no",
                             "-o", "PasswordAuthentication=no",
                             f, user+"@"+url+":"],
