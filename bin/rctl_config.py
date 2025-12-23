@@ -14,12 +14,12 @@
 ## specific language governing permissions and limitations
 ## under the License.
 
-import base64
+import hashlib
 
 def default_config():
     return {
         "admin": {
             "name": "murzyk",
-            "password": base64.b64encode(b"kolochava")
+            "password": hashlib.sha256(b"synpoliana").hexdigest()
         }
     }

@@ -14,11 +14,12 @@
 ## specific language governing permissions and limitations
 ## under the License.
 
-import re, json, datetime, base64
+import re, json, datetime, base64, hashlib
 import functools
 import logging
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 
+from rctl_globals import RctlException
 import rctl_globals, rctl_ssh
 
 class RiakRequestRequestHandler(SimpleHTTPRequestHandler):
@@ -35,8 +36,19 @@ class RiakRequestRequestHandler(SimpleHTTPRequestHandler):
             self._send_response(400)
             self.wfile.write(b"Bad command")
         else:
-            self._authorize(req)
-            handler(req, send_resp_f, self.wfile)
+            try:
+                if self._authorize(req):
+                    handler(req, send_resp_f, self.wfile)
+                else:
+                    self._send_response(403)
+                    self.wfile.write("handle me: %s".format(e).encode('utf-8'))
+            except RctlException as e:
+                self._send_response(e.status)
+                self.wfile.write(e.msg.encode('utf-8'))
+            except Exception as e:
+                self._send_response(500)
+                self.wfile.write("handle me: %s".format(e).encode('utf-8'))
+
 
     def _authorize(self, req):
         try:
@@ -44,12 +56,12 @@ class RiakRequestRequestHandler(SimpleHTTPRequestHandler):
             creds = auth.split(" ")[1]
             up = base64.b64decode(creds).decode('utf-8').split(":")
             if (rctl_globals.CONFIG['admin']['name'] == up[0] and
-                rctl_globals.CONFIG['admin']['password'] == up[1]):
-                pass
+                rctl_globals.CONFIG['admin']['password'] == hashlib.sha256(up[1].encode('utf-8')).hexdigest()):
+                return True
             else:
-                raise rctl_globals.RctlException(403, "Unauthorized")
+                return False
         except:
-            raise rctl_globals.RctlException(403, "Unauthorized")
+            return False
         pass
 
     def _send_response(self, code):
@@ -125,7 +137,7 @@ def _exec_script(req, send_resp_f, wfile):
                                    req['params'],
                                    send_resp_f,
                                    wfile)
-    except rctl_globals.RctlException as e:
+    except RctlException as e:
         send_resp_f(e.status, e.msg)
     except Exception as e:
         logging.error("%s", e)
