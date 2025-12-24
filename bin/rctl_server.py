@@ -47,6 +47,7 @@ class RiakRequestRequestHandler(SimpleHTTPRequestHandler):
                 self.wfile.write(e.msg.encode('utf-8'))
             except Exception as e:
                 self._send_response(500)
+                print(e)
                 self.wfile.write("handle me: %s".format(e).encode('utf-8'))
 
 
@@ -138,10 +139,11 @@ def _exec_script(req, send_resp_f, wfile):
                                    send_resp_f,
                                    wfile)
     except RctlException as e:
-        send_resp_f(e.status, e.msg)
+        send_resp_f(e.status)
+        wfile.write(e.msg.encode('utf-8'))
     except Exception as e:
         logging.error("%s", e)
-        send_resp_f(500, e)
+        send_resp_f(500)
 
 def _parse_hosts(s):
     o = []

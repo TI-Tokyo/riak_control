@@ -33,7 +33,7 @@ import Material.TextField as TextField
 import Material.Select as Select
 import Material.Select.Item as SelectItem
 import Material.Typography as Typography
-
+import RemoteData
 
 makeContent m =
     div View.Style.topContent
@@ -60,6 +60,12 @@ makeSshKeysBlock m =
               ]
 
 makeScriptTemplateBlock m =
+    if m.s.sshScriptExecuting then
+        makeScriptTemplateBlockExecuting m
+    else
+        makeScriptTemplateBlockWaiting m
+
+makeScriptTemplateBlockWaiting m =
     let
         (t0, tt) =
             case m.s.sshScriptTemplateSpecs of
@@ -98,7 +104,6 @@ goodToExec m =
     m.s.sshTargetHostsStr /= ""
 
 
-
 makeScriptTemplateParams m =
     let
         pp = Model.scriptTemplateBy m .name m.s.sshSelectedScriptTemplateName |> .params
@@ -132,3 +137,24 @@ makeScriptTemplateParams m =
                 ]
         else
             div [] []
+
+
+makeScriptTemplateBlockExecuting m =
+    let
+        output =
+            case m.s.sshScriptOutput of
+                RemoteData.NotAsked -> ""
+                RemoteData.Loading -> "(waiting)"
+                RemoteData.Success s -> s
+                RemoteData.Failure e -> "failed"
+    in
+        div [ style "flex-direction" "rows" ]
+            [ div [ style "white-space" "pre"
+                  , style "font-family" "monospace"
+                  ] [ text output ]
+            , Button.text
+                  (Button.config
+                  |> Button.setOnClick ExecSshScriptDone
+                  |> Button.setDisabled (not (goodToExec m))
+                  ) "Finish"
+        ]

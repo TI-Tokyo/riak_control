@@ -57,18 +57,18 @@ def make_and_exec(url, user, key, template_body, params, send_resp_f, wfile):
 
 def _scp(url, user, idf, f):
     logging.info("copying script %s to %s as %s (using key %s)", f, url, user, idf)
+    if idf:
+        idf_args = ["-i", idf]
+    else:
+        idf_args = []
+    p = subprocess.run(["scp"] + idf_args +
+                       ["-o", "KbdInteractiveAuthentication=no",
+                        "-o", "PasswordAuthentication=no",
+                        f, user+"@"+url+":"],
+                       capture_output = True,
+                       encoding ='utf8',
+                       timeout = 15)
     try:
-        if idf:
-            idf_args = ["-i", idf]
-        else:
-            idf_args = []
-        p = subprocess.run(["scp"] + idf_args +
-                           ["-o", "KbdInteractiveAuthentication=no",
-                            "-o", "PasswordAuthentication=no",
-                            f, user+"@"+url+":"],
-                           capture_output = True,
-                           encoding ='utf8',
-                           timeout = 15)
         if p.returncode != 0:
             raise rctl_globals.RctlException(404, "scp failed ({}): {}".format(p.returncode, p.stderr))
     except subprocess.TimeoutExpired:

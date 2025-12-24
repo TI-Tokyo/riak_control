@@ -32,7 +32,7 @@ def _load_config():
         logging.info("Config not found: using defaults (admin user: %s, password: %s)",
                      rctl_globals.CONFIG['admin']['name'],
                      base64.b64decode(
-                         rctl_globals.CONFIG['admin']['password']).decode('utf-8'))
+                         rctl_globals.CONFIG['admin']['password']))
 
 def _load_globals():
     try:

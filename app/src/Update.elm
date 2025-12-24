@@ -48,6 +48,7 @@ import Dict exposing (Dict)
 import Json.Decode
 import Http
 import Process
+import RemoteData
 import Material.Snackbar as Snackbar
 
 
@@ -191,21 +192,29 @@ update msg m =
 
         ExecSshScript ->
             let
+                s_ = m.s
                 tpp = Model.scriptTemplateBy m .name m.s.sshSelectedScriptTemplateName |> .params
                 rpp = { hosts = m.s.sshTargetHostsStr
                       , scriptTemplateName = m.s.sshSelectedScriptTemplateName
                       , scriptTemplateParams = tpp
                       }
             in
-                (m, Request.SshOps.execSshScript m rpp)
-        SshScriptExecuted (Ok ()) ->
+                ( {m | s = {s_ | sshScriptExecuting = True}}
+                , Request.SshOps.execSshScript m rpp
+                )
+        SshScriptExecuting output ->
+            let
+                s_ = m.s
+                upd = RemoteData.map2
+                      (++) s_.sshScriptOutput output
+            in
+                ( {m | s = {s_ | sshScriptOutput = upd}}
+                , Cmd.none
+                )
+
+        ExecSshScriptDone ->
             let s_ = m.s in
-            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
-                            (Snackbar.message ("Script executed")) m.s.msgQueue}}
-            , Cmd.none
-            )
-        SshScriptExecuted (Err err) ->
-            ( handleHttpError m "Failed to execute script: " err
+            ( {m | s = {s_ | sshScriptExecuting = False}}
             , Cmd.none
             )
 

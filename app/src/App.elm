@@ -29,6 +29,7 @@ import View.Common exposing (SortByField(..))
 import Dict exposing (Dict)
 import Task
 import Time
+import RemoteData
 import Material.Snackbar as Snackbar
 
 type alias Flags =
@@ -61,6 +62,8 @@ init f =
                 []
                 False "(new key id)" "(new key body)"
                 False "(key id to delete)"
+                RemoteData.NotAsked
+                False
                 -- config
                 { riakVersion = "---"
                 , systemVersion = "---"

@@ -36,6 +36,7 @@ def find_template(name):
 class RctlException(Exception):
     msg = None
     status = 0
-    def RctlException(s, m):
-        status = s
-        msg = m
+    def __init__(self, s, m):
+        self.status = s
+        self.msg = m
+        super().__init__(self.msg)

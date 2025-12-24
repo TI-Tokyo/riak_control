@@ -20,6 +20,6 @@ def default_config():
     return {
         "admin": {
             "name": "murzyk",
-            "password": hashlib.sha256(b"synpoliana").hexdigest()
+            "password": hashlib.sha256(b"synpoliana").hexdigest().encode('utf-8')
         }
     }

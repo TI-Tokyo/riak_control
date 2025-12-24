@@ -39,6 +39,7 @@ import Data.Vnode
 import Msg
 import View.Common exposing (SortOrder, SortByField)
 
+import RemoteData
 import Material.Snackbar as Snackbar
 import Time
 import Dict
@@ -74,7 +75,7 @@ type alias State =
     , activeTab : Msg.Tab
     , topDrawerOpen : Bool
 
-    -- boot options
+    -- boot/sshops options
     , sshScriptTemplateSpecs : List Data.SshOps.ScriptTemplate
     , sshTargetHostsStr : String
     , sshSelectedScriptTemplateName : String
@@ -85,6 +86,9 @@ type alias State =
     , sshNewKeyBody : String
     , sshDeleteKeyDialogShown : Bool
     , sshKeyNameToDelete : String
+
+    , sshScriptOutput : RemoteData.WebData String
+    , sshScriptExecuting : Bool
 
     -- connection
     , serverInfo : ServerInfo

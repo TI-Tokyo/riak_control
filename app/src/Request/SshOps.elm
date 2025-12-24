@@ -38,6 +38,7 @@ import HttpBuilder
 import HttpBuilder.Task
 import Url.Builder
 import Json.Encode exposing (string, object, list)
+import RemoteData
 import Base64
 
 
@@ -106,7 +107,7 @@ execSshScript m pp =
         |> HttpBuilder.post
         |> HttpBuilder.withHeaders (stdHeaders m)
         |> HttpBuilder.withJsonBody (sshCommandEncoder pp)
-        |> HttpBuilder.withExpect (Http.expectWhatever SshScriptExecuted)
+        |> HttpBuilder.withExpect (Http.expectString (RemoteData.fromResult >> SshScriptExecuting))
         |> HttpBuilder.request
 
 sshCommandEncoder {hosts, scriptTemplateName, scriptTemplateParams} =

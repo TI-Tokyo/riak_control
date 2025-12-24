@@ -37,6 +37,7 @@ import Data.Vnode
 import Task
 import Http
 import Time
+import RemoteData
 import Material.Snackbar as Snackbar
 import File exposing (File)
 import Dict exposing (Dict)
@@ -64,7 +65,8 @@ type Msg
     | DeleteSshKey
     | SshKeyDeleted (Result Http.Error ())
     | ExecSshScript
-    | SshScriptExecuted (Result Http.Error ())
+    | SshScriptExecuting (RemoteData.WebData String)
+    | ExecSshScriptDone
 
     | SshTargetHostsChanged String
     | SshScriptTemplateParamChanged String String
