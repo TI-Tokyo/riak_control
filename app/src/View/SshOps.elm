@@ -156,7 +156,7 @@ makeScriptBlockExecuting m =
     let
         output =
             case m.s.sshScriptOutput of
-                RemoteData.NotAsked -> ""
+                RemoteData.NotAsked -> "^"
                 RemoteData.Loading -> "(waiting)"
                 RemoteData.Success s -> s
                 RemoteData.Failure e -> "failed"

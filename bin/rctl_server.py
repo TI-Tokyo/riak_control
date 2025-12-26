@@ -14,7 +14,7 @@
 ## specific language governing permissions and limitations
 ## under the License.
 
-import re, json, datetime, base64, hashlib
+import re, json, datetime, base64, hashlib, sys
 import functools
 import logging
 from http.server import SimpleHTTPRequestHandler, HTTPServer
@@ -41,14 +41,14 @@ class RiakRequestRequestHandler(SimpleHTTPRequestHandler):
                     handler(req, send_resp_f, self.wfile)
                 else:
                     self._send_response(403)
-                    self.wfile.write("handle me: %s".format(e).encode('utf-8'))
+                    self.wfile.write(b"Unauthorized")
             except RctlException as e:
                 self._send_response(e.status)
                 self.wfile.write(e.msg.encode('utf-8'))
-            except Exception as e:
+            except Exception:
                 self._send_response(500)
-                print(e)
-                self.wfile.write("handle me: %s".format(e).encode('utf-8'))
+                print(sys.exception())
+                self.wfile.write("handle me: {}".format(repr(sys.exception())).encode('utf-8'))
 
 
     def _authorize(self, req):
@@ -141,8 +141,8 @@ def _exec_script(req, send_resp_f, wfile):
     except RctlException as e:
         send_resp_f(e.status)
         wfile.write(e.msg.encode('utf-8'))
-    except Exception as e:
-        logging.error("%s", e)
+    except Exception:
+        logging.error("%s", sys.exception())
         send_resp_f(500)
 
 def _parse_hosts(s):

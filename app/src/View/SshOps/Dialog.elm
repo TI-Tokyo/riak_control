@@ -60,7 +60,7 @@ maybeMakeEditAdminCredsDialog m =
                                       |> TextField.setLabel (Just "Name")
                                       |> TextField.setRequired True
                                       |> TextField.setValue (Just m.s.rctlAdminCredsNewUser)
-                                      |> TextField.setOnChange RctlAdminCredsNameChanged
+                                      |> TextField.setOnInput RctlAdminCredsNameChanged
                                       |> TextField.setAttributes [ attribute "spellCheck" "false" ]
                                       )
                                 , TextField.filled
@@ -68,7 +68,7 @@ maybeMakeEditAdminCredsDialog m =
                                       |> TextField.setLabel (Just "Password")
                                       |> TextField.setRequired True
                                       |> TextField.setValue (Just m.s.rctlAdminCredsNewPassword)
-                                      |> TextField.setOnChange RctlAdminCredsPasswordChanged
+                                      |> TextField.setOnInput RctlAdminCredsPasswordChanged
                                       |> TextField.setAttributes [ attribute "spellCheck" "false" ]
                                       )
                                 ]
