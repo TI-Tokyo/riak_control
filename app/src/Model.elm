@@ -76,6 +76,10 @@ type alias State =
     , topDrawerOpen : Bool
 
     -- boot/sshops options
+    , rctlAdminCredsDialogShown : Bool
+    , rctlAdminCredsNewUser : String
+    , rctlAdminCredsNewPassword : String
+
     , sshScriptTemplateSpecs : List Data.SshOps.ScriptTemplate
     , sshTargetHostsStr : String
     , sshSelectedScriptTemplateName : String

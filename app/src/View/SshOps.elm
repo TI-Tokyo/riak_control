@@ -38,7 +38,8 @@ import RemoteData
 makeContent m =
     div View.Style.topContent
         ([ makeMain m
-         ] ++ (maybeMakeAddKeyDialog m)
+         ] ++ (maybeMakeEditAdminCredsDialog m)
+           ++ (maybeMakeAddKeyDialog m)
            ++ (maybeMakeDeleteKeyDialog m))
 
 makeMain m =

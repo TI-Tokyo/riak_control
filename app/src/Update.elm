@@ -66,6 +66,31 @@ update msg m =
             , Cmd.none
             )
 
+        -- Rctl Admin Creds
+        ------------------------------
+        ShowRctlEditAdminCredsDialog ->
+            let s_ = m.s in
+            ({m | s = {s_ | rctlAdminCredsDialogShown = True}}, Cmd.none)
+        RctlAdminCredsNameChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | rctlAdminCredsNewUser = a}}, Cmd.none)
+        RctlAdminCredsPasswordChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | rctlAdminCredsNewPassword = a}}, Cmd.none)
+        RctlEditAdminCredsDialogCancelled ->
+            let s_ = m.s in
+            ({m | s = {s_ | rctlAdminCredsDialogShown = False}}, Cmd.none)
+        RctlEditAdminCredsDialogConfirmed ->
+            let
+                c_ = m.c
+                s_ = m.s
+            in
+                ( {m | s = {s_ | rctlAdminCredsDialogShown = False}
+                    , c = {c_ | riakControlServerUser = s_.rctlAdminCredsNewUser
+                              , riakControlServerPassword = s_.rctlAdminCredsNewPassword}}
+                , Cmd.none
+                )
+
         -- SshOps
         ------------------------------
         RefreshBootOptions ->

@@ -58,6 +58,7 @@ init f =
                 [] [] []
                 Snackbar.initialQueue Msg.Connection True
                 -- boot
+                False f.riakControlServerUser f.riakControlServerPassword
                 [] "(user@host (ssh-key-name))" "(script template id)"
                 []
                 False "(new key id)" "(new key body)"

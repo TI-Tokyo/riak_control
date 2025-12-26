@@ -56,6 +56,12 @@ type Msg
     -- SshOps
     ----------
     = RefreshBootOptions
+    | RctlEditAdminCredsDialogCancelled
+    | RctlEditAdminCredsDialogConfirmed
+    | RctlAdminCredsNameChanged String
+    | RctlAdminCredsPasswordChanged String
+    | ShowRctlEditAdminCredsDialog
+
     | GetSshScriptTemplateList
     | GotSshScriptTemplateList (Result Http.Error (List Data.SshOps.ScriptTemplate))
     | GetSshKeyList

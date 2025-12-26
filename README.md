@@ -49,3 +49,13 @@ $(platform\_etc\_dir).
 
 - `{riak_kv, [{secure_referer_check, false}]}` (this should be
 properly dealt with before a 1.0 release).
+
+### rctl.conf
+```
+{
+    "admin": {
+        "name": "barsyk",
+        "password": "b72fd0f9173971a62181358f796f7304f2c7fb48ef6cc109331652b8808fafb5"
+    }
+}
+```

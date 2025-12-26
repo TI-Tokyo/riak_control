@@ -19,7 +19,8 @@
 -- ---------------------------------------------------------------------
 
 module View.SshOps.Dialog exposing
-    ( maybeMakeAddKeyDialog
+    ( maybeMakeEditAdminCredsDialog
+    , maybeMakeAddKeyDialog
     , maybeMakeDeleteKeyDialog
     )
 
@@ -38,6 +39,56 @@ import Material.TextArea as TextArea
 import Material.Select as Select
 import Material.Select.Item as SelectItem
 import Material.Dialog as Dialog
+
+maybeMakeEditAdminCredsDialog m =
+    if m.s.rctlAdminCredsDialogShown then
+        [ Dialog.confirmation
+              (Dialog.config
+              |> Dialog.setOpen True
+              |> Dialog.setOnClose RctlEditAdminCredsDialogCancelled
+              )
+              { title = "Admin creds"
+              , content =
+                    [ div View.Style.dialogContentPart
+                          [ div [ style "display" "grid"
+                                , style "grid-template-columns" "repeat(2, 1fr)"
+                                , style "align-items" "left"
+                                , style "margin" "0.6em 0 0 0"
+                                ]
+                                [ TextField.filled
+                                      (TextField.config
+                                      |> TextField.setLabel (Just "Name")
+                                      |> TextField.setRequired True
+                                      |> TextField.setOnChange RctlAdminCredsNameChanged
+                                      |> TextField.setAttributes [ attribute "spellCheck" "false" ]
+                                      )
+                                , TextField.filled
+                                      (TextField.config
+                                      |> TextField.setLabel (Just "Password")
+                                      |> TextField.setRequired True
+                                      |> TextField.setOnChange RctlAdminCredsPasswordChanged
+                                      |> TextField.setAttributes [ attribute "spellCheck" "false" ]
+                                      )
+                                ]
+                          ]
+                    ]
+              , actions =
+                    [ Button.text
+                          (Button.config |> Button.setOnClick RctlEditAdminCredsDialogCancelled)
+                          "Cancel"
+                    , Button.text
+                          (Button.config
+                          |> Button.setOnClick RctlEditAdminCredsDialogConfirmed
+                          |> Button.setAttributes [ Dialog.defaultAction ]
+                          )
+                          "Ok"
+                    ]
+              }
+        ]
+    else
+        []
+
+
 
 maybeMakeAddKeyDialog m =
     if m.s.sshAddKeyDialogShown then
