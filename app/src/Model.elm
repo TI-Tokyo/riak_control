@@ -91,7 +91,7 @@ type alias State =
     , sshDeleteKeyDialogShown : Bool
     , sshKeyNameToDelete : String
 
-    , sshScriptOutput : RemoteData.WebData String
+    , sshScriptOutput : String
     , sshScriptExecuting : Bool
 
     -- connection

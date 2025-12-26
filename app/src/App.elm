@@ -25,6 +25,7 @@ import Data.Cluster
 import Update exposing (refreshAll)
 import Msg exposing (Msg(..))
 import View.Common exposing (SortByField(..))
+import Static
 
 import Dict exposing (Dict)
 import Task
@@ -63,7 +64,7 @@ init f =
                 []
                 False "(new key id)" "(new key body)"
                 False "(key id to delete)"
-                RemoteData.NotAsked
+                Static.awaitingOutput
                 False
                 -- config
                 { riakVersion = "---"

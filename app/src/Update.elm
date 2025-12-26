@@ -40,6 +40,7 @@ import Data.Vnode
 import Data.Json
 import View.Common
 import Util
+import Static
 
 import Time
 import Task exposing (attempt, perform, andThen, succeed, sequence)
@@ -224,22 +225,34 @@ update msg m =
                       , scriptTemplateParams = tpp
                       }
             in
-                ( {m | s = {s_ | sshScriptExecuting = True}}
+                ( {m | s = {s_ | sshScriptExecuting = True
+                               , sshScriptOutput = Static.awaitingOutput}}
                 , Request.SshOps.execSshScript m rpp
                 )
         SshScriptExecuting output ->
             let
                 s_ = m.s
-                upd = RemoteData.map2
-                      (++) s_.sshScriptOutput output
+                appendf =
+                    \a ->
+                        if s_.sshScriptOutput == Static.awaitingOutput then
+                            a
+                        else
+                            s_.sshScriptOutput ++ a
+                newOutput =
+                    case output of
+                        RemoteData.NotAsked -> s_.sshScriptOutput
+                        RemoteData.Loading -> s_.sshScriptOutput
+                        RemoteData.Failure e -> "Failed"
+                        RemoteData.Success a -> appendf a
             in
-                ( {m | s = {s_ | sshScriptOutput = upd}}
+                ( {m | s = {s_ | sshScriptOutput = newOutput}}
                 , Cmd.none
                 )
 
         ExecSshScriptDone ->
             let s_ = m.s in
-            ( {m | s = {s_ | sshScriptExecuting = False}}
+            ( {m | s = {s_ | sshScriptExecuting = False
+                           , sshScriptOutput = Static.awaitingOutput}}
             , Cmd.none
             )
 

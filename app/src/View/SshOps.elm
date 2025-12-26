@@ -153,21 +153,13 @@ makeScriptTemplateParams m =
 
 
 makeScriptBlockExecuting m =
-    let
-        output =
-            case m.s.sshScriptOutput of
-                RemoteData.NotAsked -> "^"
-                RemoteData.Loading -> "(waiting)"
-                RemoteData.Success s -> s
-                RemoteData.Failure e -> "failed"
-    in
-        div [ style "flex-direction" "rows" ]
-            [ div [ style "white-space" "pre"
-                  , style "font-family" "monospace"
-                  ] [ text output ]
-            , Button.text
-                  (Button.config
-                  |> Button.setOnClick ExecSshScriptDone
-                  |> Button.setDisabled (not (goodToExec m))
-                  ) "Finish"
+    div [ style "flex-direction" "rows" ]
+        [ div [ style "white-space" "pre"
+              , style "font-family" "monospace"
+              ] [ text m.s.sshScriptOutput ]
+        , Button.text
+              (Button.config
+              |> Button.setOnClick ExecSshScriptDone
+              |> Button.setDisabled (not (goodToExec m))
+              ) "Finish"
         ]
