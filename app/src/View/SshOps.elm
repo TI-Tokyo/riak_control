@@ -26,7 +26,7 @@ import Data.SshOps
 import View.Style
 import View.SshOps.Dialog exposing (..)
 
-import Html exposing (Html, text, div, pre)
+import Html exposing (Html, text, div, pre, b)
 import Html.Attributes exposing (attribute, style, class)
 import Material.Button as Button
 import Material.TextField as TextField
@@ -45,8 +45,20 @@ makeContent m =
 makeMain m =
     div [ style "flex-direction" "column"
         , style "padding" "2em 1em 2em"
-        ] [ makeSshKeysBlock m
-          , makeScriptTemplateBlock m
+        ] [ makeRctlServerBlock m
+          , makeSshKeysBlock m
+          , div [ style "border-top" "solid grey"
+                ] [ makeScriptBlock m ]
+          ]
+
+makeRctlServerBlock m =
+    div [ style "display" "grid", style "grid-template-columns" "auto min-content"
+        ] [ div [] [ text <| "Riak Control server at "
+                   , b [] [ text m.c.riakControlServerUrl ]
+                   , text <| ", admin user "
+                   , b [] [ text m.c.riakControlServerUser ]
+                   ]
+          , Button.text (Button.config |> Button.setOnClick ShowRctlEditAdminCredsDialog) "Creds"
           ]
 
 makeSshKeysBlock m =
@@ -60,13 +72,13 @@ makeSshKeysBlock m =
               , Button.text (Button.config |> Button.setOnClick ShowDeleteSshKeyDialog) "Remove"
               ]
 
-makeScriptTemplateBlock m =
+makeScriptBlock m =
     if m.s.sshScriptExecuting then
-        makeScriptTemplateBlockExecuting m
+        makeScriptBlockExecuting m
     else
-        makeScriptTemplateBlockWaiting m
+        makeScriptBlockWaiting m
 
-makeScriptTemplateBlockWaiting m =
+makeScriptBlockWaiting m =
     let
         (t0, tt) =
             case m.s.sshScriptTemplateSpecs of
@@ -140,7 +152,7 @@ makeScriptTemplateParams m =
             div [] []
 
 
-makeScriptTemplateBlockExecuting m =
+makeScriptBlockExecuting m =
     let
         output =
             case m.s.sshScriptOutput of
