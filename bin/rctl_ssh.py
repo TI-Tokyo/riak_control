@@ -87,13 +87,19 @@ def _ssh_exec(url, user, idf_name, scriptf_name, params,
                          [user+"@"+url, "./"+os.path.basename(scriptf_name)],
                          encoding ='utf8',
                          stdout = subprocess.PIPE,
-                         stderr = subprocess.STDOUT)
+                         stderr = subprocess.STDOUT,
+                         bufsize = 32,
+                         pipesize = 32,
+                         text = True)
     send_resp_f(202)
+    amt_sent = 0
     while p.poll() is None:
         try:
-            outs, _ = p.communicate(timeout = 5)
-            wfile.write(outs.encode('utf-8'))
-        except subprocess.TimeoutExpired:
+            outs, _ = p.communicate(timeout = 1)
+            wfile.write(outs[amt_sent:].encode('utf-8'))
+        except subprocess.TimeoutExpired as e:
+            wfile.write(e.output[amt_sent:])
+            amt_sent = len(e.output)
             pass
     if p.returncode == 0:
         wfile.write(b"Script terminated successfully\n")

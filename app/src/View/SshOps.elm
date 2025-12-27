@@ -25,6 +25,7 @@ import Msg exposing (Msg(..))
 import Data.SshOps
 import View.Style
 import View.SshOps.Dialog exposing (..)
+import Util
 
 import Html exposing (Html, text, div, pre, b)
 import Html.Attributes exposing (attribute, style, class)
@@ -81,9 +82,7 @@ makeScriptBlock m =
 makeScriptBlockWaiting m =
     let
         (t0, tt) =
-            case m.s.sshScriptTemplateSpecs of
-                x0 :: xx -> (x0, xx)
-                [] -> (Data.SshOps.dummyScriptTemplate, [])
+            Util.headAndTail m.s.sshScriptTemplateSpecs Data.SshOps.dummyScriptTemplate
     in
         div [ style "flex-direction" "rows" ]
             [ div [ style "display" "grid"
