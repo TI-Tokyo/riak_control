@@ -218,40 +218,59 @@ update msg m =
 
         ExecSshScript ->
             let
-                s_ = m.s
                 tpp = Model.scriptTemplateBy m .name m.s.sshSelectedScriptTemplateName |> .params
                 rpp = { hosts = m.s.sshTargetHostsStr
                       , scriptTemplateName = m.s.sshSelectedScriptTemplateName
                       , scriptTemplateParams = tpp
                       }
             in
-                ( {m | s = {s_ | sshScriptExecuting = True
-                               , sshScriptOutput = Static.awaitingOutput}}
-                , Request.SshOps.execSshScript m rpp
-                )
-        SshScriptExecuting output ->
+                (m, Request.SshOps.execSshScript m rpp)
+        SshScriptExecuting (Ok {sessionId}) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | sshScriptExecutionStatus = Data.SshOps.ScriptRunning}}
+            , Request.SshOps.getScriptOutput m {sessionId = sessionId}
+            )
+        SshScriptExecuting (Err err) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | sshScriptExecutionStatus = Data.SshOps.ScriptFinished
+                           , msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Failed to execute script: " ++ (explainHttpError err))) m.s.msgQueue}}
+            , Cmd.none
+            )
+
+        GotScriptOutput (Ok {sessionId, finished, output})  ->
             let
                 s_ = m.s
-                appendf =
-                    \a ->
-                        if s_.sshScriptOutput == Static.awaitingOutput then
-                            a
-                        else
-                            s_.sshScriptOutput ++ a
                 newOutput =
-                    case output of
-                        RemoteData.NotAsked -> s_.sshScriptOutput
-                        RemoteData.Loading -> s_.sshScriptOutput
-                        RemoteData.Failure e -> "Failed"
-                        RemoteData.Success a -> appendf a
+                    if s_.sshScriptOutput == Static.awaitingOutput then
+                        output
+                    else
+                        s_.sshScriptOutput ++ output
+                (newExecStatus, cmd) =
+                    if finished then
+                        ( Data.SshOps.ScriptFinished
+                        , Cmd.none
+                        )
+                    else
+                        ( Data.SshOps.ScriptRunning
+                        , Request.SshOps.getScriptOutput m {sessionId = sessionId}
+                        )
             in
-                ( {m | s = {s_ | sshScriptOutput = newOutput}}
-                , Cmd.none
+                ( {m | s = {s_ | sshScriptExecutionStatus = newExecStatus
+                               , sshScriptOutput = newOutput}}
+                , cmd
                 )
+        GotScriptOutput (Err err)  ->
+            let s_ = m.s in
+            ( {m | s = {s_ | sshScriptExecutionStatus = Data.SshOps.ScriptFinished
+                           , msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Failed to get script output: " ++ (explainHttpError err))) m.s.msgQueue}}
+            , Cmd.none
+            )
 
         ExecSshScriptDone ->
             let s_ = m.s in
-            ( {m | s = {s_ | sshScriptExecuting = False
+            ( {m | s = {s_ | sshScriptExecutionStatus = Data.SshOps.ScriptNotStarted
                            , sshScriptOutput = Static.awaitingOutput}}
             , Cmd.none
             )

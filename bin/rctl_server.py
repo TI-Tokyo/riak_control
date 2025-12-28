@@ -70,6 +70,7 @@ class RiakRequestRequestHandler(SimpleHTTPRequestHandler):
         self.send_header("content-type", "application/json")
         self.end_headers()
 
+
 def run(port, docroot):
     server_address = ("", port)
     Handler = functools.partial(RiakRequestRequestHandler, directory = docroot)
@@ -131,13 +132,13 @@ def _exec_script(req, send_resp_f, wfile):
             key = rctl_globals.find_key(h['key'])
             logging.info("exec: script: %s, on %s as %s, key: %s",
                          template['name'], h['url'], h['user'], h['key'])
-            rctl_ssh.make_and_exec(h['url'],
-                                   h['user'],
-                                   key,
-                                   template['body'],
-                                   req['params'],
-                                   send_resp_f,
-                                   wfile)
+            session = rctl_ssh.make_and_exec(
+                h['url'], h['user'], key,
+                template['body'], req['params'])
+            send_resp_f(202)
+            wfile.write(
+                json.dumps(session).encode('utf-8')
+            )
     except RctlException as e:
         send_resp_f(e.status)
         wfile.write(e.msg.encode('utf-8'))
@@ -159,9 +160,44 @@ def _parse_hosts(s):
                'key': key}]
     return o
 
+def _get_script_output(req, send_resp_f, wfile):
+    session = rctl_globals.ACTIVE_SSH_SESSIONS[req['session_id']]
+    p = session['process']
+    bytes_sent = session['sent_bytes']
+
+    send_resp_f(200)
+    try:
+        outs, _ = p.communicate(timeout = 1)
+        output = outs[bytes_sent:]
+        if p.returncode == 0:
+            output += "Script terminated successfully\n"
+        else:
+            output += "Script terminated with error code {}\n".format(p.returncode)
+        ret = {
+            "session_id": req['session_id'],
+            "finished": True,
+            "output": output
+        }
+        wfile.write(json.dumps(ret).encode('utf-8'))
+        del rctl_globals.ACTIVE_SSH_SESSIONS[req['session_id']]
+
+    except subprocess.TimeoutExpired as e:
+        output = e.output[bytes_sent:]
+        ret = {
+            "session_id": req['session_id'],
+            "finished": False,
+            "output": output
+        }
+        wfile.write(json.dumps(ret).encode('utf-8'))
+        bytes_sent = len(e.output)
+        session |= {'sent_bytes': bytes_sent}
+        rctl_globals.ACTIVE_SSH_SESSIONS |= session
+
+
 HANDLERS = {'ListSshKeys': _list_ssh_keys,
             'StoreSshKey': _store_ssh_key,
             'DeleteSshKey': _delete_ssh_key,
             'ListScriptTemplates': _list_script_templates,
-            'ExecScript': _exec_script
+            'ExecScript': _exec_script,
+            'GetScriptOutput': _get_script_output
             }

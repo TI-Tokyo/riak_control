@@ -24,6 +24,7 @@ module Request.SshOps exposing
     , storeSshKey
     , deleteSshKey
     , execSshScript
+    , getScriptOutput
     )
 
 import Model exposing (Model)
@@ -107,7 +108,7 @@ execSshScript m pp =
         |> HttpBuilder.post
         |> HttpBuilder.withHeaders (stdHeaders m)
         |> HttpBuilder.withJsonBody (sshCommandEncoder pp)
-        |> HttpBuilder.withExpect (Http.expectString (RemoteData.fromResult >> SshScriptExecuting))
+        |> HttpBuilder.withExpect (Http.expectJson SshScriptExecuting Data.Json.decodeSshSession)
         |> HttpBuilder.request
 
 sshCommandEncoder {hosts, scriptTemplateName, scriptTemplateParams} =
@@ -123,6 +124,21 @@ sshCommandEncoder {hosts, scriptTemplateName, scriptTemplateParams} =
             , ("script_name", string scriptTemplateName)
             , ("params", object pp)
             ]
+
+getScriptOutput : Model -> GetScriptOutputCmdParams -> Cmd Msg
+getScriptOutput m pp =
+    Url.Builder.crossOrigin m.c.riakControlServerUrl [] []
+        |> HttpBuilder.post
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withJsonBody (getScriptOutputCommandEncoder pp)
+        |> HttpBuilder.withExpect (Http.expectJson GotScriptOutput Data.Json.decodeScriptOutput)
+        |> HttpBuilder.request
+
+getScriptOutputCommandEncoder {sessionId} =
+    object
+        [ ("command", string "GetScriptOutput")
+        , ("session_id", string sessionId)
+        ]
 
 
 stdHeaders m =

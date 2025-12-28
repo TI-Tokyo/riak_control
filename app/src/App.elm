@@ -22,6 +22,7 @@ module App exposing (init, subscriptions, Flags)
 
 import Model exposing (..)
 import Data.Cluster
+import Data.SshOps
 import Update exposing (refreshAll)
 import Msg exposing (Msg(..))
 import View.Common exposing (SortByField(..))
@@ -65,7 +66,7 @@ init f =
                 False "(new key id)" "(new key body)"
                 False "(key id to delete)"
                 Static.awaitingOutput
-                False
+                Data.SshOps.ScriptNotStarted
                 -- config
                 { riakVersion = "---"
                 , systemVersion = "---"

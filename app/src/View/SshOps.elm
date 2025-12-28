@@ -74,10 +74,10 @@ makeSshKeysBlock m =
               ]
 
 makeScriptBlock m =
-    if m.s.sshScriptExecuting then
-        makeScriptBlockExecuting m
-    else
-        makeScriptBlockWaiting m
+    case m.s.sshScriptExecutionStatus of
+        Data.SshOps.ScriptNotStarted -> makeScriptBlockWaiting m
+        Data.SshOps.ScriptRunning -> makeScriptBlockExecuting m Data.SshOps.ScriptRunning
+        Data.SshOps.ScriptFinished -> makeScriptBlockExecuting m Data.SshOps.ScriptFinished
 
 makeScriptBlockWaiting m =
     let
@@ -151,7 +151,7 @@ makeScriptTemplateParams m =
             div [] []
 
 
-makeScriptBlockExecuting m =
+makeScriptBlockExecuting m status =
     div [ style "flex-direction" "rows" ]
         [ div [ style "white-space" "pre"
               , style "font-family" "monospace"
@@ -159,6 +159,7 @@ makeScriptBlockExecuting m =
         , Button.text
               (Button.config
               |> Button.setOnClick ExecSshScriptDone
+              |> Button.setDisabled (status == Data.SshOps.ScriptRunning)
               |> Button.setDisabled (not (goodToExec m))
               ) "Finish"
         ]

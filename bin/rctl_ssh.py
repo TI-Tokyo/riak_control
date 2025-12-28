@@ -20,7 +20,7 @@ import tempfile
 import subprocess
 import rctl_globals
 
-def make_and_exec(url, user, key, template_body, params, send_resp_f, wfile):
+def make_and_exec(url, user, key, template_body, params):
     if key:
         idf = tempfile.NamedTemporaryFile(dir = rctl_globals.DATADIR,
                                           mode = 'w+',
@@ -45,15 +45,13 @@ def make_and_exec(url, user, key, template_body, params, send_resp_f, wfile):
 
     _scp(url, user, idf_name, scriptf.name)
 
-    t0 = time.time_ns()
-    _ssh_exec(url, user, idf_name, scriptf.name, params,
-              send_resp_f, wfile)
-    t1 = time.time_ns()
-    logging.info("script executed in %d msec", (t1 - t0) // 1000000)
+    res = _ssh_exec(url, user, idf_name, scriptf.name, params)
 
     if idf_name is not None:
         os.unlink(idf.name)
     os.unlink(scriptf.name)
+
+    return res
 
 def _scp(url, user, idf, f):
     logging.info("copying script %s to %s as %s (using key %s)", f, url, user, idf)
@@ -74,8 +72,7 @@ def _scp(url, user, idf, f):
     except subprocess.TimeoutExpired:
         raise rctl_globals.RctlException(408, "scp failed ({}): {}".format(p.returncode, p.stderr))
 
-def _ssh_exec(url, user, idf_name, scriptf_name, params,
-              send_resp_f, wfile):
+def _ssh_exec(url, user, idf_name, scriptf_name, params):
     logging.info("executing script %s on %s as %s (using key %s)", scriptf_name, url, user, idf_name)
     if idf_name is not None:
         idf_args = ["-i", idf_name]
@@ -88,20 +85,13 @@ def _ssh_exec(url, user, idf_name, scriptf_name, params,
                          encoding ='utf8',
                          stdout = subprocess.PIPE,
                          stderr = subprocess.STDOUT,
-                         bufsize = 32,
-                         pipesize = 32,
                          text = True)
-    send_resp_f(202)
-    amt_sent = 0
-    while p.poll() is None:
-        try:
-            outs, _ = p.communicate(timeout = 1)
-            wfile.write(outs[amt_sent:].encode('utf-8'))
-        except subprocess.TimeoutExpired as e:
-            wfile.write(e.output[amt_sent:])
-            amt_sent = len(e.output)
-            pass
-    if p.returncode == 0:
-        wfile.write(b"Script terminated successfully\n")
-    else:
-        wfile.write("Script terminated with error code {}".format(p.returncode).encode('utf-8'))
+
+    session_id = uuid.uuid4()
+    session = {
+        "process": p,
+        "sent_bytes": 0
+    }
+    rctl_globals.ACTIVE_SSH_SESSIONS |= {session_id: session}
+
+    return {"session_id": session_id}

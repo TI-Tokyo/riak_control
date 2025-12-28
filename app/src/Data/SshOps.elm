@@ -20,13 +20,34 @@
 
 module Data.SshOps exposing (..)
 
-import Regex
-
 type Command
     = GetScriptTemplateList
     | ExecScriptCommand ExecScriptCmdParams
+    | GetScriptOutputCommand GetScriptOutputCmdParams
     | StoreKeyCommand StoreKeyCmdParams
     | DeleteKeyCommand DeleteKeyCmdParams
+
+type alias StoreKeyCmdParams =
+    { name : String
+    , body : String
+    }
+
+type alias DeleteKeyCmdParams =
+    { name : String
+    }
+
+type alias SshKey =
+    { name : String
+    , created : String
+    , body : String
+    }
+
+dummySshKey =
+    { name = ""
+    , body = ""
+    , created = ""
+    }
+
 
 type alias ScriptTemplate =
     { name : String
@@ -46,26 +67,8 @@ type alias ExecScriptCmdParams =
     , scriptTemplateParams : List TemplateParameter
     }
 
-type alias StoreKeyCmdParams =
-    { name : String
-    , body : String
-    }
-
-type alias DeleteKeyCmdParams =
-    { name : String
-    }
-
-type alias SshKey =
-    { name : String
-    , created : String
-    , body : String
-    }
-
-
-dummySshKey =
-    { name = ""
-    , body = ""
-    , created = ""
+type alias GetScriptOutputCmdParams =
+    { sessionId : String
     }
 
 dummyScriptTemplate =
@@ -74,4 +77,17 @@ dummyScriptTemplate =
     , params = []
     }
 
+type SshScriptExecutionStatus
+    = ScriptNotStarted
+    | ScriptRunning
+    | ScriptFinished
 
+type alias SshSession =
+    { sessionId : String
+    }
+
+type alias ScriptOutput =
+    { sessionId : String
+    , finished : Bool
+    , output : String
+    }

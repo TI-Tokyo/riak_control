@@ -21,6 +21,8 @@
 module Data.Json exposing
     ( decodeSshScriptTemplateList
     , decodeSshStoredKeyList
+    , decodeSshSession
+    , decodeScriptOutput
 
     , decodeServerInfo
 
@@ -84,6 +86,15 @@ decodeSshScriptTemplate =
             |> required "body" string
             |> required "params" (list tp)
 
+decodeSshSession =
+    succeed SshSession
+        |> required "session_id" string
+
+decodeScriptOutput =
+    succeed ScriptOutput
+        |> required "session_id" string
+        |> required "finished" bool
+        |> required "output" string
 
 
 -- Connection ------------------------------

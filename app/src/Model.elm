@@ -92,7 +92,7 @@ type alias State =
     , sshKeyNameToDelete : String
 
     , sshScriptOutput : String
-    , sshScriptExecuting : Bool
+    , sshScriptExecutionStatus : Data.SshOps.SshScriptExecutionStatus
 
     -- connection
     , serverInfo : ServerInfo

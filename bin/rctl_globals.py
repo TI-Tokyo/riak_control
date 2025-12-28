@@ -17,6 +17,8 @@
 CONFIG = {}
 SSH_KEYS = []
 SCRIPT_TEMPLATES = []
+ACTIVE_SSH_SESSIONS = {}
+
 DATADIR = "."
 ETCDIR = "."  # to be set in main()
 
