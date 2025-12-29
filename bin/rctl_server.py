@@ -16,6 +16,7 @@
 
 import re, json, datetime, base64, hashlib, sys
 import functools
+import subprocess
 import logging
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 
@@ -186,7 +187,7 @@ def _get_script_output(req, send_resp_f, wfile):
         ret = {
             "session_id": req['session_id'],
             "finished": False,
-            "output": output
+            "output": output.decode('utf-8')
         }
         wfile.write(json.dumps(ret).encode('utf-8'))
         bytes_sent = len(e.output)

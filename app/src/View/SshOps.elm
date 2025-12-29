@@ -49,6 +49,7 @@ makeMain m =
         ] [ makeRctlServerBlock m
           , makeSshKeysBlock m
           , div [ style "border-top" "solid grey"
+                , style "padding" "1em 0 0"
                 ] [ makeScriptBlock m ]
           ]
 
@@ -159,7 +160,7 @@ makeScriptBlockExecuting m status =
         , Button.text
               (Button.config
               |> Button.setOnClick ExecSshScriptDone
-              |> Button.setDisabled (status == Data.SshOps.ScriptRunning)
+              |> Button.setDisabled (status /= Data.SshOps.ScriptFinished)
               |> Button.setDisabled (not (goodToExec m))
               ) "Finish"
         ]

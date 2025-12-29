@@ -14,7 +14,7 @@
 ## specific language governing permissions and limitations
 ## under the License.
 
-import os, time
+import os, time, uuid
 import logging
 import tempfile
 import subprocess
@@ -37,7 +37,7 @@ def make_and_exec(url, user, key, template_body, params):
                                           delete = False)
     pp = []
     for p in params:
-        pp += [p+"="+params[p]]
+        pp += [p+"=\""+params[p]+"\""]
     pstr = "#!/bin/sh\nexport " + " ".join(pp) + "\n"
 
     scriptf.write(pstr + template_body)
@@ -59,18 +59,18 @@ def _scp(url, user, idf, f):
         idf_args = ["-i", idf]
     else:
         idf_args = []
-    p = subprocess.run(["scp"] + idf_args +
-                       ["-o", "KbdInteractiveAuthentication=no",
-                        "-o", "PasswordAuthentication=no",
-                        f, user+"@"+url+":"],
-                       capture_output = True,
-                       encoding ='utf8',
-                       timeout = 15)
     try:
+        p = subprocess.run(["scp"] + idf_args +
+                           ["-o", "KbdInteractiveAuthentication=no",
+                            "-o", "PasswordAuthentication=no",
+                            f, user+"@"+url+":"],
+                           capture_output = True,
+                           encoding ='utf8',
+                           timeout = 15)
         if p.returncode != 0:
             raise rctl_globals.RctlException(404, "scp failed ({}): {}".format(p.returncode, p.stderr))
     except subprocess.TimeoutExpired:
-        raise rctl_globals.RctlException(408, "scp failed ({}): {}".format(p.returncode, p.stderr))
+        raise rctl_globals.RctlException(408, "Host unreachable")
 
 def _ssh_exec(url, user, idf_name, scriptf_name, params):
     logging.info("executing script %s on %s as %s (using key %s)", scriptf_name, url, user, idf_name)
@@ -87,7 +87,7 @@ def _ssh_exec(url, user, idf_name, scriptf_name, params):
                          stderr = subprocess.STDOUT,
                          text = True)
 
-    session_id = uuid.uuid4()
+    session_id = str(uuid.uuid4())
     session = {
         "process": p,
         "sent_bytes": 0
