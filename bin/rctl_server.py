@@ -143,23 +143,23 @@ def _exec_script(req, send_resp_f, wfile):
     except RctlException as e:
         send_resp_f(e.status)
         wfile.write(e.msg.encode('utf-8'))
-    except Exception:
-        logging.error("%s", sys.exception())
-        send_resp_f(500)
 
 def _parse_hosts(s):
-    o = []
-    r = r'(\w+)@(\w+)\((\w*)\)'
-    for h in re.split(", +", s):
-        m = re.search(r, h)
-        if m.group(3) in ["", "none"]:
-            key = None
-        else:
-            key = m.group(3)
-        o += [{'user': m.group(1),
-               'url': m.group(2),
-               'key': key}]
-    return o
+    try:
+        o = []
+        r = r'(\w+)@(\w+)\((\w*)\)'
+        for h in re.split(", +", s):
+            m = re.search(r, h)
+            if m.group(3) in ["", "none"]:
+                key = None
+            else:
+                key = m.group(3)
+            o += [{'user': m.group(1),
+                   'url': m.group(2),
+                   'key': key}]
+        return o
+    except Exception:
+        raise rctl_globals.RctlException(400, "malformed target hosts")
 
 def _get_script_output(req, send_resp_f, wfile):
     session = rctl_globals.ACTIVE_SSH_SESSIONS[req['session_id']]
@@ -181,6 +181,8 @@ def _get_script_output(req, send_resp_f, wfile):
         }
         wfile.write(json.dumps(ret).encode('utf-8'))
         del rctl_globals.ACTIVE_SSH_SESSIONS[req['session_id']]
+
+        rctl_ssh.cleanup(session['id_file'], session['script_file'])
 
     except subprocess.TimeoutExpired as e:
         output = e.output[bytes_sent:]

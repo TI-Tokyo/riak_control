@@ -16,15 +16,12 @@
 
 import os, time, uuid
 import logging
-import tempfile
 import subprocess
 import rctl_globals
 
 def make_and_exec(url, user, key, template_body, params):
     if key:
-        idf = tempfile.NamedTemporaryFile(dir = rctl_globals.DATADIR,
-                                          mode = 'w+',
-                                          delete = False)
+        idf = open(rctl_globals.DATADIR + "/_key_", mode = 'w+')
         idf.write(key['body'])
         idf.close()
         os.chmod(idf.name, 0o600)
@@ -32,9 +29,7 @@ def make_and_exec(url, user, key, template_body, params):
     else:
         idf_name = None
 
-    scriptf = tempfile.NamedTemporaryFile(dir = rctl_globals.DATADIR,
-                                          mode = 'w+',
-                                          delete = False)
+    scriptf = open(rctl_globals.DATADIR + "/_script_", mode = 'w+')
     pp = []
     for p in params:
         pp += [p+"=\""+params[p]+"\""]
@@ -47,23 +42,28 @@ def make_and_exec(url, user, key, template_body, params):
 
     res = _ssh_exec(url, user, idf_name, scriptf.name, params)
 
-    if idf_name is not None:
-        os.unlink(idf.name)
-    os.unlink(scriptf.name)
-
     return res
+
+def cleanup(idf, scriptf):
+    if idf is not None:
+        os.unlink(idf)
+    os.unlink(scriptf)
+
+
+def _option_i(f):
+    if f:
+        return ["-i", f]
+    else:
+        return []
+
+_option_o = ["-o", "KbdInteractiveAuthentication=no",
+             "-o", "PasswordAuthentication=no"]
 
 def _scp(url, user, idf, f):
     logging.info("copying script %s to %s as %s (using key %s)", f, url, user, idf)
-    if idf:
-        idf_args = ["-i", idf]
-    else:
-        idf_args = []
     try:
-        p = subprocess.run(["scp"] + idf_args +
-                           ["-o", "KbdInteractiveAuthentication=no",
-                            "-o", "PasswordAuthentication=no",
-                            f, user+"@"+url+":"],
+        p = subprocess.run(["scp"] + _option_i(idf) + _option_o +
+                           [f, user+"@"+url+":"],
                            capture_output = True,
                            encoding ='utf8',
                            timeout = 15)
@@ -74,13 +74,9 @@ def _scp(url, user, idf, f):
 
 def _ssh_exec(url, user, idf_name, scriptf_name, params):
     logging.info("executing script %s on %s as %s (using key %s)", scriptf_name, url, user, idf_name)
-    if idf_name is not None:
-        idf_args = ["-i", idf_name]
-    else:
-        idf_args = []
-
-    subprocess.run(["ssh"] + idf_args + [user+"@"+url, "chmod", "+x", os.path.basename(scriptf_name)])
-    p = subprocess.Popen(["ssh"] + idf_args +
+    ssh_options = _option_i(idf_name) + _option_o
+    subprocess.run(["ssh"] + ssh_options + [user+"@"+url, "chmod", "+x", os.path.basename(scriptf_name)])
+    p = subprocess.Popen(["ssh"] + ssh_options +
                          [user+"@"+url, "./"+os.path.basename(scriptf_name)],
                          encoding ='utf8',
                          stdout = subprocess.PIPE,
@@ -90,7 +86,9 @@ def _ssh_exec(url, user, idf_name, scriptf_name, params):
     session_id = str(uuid.uuid4())
     session = {
         "process": p,
-        "sent_bytes": 0
+        "sent_bytes": 0,
+        "script_file": scriptf_name,
+        "id_file": idf_name
     }
     rctl_globals.ACTIVE_SSH_SESSIONS |= {session_id: session}
 
