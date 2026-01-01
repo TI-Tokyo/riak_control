@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -178,6 +178,7 @@ makeScriptBlockExecuting m status =
             [ div [ style "white-space" "pre"
                   , style "background-color" "black"
                   , style "color" "white"
+                  , style "padding" "1em"
                   , style "font-family" "monospace"
                   ] [ text m.s.sshScriptOutput ]
             , b

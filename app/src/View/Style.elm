@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -66,16 +66,6 @@ dialogContentPart =
     , style "row-gap" "0.3em"
     ]
 
-
-jsonInset =
-    [ style "scale" "0.8"
-    , style "background-color" "#f5f5f5"
-    , style "border" "thick"
-    , style "border-radius" "0 0 1em 0"
-    , style "font-family" "monospace"
-    , style "white-space" "pre"
-    ]
-
 createFab =
     [ style "position" "fixed"
     , style "bottom" "2rem"
@@ -91,12 +81,6 @@ filterAndSort =
     , style "height" "5em"
     , style "background" "white"
     , style "z-index" "21"
-    , style "align-items" "center"
-    , style "justify-content" "center"
-    ]
-
-center =
-    [ style "display" "grid"
     , style "align-items" "center"
     , style "justify-content" "center"
     ]
