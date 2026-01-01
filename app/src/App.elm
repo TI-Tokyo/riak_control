@@ -61,10 +61,11 @@ init f =
                 Snackbar.initialQueue Msg.Connection True
                 -- boot
                 False f.riakControlServerUser f.riakControlServerPassword
-                [] "(user@host (ssh-key-name))" "(script template id)"
+                [] "" "(script-template-id)"
                 []
                 False "(new key id)" "(new key body)"
                 False "(key id to delete)"
+                "(current-session-id)"
                 Static.awaitingOutput
                 Data.SshOps.ScriptNotStarted
                 -- config

@@ -27,7 +27,7 @@ import View.Style
 import View.SshOps.Dialog exposing (..)
 import Util
 
-import Html exposing (Html, text, div, pre, b)
+import Html exposing (Html, text, div, pre, b, code)
 import Html.Attributes exposing (attribute, style, class)
 import Material.Button as Button
 import Material.TextField as TextField
@@ -88,11 +88,17 @@ makeScriptBlockWaiting m =
         div [ style "flex-direction" "rows" ]
             [ div [ style "display" "grid"
                   , style "grid-template-columns" "30em auto"
-                  ] [ TextField.filled
+                  ] [ div [ style "grid-column-end" "span 2" ]
+                          [ text "Target hosts, following this pattern: "
+                          , code [] [ text "user@host (key-name)" ]
+                          , text " (key-name is optional, and is one of the keys added above)."
+                          ]
+                    , TextField.filled
                           (TextField.config
                           |> TextField.setLabel (Just "Target hosts")
                           |> TextField.setValue (Just m.s.sshTargetHostsStr)
                           |> TextField.setOnInput SshTargetHostsChanged
+                          |> TextField.setAttributes [ attribute "spellCheck" "false" ]
                           )
                     , Select.outlined
                           (Select.config
@@ -143,7 +149,9 @@ makeScriptTemplateParams m =
     in
         if pp /= [] then
             div []
-                [ div [ style "font-weight" "bold" ] [ text "Script parameters:" ]
+                [ div [ style "font-weight" "bold"
+                      , style "padding-top" "2em"
+                      ] [ text "Script parameters:" ]
                 , div [ style "display" "grid"
                       , style "grid-template-columns" "auto 1fr"
                       ] (List.map f pp |> List.concat)
@@ -153,14 +161,24 @@ makeScriptTemplateParams m =
 
 
 makeScriptBlockExecuting m status =
-    div [ style "flex-direction" "rows" ]
-        [ div [ style "white-space" "pre"
-              , style "font-family" "monospace"
-              ] [ text m.s.sshScriptOutput ]
-        , Button.text
-              (Button.config
-              |> Button.setOnClick ExecSshScriptDone
-              |> Button.setDisabled (status /= Data.SshOps.ScriptFinished)
-              |> Button.setDisabled (not (goodToExec m))
-              ) "Finish"
-        ]
+    let
+        b =
+            if status == Data.SshOps.ScriptRunning then
+                Button.text
+                    (Button.config
+                    |> Button.setOnClick ExecSshScriptInterrupt
+                    ) "Interrupt"
+            else
+                Button.text
+                    (Button.config
+                    |> Button.setOnClick ExecSshScriptDone
+                    ) "Finish"
+    in
+        div [ style "flex-direction" "rows" ]
+            [ div [ style "white-space" "pre"
+                  , style "background-color" "black"
+                  , style "color" "white"
+                  , style "font-family" "monospace"
+                  ] [ text m.s.sshScriptOutput ]
+            , b
+            ]

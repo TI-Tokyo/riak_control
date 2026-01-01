@@ -24,6 +24,7 @@ module Request.SshOps exposing
     , storeSshKey
     , deleteSshKey
     , execSshScript
+    , interruptSshScript
     , getScriptOutput
     )
 
@@ -107,11 +108,11 @@ execSshScript m pp =
     Url.Builder.crossOrigin m.c.riakControlServerUrl [] []
         |> HttpBuilder.post
         |> HttpBuilder.withHeaders (stdHeaders m)
-        |> HttpBuilder.withJsonBody (sshCommandEncoder pp)
+        |> HttpBuilder.withJsonBody (execSshScriptEncoder pp)
         |> HttpBuilder.withExpect (Http.expectJson SshScriptExecuting Data.Json.decodeSshSession)
         |> HttpBuilder.request
 
-sshCommandEncoder {hosts, scriptTemplateName, scriptTemplateParams} =
+execSshScriptEncoder {hosts, scriptTemplateName, scriptTemplateParams} =
     let
         pp = List.map
              (\{name, value} ->
@@ -124,6 +125,23 @@ sshCommandEncoder {hosts, scriptTemplateName, scriptTemplateParams} =
             , ("script_name", string scriptTemplateName)
             , ("params", object pp)
             ]
+
+
+interruptSshScript : Model -> InterruptScriptCmdParams -> Cmd Msg
+interruptSshScript m pp =
+    Url.Builder.crossOrigin m.c.riakControlServerUrl [] []
+        |> HttpBuilder.post
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withJsonBody (interruptSshScriptEncoder pp)
+        |> HttpBuilder.withExpect (Http.expectWhatever SshScriptInterrupted)
+        |> HttpBuilder.request
+
+interruptSshScriptEncoder {sessionId} =
+    object
+        [ ("command", string "InterruptScript")
+        , ("session_id", string sessionId)
+        ]
+
 
 getScriptOutput : Model -> GetScriptOutputCmdParams -> Cmd Msg
 getScriptOutput m pp =

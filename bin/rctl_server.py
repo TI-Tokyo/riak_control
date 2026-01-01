@@ -143,14 +143,19 @@ def _exec_script(req, send_resp_f, wfile):
     except RctlException as e:
         send_resp_f(e.status)
         wfile.write(e.msg.encode('utf-8'))
+    except Exception as ex:
+        print(repr(ex))
+        print(repr(ex.__traceback__))
+        logging.error("%s", sys.exception())
+        send_resp_f(500)
 
 def _parse_hosts(s):
     try:
         o = []
-        r = r'(\w+)@(\w+)\((\w*)\)'
+        r = r'(\w+)@(\w+)(?:\((\w*)\)|)'
         for h in re.split(", +", s):
             m = re.search(r, h)
-            if m.group(3) in ["", "none"]:
+            if m.group(3) in ["", "none", None]:
                 key = None
             else:
                 key = m.group(3)
@@ -160,6 +165,13 @@ def _parse_hosts(s):
         return o
     except Exception:
         raise rctl_globals.RctlException(400, "malformed target hosts")
+
+def _interrupt_script(req, send_resp_f, wfile):
+    session = rctl_globals.ACTIVE_SSH_SESSIONS[req['session_id']]
+    logging.info("interrupt: session_id: %s", req['session_id'])
+    p = session['process']
+    p.terminate()
+    send_resp_f(200)
 
 def _get_script_output(req, send_resp_f, wfile):
     session = rctl_globals.ACTIVE_SSH_SESSIONS[req['session_id']]
@@ -202,5 +214,6 @@ HANDLERS = {'ListSshKeys': _list_ssh_keys,
             'DeleteSshKey': _delete_ssh_key,
             'ListScriptTemplates': _list_script_templates,
             'ExecScript': _exec_script,
+            'InterruptScript': _interrupt_script,
             'GetScriptOutput': _get_script_output
             }

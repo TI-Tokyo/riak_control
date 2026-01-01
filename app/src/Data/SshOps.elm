@@ -23,6 +23,7 @@ module Data.SshOps exposing (..)
 type Command
     = GetScriptTemplateList
     | ExecScriptCommand ExecScriptCmdParams
+    | InterruptScriptCommand InterruptScriptCmdParams
     | GetScriptOutputCommand GetScriptOutputCmdParams
     | StoreKeyCommand StoreKeyCmdParams
     | DeleteKeyCommand DeleteKeyCmdParams
@@ -65,6 +66,10 @@ type alias ExecScriptCmdParams =
     { hosts : String
     , scriptTemplateName : String
     , scriptTemplateParams : List TemplateParameter
+    }
+
+type alias InterruptScriptCmdParams =
+    { sessionId : String
     }
 
 type alias GetScriptOutputCmdParams =

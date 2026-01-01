@@ -227,7 +227,8 @@ update msg m =
                 (m, Request.SshOps.execSshScript m rpp)
         SshScriptExecuting (Ok {sessionId}) ->
             let s_ = m.s in
-            ( {m | s = {s_ | sshScriptExecutionStatus = Data.SshOps.ScriptRunning}}
+            ( {m | s = {s_ | sshCurrentSessionId = sessionId
+                           , sshScriptExecutionStatus = Data.SshOps.ScriptRunning}}
             , Request.SshOps.getScriptOutput m {sessionId = sessionId}
             )
         SshScriptExecuting (Err err) ->
@@ -264,7 +265,23 @@ update msg m =
             let s_ = m.s in
             ( {m | s = {s_ | sshScriptExecutionStatus = Data.SshOps.ScriptFinished
                            , msgQueue = Snackbar.addMessage
-                            (Snackbar.message ("Failed to get script output: " ++ (explainHttpError err))) m.s.msgQueue}}
+                            (Snackbar.message ("Failed to get script output: " ++ (explainHttpError err))) s_.msgQueue}}
+            , Cmd.none
+            )
+
+        ExecSshScriptInterrupt ->
+            let s_ = m.s in
+            (m, Request.SshOps.interruptSshScript m {sessionId = m.s.sshCurrentSessionId})
+
+        SshScriptInterrupted (Ok ()) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | sshScriptExecutionStatus = Data.SshOps.ScriptFinished
+                           , msgQueue = Snackbar.addMessage
+                            (Snackbar.message "Script interrupted") s_.msgQueue}}
+            , Cmd.none
+            )
+        SshScriptInterrupted (Err err) ->
+            ( handleHttpError m "Failed to interrupt script: " err
             , Cmd.none
             )
 

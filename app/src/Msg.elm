@@ -73,6 +73,8 @@ type Msg
     | ExecSshScript
     | SshScriptExecuting (Result Http.Error Data.SshOps.SshSession)
     | GotScriptOutput (Result Http.Error Data.SshOps.ScriptOutput)
+    | ExecSshScriptInterrupt
+    | SshScriptInterrupted (Result Http.Error ())
     | ExecSshScriptDone
 
     | SshTargetHostsChanged String

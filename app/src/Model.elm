@@ -91,6 +91,7 @@ type alias State =
     , sshDeleteKeyDialogShown : Bool
     , sshKeyNameToDelete : String
 
+    , sshCurrentSessionId : String
     , sshScriptOutput : String
     , sshScriptExecutionStatus : Data.SshOps.SshScriptExecutionStatus
 
