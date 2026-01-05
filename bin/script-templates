@@ -27,9 +27,39 @@
                 "name": "ringsize"
             },
             {
-                "value": "3.2.6",
+                "value": "https://files.tiot.jp/riak",
+                "description": "Base URL of package repository",
+                "name": "packagerepo"
+            },
+            {
+                "value": "3.4.0",
                 "description": "The version number of the type of Riak you are installing e.g. for KV \"3.0.16\" or \"3.2.1\".",
                 "name": "subver"
+            },
+            {
+                "value": "no",
+                "description": "Prepare for Riak Control (e.g., enable security, create an admin user, install certificate and key).",
+                "name": "prepare_for_riak_control"
+            },
+            {
+                "value": "rctl-admin",
+                "description": "Riak Control user",
+                "name": "riak_control_user"
+            },
+            {
+                "value": "*****",
+                "description": "Riak Control user password",
+                "name": "riak_control_password"
+            },
+            {
+                "value": "127.0.0.1/32",
+                "description": "Address mask to pass to \"riak admin security add-source\"",
+                "name": "riak_control_pwd_sec_net_source"
+            },
+            {
+                "value": "",
+                "description": "URL to fetch ceritificate bundle (with cert.pem, key.pem and cacertfile.pem, tar-gzipped) to install on this node.",
+                "name": "ssl_bundle_url"
             },
             {
                 "value": "leveled",
@@ -77,13 +107,13 @@
                 "name": "cs_admin_key"
             },
             {
-                "value": "1",
-                "description": "(CS) Generate admin user key (\"1\" or \"0\").",
+                "value": "yes",
+                "description": "(CS) Generate admin user key.",
                 "name": "cs_admin_generate"
             }
         ],
         "file": "install-riak.sh",
-        "name": "install-from-package",
+        "name": "Install from package",
         "description": "A script to download, install, configure and start a riak node, or join an existing cluster."
     },
     {

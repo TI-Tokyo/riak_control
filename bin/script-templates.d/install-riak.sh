@@ -1,5 +1,9 @@
 #!/bin/sh
-usage() { echo "Usage: $0 [-t <string>] [-n <string>] [-j <string>] [-c <string>] [-r <int>] [-l <string>] [-v <string>] [-f <string>] [-b <string>] [-a <string>] [-o <string>] [-u <string>] [-e <string>] [-k <string>] [-m <string>] [-p] [-g] [-y] [-h]" 1>&2; exit 1; }
+usage() {
+    echo "Usage: $0 [-t <string>] [-n <string>] [-j <string>] [-c <string>] [-r <int>] [-l <string>] [-v <string>] [-f <string>] [-b <string>] [-a <string>] [-o <string>] [-u <string>] [-e <string>] [-k <string>] [-m <string>] [-p] [-g] [-y] [-h]" 1>&2
+    exit 1
+}
+
 ## Read in any user provided flags and assign to the correct variables
 while getopts 't:n:j:c:r:l:v:f:b:d:a:i:o:u:e:k:e:pgyh' c
 do
@@ -23,7 +27,7 @@ do
     k) key=$OPTARG ;;
     m) kvpackage=$OPTARG ;;
     p) performance=1 ;;
-    g) generate=1 ;;
+    g) generate=yes ;;
     y) yes=1 ;;
     h) help=1 ;;
   esac
@@ -45,6 +49,10 @@ user=${user:-$cs_admin_user}
 email=${email:-$cs_admin_email}
 key=${key:-$cs_admin_key}
 generate=${generate:-$cs_admin_generate}
+
+packagerepo=${packagerepo:-https://files.tiot.jp/riak}
+prepare_for_riak_control=${prepare_for_riak_control:-no}
+ssl_bundle_url=${ssl_bundle_url:-}
 
 if [ "$help" = 1 ]
   then
@@ -185,6 +193,7 @@ if [ "$os" = "freebsd" ]
     11) version="11.1" ;;
     12) version="12.1" ;;
     13) version="13.0" ;;
+    14) version="14.0" ;;
   esac
   riakstart="sudo riak start"
   riakstop="sudo riak stop"
@@ -309,7 +318,7 @@ maybeFQDN=$(echo $nodename | cut -d '@' -f 2 | xargs)
 ipaddr=$(grep $maybeFQDN /etc/hosts | grep -v "#" | head -n 1 | cut -f 1)
 if [ -z ${ipaddr+x} ]
   then
-## How about separated by space(s)?  
+## How about separated by space(s)?
   ipaddr=$(grep $maybeFQDN /etc/hosts | grep -v "#" | head -n 1 | cut -d " " -f 1)
   if [ -z ${ipaddr+x} ]
     then
@@ -363,7 +372,7 @@ if [ -z ${subver+x} ]
   esac
   echo "No version specified for Riak $(echo $type | tr '[:lower:]' '[:upper:]')."
   if [ $type = "cs" ]
-    then 
+    then
     echo "Defaulting to version $subver with Riak KV version $kvsubver."
   else
     echo "Defaulting to version $subver."
@@ -463,7 +472,7 @@ if [ -z ${search+x} ] && [ -z ${config+x} ] && [ "$type" = "kv" ]
   fi
   echo ""
 fi
-## Time for a bit more complicated stuff where we auto-config some things based on 
+## Time for a bit more complicated stuff where we auto-config some things based on
 ## previous user input and other stuff based on extra details we need to know
 
 ## First set backend and AAE automatically if TS, CS or using Yokozuna
@@ -585,7 +594,7 @@ if [ "$type" = "cs" ]
         message="Would you like to generate an admin key?"
         if yes_or_no "$message"
           then
-          generate=1
+          generate=yes
           if [ -z ${user+x} ]
             then
             echo "Please provide a username e.g. \"admin\" or \"sausage\""
@@ -686,7 +695,7 @@ if [ ! -z ${override+x} ]
 fi
 echo ""
 if [ $type = "cs" ]
-  then 
+  then
     echo "You would like to install Riak CS $subver with Riak KV version $kvsubver."
 else
     echo "You would like to install Riak $(echo $type | tr '[:lower:]' '[:upper:]') version $subver."
@@ -783,10 +792,10 @@ if [ ! -z ${config+x} ]
     aae=$(grep "^tictacaae_active = " $config/riak.conf | cut -d '=' -f 2 | xargs)
     if [ "$aae" = "active" ]
       then
-      aae="tictac"  
+      aae="tictac"
     else
       aae="disabled"
-    fi  
+    fi
   fi
   if [ "$(grep "^search = " $config/riak.conf | cut -d '=' -f 2 | xargs)" = "on" ]
     then
@@ -850,28 +859,28 @@ if [ -z ${package+x} ] || [ "$os" != "alpine" ]
   then
 ## Chop the subversion up as needed then download
   ver=$(echo $subver | cut -d "." -f 1,2)
-  echo "Attempting to get package from https://files.tiot.jp/riak/$type/$ver/$subver/$os/$version/"
-  package=$(curl https://files.tiot.jp/riak/$type/$ver/$subver/$os/$version/ | grep $packagetype | cut -d ">" -f 9 | cut -d "<" -f 1 | grep -v -e ".src." -e "dbgsym" -e "Parent" -e ".sha" | grep OTP$otp)
+  echo "Attempting to get package from $packagerepo/$type/$ver/$subver/$os/$version/"
+  package=$(curl $packagerepo/$type/$ver/$subver/$os/$version/ | grep $packagetype | cut -d ">" -f 9 | cut -d "<" -f 1 | grep -v -e ".src." -e "dbgsym" -e "Parent" -e ".sha" | grep OTP$otp)
   if [ -z ${package+x} ]
     then
     echo "No packages of Riak $type version $subver available for your operating system."
     echo "Please change the desired verion of Riak by calling this installer again with"
     echo "the following options:"
     echo ""
-    echo "./install-riak.sh -t $type -n $nodename -c $cookie $miscflags-v [VERSION e.g. 3.0.16]"
+    echo "./install-riak.sh -t $type -n $nodename -c $cookie $miscflags -v [VERSION e.g. 3.0.16]"
     echo ""
     echo "You could also attempt specifying an OS override e.g. if you wish to install a 2.1.4"
     echo "version of Riak KV on Ubuntu Jammy, it might be possible using the package provided"
     echo "for Ubuntu Trusty (you may have to build some manual dependencies such as OpenSSL 0.98)."
     echo ""
-    echo "./install-riak.sh -t $type -n $nodename -c $cookie $miscflags-o trusty -v [VERSION e.g. 2.1.4]"
+    echo "./install-riak.sh -t $type -n $nodename -c $cookie $miscflags -o trusty -v [VERSION e.g. 2.1.4]"
     exit
   fi
   if [ "$type" = "cs" ] && [ -z ${kvpackage+x} ]
     then
     kvver=$(echo $kvsubver | cut -d "." -f 1,2)
-    echo "Attempting to get package from https://files.tiot.jp/riak/kv/$kvver/$kvsubver/$os/$version/"
-    kvpackage=$(curl https://files.tiot.jp/riak/kv/$kvver/$kvsubver/$os/$version/ | grep $packagetype | cut -d ">" -f 9 | cut -d "<" -f 1 | grep -v -e ".src." -e "dbgsym" -e "Parent" -e ".sha"  | grep OTP$otp)
+    echo "Attempting to get package from $packagerepo/kv/$kvver/$kvsubver/$os/$version/"
+    kvpackage=$(curl $packagerepo/kv/$kvver/$kvsubver/$os/$version/ | grep $packagetype | cut -d ">" -f 9 | cut -d "<" -f 1 | grep -v -e ".src." -e "dbgsym" -e "Parent" -e ".sha"  | grep OTP$otp)
     if [ -z ${kvpackage+x} ]
       then
       echo "No packages of Riak KV version $kvsubver available for your operating system."
@@ -888,9 +897,9 @@ if [ -z ${package+x} ] || [ "$os" != "alpine" ]
       exit
     fi
     ##get KV packages
-    echo "KV package successfully located. Downloading from https://files.tiot.jp/riak/kv/$kvver/$kvsubver/$os/$version/$kvpackage..."
-    curl -O https://files.tiot.jp/riak/kv/$kvver/$kvsubver/$os/$version/$kvpackage
-    curl -O https://files.tiot.jp/riak/kv/$kvver/$kvsubver/$os/$version/$kvpackage.sha
+    echo "KV package successfully located. Downloading from $packagerepo/kv/$kvver/$kvsubver/$os/$version/$kvpackage..."
+    curl -O $packagerepo/kv/$kvver/$kvsubver/$os/$version/$kvpackage
+    curl -O $packagerepo/kv/$kvver/$kvsubver/$os/$version/$kvpackage.sha
   ##check valid
     if $(sha256sum --check $kvpackage.sha --status)
       then
@@ -901,9 +910,9 @@ if [ -z ${package+x} ] || [ "$os" != "alpine" ]
     fi
   fi
 ##get packages
-  echo "$type package successfully located. Downloading from https://files.tiot.jp/riak/$type/$ver/$subver/$os/$version/$package..."
-  curl -O https://files.tiot.jp/riak/$type/$ver/$subver/$os/$version/$package
-  curl -O https://files.tiot.jp/riak/$type/$ver/$subver/$os/$version/$package.sha
+  echo "$type package successfully located. Downloading from $packagerepo/$type/$ver/$subver/$os/$version/$package..."
+  curl -O $packagerepo/$type/$ver/$subver/$os/$version/$package
+  curl -O $packagerepo/$type/$ver/$subver/$os/$version/$package.sha
 ##check valid
   if $(sha256sum --check $package.sha --status)
     then
@@ -1049,7 +1058,7 @@ else
       sudo sed -i "s/riak_host = 127.0.0.1/riak_host = $ipaddr/g" /etc/riak-cs/riak-cs.conf
       sudo sed -i "s/stanchion_subnet = 127.0.0.1/stanchion_subnet = $ipaddr/g" /etc/riak-cs/riak-cs.conf
       sudo sed -i "s/nodename = riak-cs@127.0.0.1/nodename = riak-cs@$maybeFQDN/g" /etc/riak-cs/riak-cs.conf
-    else 
+    else
       sudo sed -i "s/127.0.0.1/$interface/g" /etc/riak-cs/riak-cs.conf
     fi
     if [ ! -z {$key+x} ]
@@ -1072,7 +1081,23 @@ else
     sudo sed -i "s/search = off/search = on/g" /etc/riak/riak.conf
     sudo sed -i "s/-d64 -Xms 1g -Xmx 1g -XX:+UseStringCache -XX:+UseCompressedOops/$search/g" /etc/riak/riak.conf
   fi
+
+  if [ "$prepare_for_riak_control" = "yes" ]
+  then
+    echo "Enabling ssl and https listener"
+    sudo sed -i "s/^#+ +ssl\./ssl./" /etc/riak/riak.conf
+    sudo sed -i "s/#+ +listener.https.internal/listener.https.internal/" /etc/riak/riak.conf
+    sudo sed -i "s/ {riak_core,/ {riak_kv, [{secure_referer_check, false}]},\n {riak_core,/" /etc/riak/advanced.config
+  fi
+  if [ ! -z ${ssl_bundle_url+x} ]
+  then
+    echo "Fetching and installing your certificate bundle"
+    tmpf=/tmp/riak-ssl-cert-bundle.tar.gz
+    curl -o $tmpf $ssl_bundle_url && sudo tar -C /etc/riak -xzf $tmpf
+    rm $tmpf
+  fi
 fi
+
 sudo riak chkconfig
 if [ "$type" = "cs" ]
   then
@@ -1230,6 +1255,16 @@ if [ ${joining+x} ]
     echo "\"$riakadmin cluster plan\" and \"$riakadmin cluster commit\" accordingly."
   fi
 fi
+
+if [ "$prepare_for_riak_control" = "yes" ]
+then
+  echo "Enabling security and creating an admin user for Riak Control"
+  $riakadmin security enable
+  $riakadmin security add-user "$riak_control_user" password="$riak_control_password"
+  $riakadmin security grant riak_kv.riak_control on any to "$riak_control_user"
+  $riakadmin security add-source all "$riak_control_pwd_sec_net_source" password
+fi
+
 echo "The installer has now completed. We recommend you look at the documentation available on"
 echo "https://www.tiot.jp/riak-docs/\" for Riak $type for further information on how to use Riak."
 echo "Thank you very much for using the installer."
