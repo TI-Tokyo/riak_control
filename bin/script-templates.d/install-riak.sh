@@ -53,6 +53,7 @@ generate=${generate:-$cs_admin_generate}
 packagerepo=${packagerepo:-https://files.tiot.jp/riak}
 prepare_for_riak_control=${prepare_for_riak_control:-no}
 ssl_bundle_url=${ssl_bundle_url:-}
+yes=1
 
 if [ "$help" = 1 ]
   then
@@ -171,7 +172,7 @@ if [ "$os" = "ubuntu" ]
   installer="dpkg -i"
 fi
 if [ "$os" = "kali" ]
-  then 
+  then
   os="ubuntu"
   version="jammy$bit"
   packagetype="deb"
@@ -201,7 +202,7 @@ if [ "$os" = "freebsd" ]
   riakcsstop="sudo riak-cs stop"
 fi
 if [ "$os" = "alpine" ]
-  then 
+  then
   packagetype="apk"
   installer="apk add "
   riakstart="sudo riak start"
@@ -210,18 +211,22 @@ if [ "$os" = "alpine" ]
   riakcsstop="sudo riak-cs stop"
 fi
 if [ "$os" = "osx" ]; then packagetype="tar.gz"; installer="tar -xvf "; fi
-if [ ! -z ${override+x} ]; then version="$override"; fi
+if [ -n "$override" ]; then version="$override"; fi
 
 
 ## Define a "Yes or No" function that will be used multiple times throughout the script.
 yes_or_no () {
-  while true; do
-    read -p "$* [y/n]: " yn
-    case $yn in
-      [Yy]*) return 0 ;;
-      [Nn]*) return 1 ;;
-    esac
-  done
+    if [ "$yes" = "1" ]; then
+        return 0
+    else
+        while true; do
+            read -p "$* [y/n]: " yn
+            case $yn in
+                [Yy]*) return 0 ;;
+                [Nn]*) return 1 ;;
+            esac
+        done
+    fi
 }
 
 ## Time to greet the users!
@@ -243,7 +248,7 @@ echo ""
 echo "* For additional installer options such as installing from local storage, please exit and re-run with \"-h\""
 echo ""
 message="Are you ready to proceed?"
-if [ "$yes" = 1 ] || yes_or_no "$message"
+if yes_or_no "$message"
   then
   echo "Thank you."
 else
@@ -252,7 +257,7 @@ else
 fi
 
 ## Set type (KV, CS or TS) unless pre-set by the calling command
-if [ -z ${type+x} ]
+if [ -z "$type" ]
   then
   echo "First of all, we're going to ask you to choose the desired flavour of Riak that you would like to use."
   echo "Are you looking for the most commonly used key/value store, Riak KV?"
@@ -279,11 +284,10 @@ fi
 echo ""
 echo "If you are unhappy with your type selection, remember that you can exit the installer with Ctrl-C and start again"
 echo ""
-sleep 1
 
 ## Set node name unless pre-set or using local config files
 
-if [ -z ${nodename+x} ] && [ -z ${config+x} ]
+if [ -z "$nodename" ] && [ -z "$config" ]
   then
   echo "What node name would you like to give this node? Here are some examples of acceptible formats:"
   echo ""
@@ -303,7 +307,7 @@ if [ -z ${nodename+x} ] && [ -z ${config+x} ]
   echo ""
 else
 ## If a set of config files have been specified, retrieve the nodename from there
-  if [ ! -z ${config+x} ]
+  if [ -n "$config" ]
     then
     nodename=$(grep "^nodename =" $config/riak.conf | cut -d "=" -f "2")
   fi
@@ -316,15 +320,15 @@ echo "Checking nodename settings, please ignore any error messages displayed her
 maybeFQDN=$(echo $nodename | cut -d '@' -f 2 | xargs)
 ## Is the potential FQDN uncommented in the hosts file and separated by a tab?
 ipaddr=$(grep $maybeFQDN /etc/hosts | grep -v "#" | head -n 1 | cut -f 1)
-if [ -z ${ipaddr+x} ]
+if [ -z "$ipaddr" ]
   then
 ## How about separated by space(s)?
   ipaddr=$(grep $maybeFQDN /etc/hosts | grep -v "#" | head -n 1 | cut -d " " -f 1)
-  if [ -z ${ipaddr+x} ]
+  if [ -z "$ipaddr" ]
     then
 ## Is it resolvable as an IPv4 address via DNS (using `ping` as `dig`` is not installed by default on some OS)
     ipaddr=$(ping $maybeFQDN -c 1 -4 | grep "64 bytes" | cut -d " " -f4)
-    if [ -z $(ipaddr+x) ]
+    if [ -z $(ipaddr) ]
       then
 ## How about as an IPv6 address?
       ipaddr=$(ping $maybeFQDN -c 1 -6 | grep "64 bytes" | cut -d " " -f4)
@@ -337,33 +341,10 @@ fi
 ## If the IP address contains spaces, just return the IP address at the start
 ipaddr=$(echo $ipaddr | cut -d " " -f 1)
 
-if [ -z ${joining+x} ] && [ "$ipaddr" != "127.0.0.1" ] && [ "$ipaddr" != "::1" ]
-  then
-  message="Is this node going to be joining a pre-existing cluster?"
-  if yes_or_no "$message"
-    then
-    echo "Please enter the nodename of a node in the pre-existing cluster this node can join with."
-    read joining
-  else
-    echo "Logged as first node of a new cluster or a standalone node"
-  fi
-  echo ""
-fi
-
 ## Set shared cookie if not already set
 
-if [ -z ${cookie+x} ] && [ -z ${config+x} ]
-  then
-  echo "Next we are going to set up the pre-shared cookie. This is used so that the different Riak nodes only talk to nodes"
-  echo "with the same cookie. As such, all nodes in the same cluster should have the same cookie."
-  echo ""
-  echo "Does your cluster have a pre-shared cookie? If so, please enter underneath. If not, please make one up (no spaces)."
-  read cookie
-  echo ""
-fi
-
 ## If no version has been set, default to 3.0.16 for KV and 3.0.1 for TS. CS needs two subversions, KV and CS with CS being 3.2.5
-if [ -z ${subver+x} ]
+if [ -z "$subver" ]
   then
   case $type in
   cs) subver="3.2.5"; kvsubver="3.2.0" ;;
@@ -409,7 +390,7 @@ echo ""
 
 ## Set ring size if not already set
 
-if [ -z ${ringsize+x} ] && [ -z ${config+x} ]
+if [ -z "$ringsize" ] && [ -z "$config" ]
   then
   echo "What ring size should your cluster have? This should be a power of 2."
   if [ "$topver" = "2" ] || [ "$topver" = "1" ]
@@ -442,7 +423,7 @@ fi
 
 ## Yokozuna
 
-if [ -z ${search+x} ] && [ -z ${config+x} ] && [ "$type" = "kv" ]
+if [ -n "$search" ] && [ "$type" = "kv" ]
   then
   echo "This section is regarding Yokozuna, a search feature that uses Solr from the Apache project."
   echo "Most use cases do not require Yokozuna, especially as the Solr JVM makes it surprisingly memory hungry."
@@ -476,13 +457,13 @@ fi
 ## previous user input and other stuff based on extra details we need to know
 
 ## First set backend and AAE automatically if TS, CS or using Yokozuna
-if [ "$type" = "ts" ] || [ "$type" = "cs" ] || [ ! -z ${search+x} ]
+if [ "$type" = "ts" ] || [ "$type" = "cs" ] || [ -n "$search" ]
   then
   backend="leveldb"
   aae="legacy"
 else
 ## Give backend options
-  if [ -z ${backend+x} ] && [ -z ${config+x} ]
+  if [ -z "$backend" ] && [ -z "$config" ]
     then
     echo "First, we shall look at database backends."
     echo "NOTE: this installer is not capable of configuring multiple backends except the default one for Riak CS." 
@@ -510,13 +491,13 @@ else
   fi
 
 ## Give AAE options but do not present "disabled" (passive) as an option.
-  if [ -z ${aae+x} ] && [ -z ${config+x} ]
+  if [ -z "$aae" ] && [ -z "$config" ]
     then
     echo "Next we are going to set up Active Anti-Entropy (AAE)."
     echo "Unless you have a strong reason to use the legacy AAE from 2016 e.g. future plans to use Yokozuna or CS,"
     echo "it is generally recommended to use TicTacAAE."
     message="Do you wish to use TicTacAAE?"
-    if [ "$yes" = 1 ] || yes_or_no "$message"
+    if yes_or_no "$message"
       then
       echo "Setting AAE to TicTacAAE."
       aae="tictac"
@@ -530,12 +511,12 @@ fi
 
 ## Set data directory
 
-if [ -z ${datadir+x} ] && [ -z ${config} ]
+if [ -z "$datadir" ] && [ -z "$config" ]
   then
   echo "Where would you like to save your data? The default path is /var/lib/riak. It is possible to use a dedicated hard disk mounted here or mount it at a different location"
   echo "and use that for your data directory. Either way, please mount dedicated drives with the \"noatime\" flag in /etc/fstab for better performance."
   message="Would you like to use the default path of /var/lib/riak?"
-  if [ "$yes" = 1 ] || yes_or_no "$message"
+  if [ yes_or_no "$message"
     then
     echo "Leaving it as /var/lib/riak"
     datadir="/var/lib/riak"
@@ -548,7 +529,7 @@ fi
 
 ## Set listening interface
 
-if [ -z ${interface+x} ] && [ -z ${config+x} ]
+if [ -z "$interface" ] && [ -z "$config" ]
   then
   echo "Finally, we are going to determine which interface(s) Riak should listen on."
   message="Can Riak listen on all interfaces (recommended)?"
@@ -575,9 +556,9 @@ fi
 
 if [ "$type" = "cs" ]
   then
-  if [ -z ${generate+x} ]
+  if [ -z "$generate" ]
     then
-    if [ -z ${key+x} ]
+    if [ -z "$key" ]
     then
       echo "Riak CS requires an admin key to perform some functions. This is commonly generated by the first node in a cluster."
       echo "If you do not currently have an admin key, this can be generated later."
@@ -595,14 +576,14 @@ if [ "$type" = "cs" ]
         if yes_or_no "$message"
           then
           generate=yes
-          if [ -z ${user+x} ]
+          if [ -z "$user" ]
             then
             echo "Please provide a username e.g. \"admin\" or \"sausage\""
             read user
           else
             echo "Username of $user already provided."
           fi
-          if [ -z ${email+x} ]
+          if [ -z "$email" ]
             then
             echo "Please provide an email address for the admin user."
             read email
@@ -617,19 +598,19 @@ if [ "$type" = "cs" ]
       fi
     fi
   else
-    if [ ! -z ${key+x} ]
+    if [ -n "$key" ]
       then
       echo "As an admin key has already been specified, there is no need to generate one as well. Using provided key."
       unset $generate
     else
-      if [ -z ${user+x} ]
+      if [ -z "$user" ]
         then
         echo "Please provide a username for the Riak CS admin user e.g. \"admin\" or \"sausage\""
         read user
       else
         echo "Username of $user already provided."
       fi
-      if [ -z ${email+x} ]
+      if [ -z "$email" ]
         then
         echo "Please provide an email address for the Riak CS admin user."
         read email
@@ -652,17 +633,17 @@ fi
 # End #
 #######
 
-if [ -z ${performance+x} ]
+if [ -z "$performance" ]
   then
   echo "To function well, Riak needs to be able to open large numbers of tiny files simultaneously. This is controlled by the ulimit setting."
   message="Would you like the installer to attempt to tune ulimit settings for you?"
-  if [ "$yes" = 1 ] || yes_or_no "$message"
+  if yes_or_no "$message"
     then
     limit=$(grep riak /etc/security/limits.conf)
     if [ "$limit" = "" ]
       then
       echo "Tuning /etc/security/limits.conf by adding soft and hard limits for the number of files Riak can have open."
-      sudo echo -e "$(head -n -1 /etc/security/limits.conf) \r\nriak             soft    nofile          65536\r\nriak             hard    nofile          200000\r\n$(tail -n 1 /etc/security/limits.conf)" > /etc/security/limits.conf
+      sudo sed -i '$ariak             soft    nofile          65536\nriak             hard    nofile          200000' /etc/security/limits.conf
     else
       echo "It would appear that /etc/security/limits.conf has already been tuned. The installer will not make any changes to this file."
     fi
@@ -675,7 +656,7 @@ else
   if [ "$limit" = "" ]
     then
     echo "Tuning /etc/security/limits.conf by adding soft and hard limits for the number of files Riak can have open."
-    sudo echo -e "$(head -n -1 /etc/security/limits.conf) \r\nriak             soft    nofile          65536\r\nriak             hard    nofile          200000\r\n$(tail -n 1 /etc/security/limits.conf)" > /etc/security/limits.conf
+    sudo sed -i '$ariak             soft    nofile          65536\nriak             hard    nofile          200000' /etc/security/limits.conf
   else
     echo "It would appear that /etc/security/limits.conf has already been tuned. The installer will not make any changes to this file."
   fi
@@ -689,7 +670,7 @@ echo "We have detected that you are using:"
 echo "Operating system: $ospretty ($bit bit)"
 echo "Compatible OS equivalent version for a corresponding Riak package (see https://files.tiot.jp/riak/$type): $version"
 echo "Architecture: $arch"
-if [ ! -z ${override+x} ]
+if [ -n "$override" ]
   then
   echo "You wish to override the detected OS with $override."
 fi
@@ -701,85 +682,15 @@ else
     echo "You would like to install Riak $(echo $type | tr '[:lower:]' '[:upper:]') version $subver."
 fi
 
-## Populate a variable called miscflags which can be used to copy and paste into the CLI to automate the process
-if [ ! -z ${joining+x} ]
-  then
-  miscflags="-j $joining "
-fi
-if [ ! -z ${config+x} ]
-  then
-  miscflags="$(echo $miscflags) -l $config "
-fi
-if [ ! -z ${interface+x} ]
-  then
-  miscflags="$(echo $miscflags) -i $interface "
-fi
-if [ ! -z ${aae+x} ]
-  then
-  miscflags="$(echo $miscflags) -a $aae "
-fi
-if [ ! -z ${backend+x} ]
-  then
-  miscflags="$(echo $miscflags) -b $backend "
-fi
-if [ ! -z ${datadir+x} ]
-  then
-  miscflags="$(echo $miscflags) -d $datadir "
-fi
-if [ ! -z ${search+x} ]
-  then
-  miscflags="$(echo $miscflags) -s $search "
-fi
-if [ ! -z ${ringsize+x} ]
-  then
-  miscflags="$(echo $miscflags) -r $ringsize "
-fi
-if [ ! -z ${override+x} ]
-  then
-  miscflags="$(echo $miscflags) -o $override "
-fi
-if [ ! -z ${package+x} ]
-  then
-  miscflags="$(echo $miscflags) -l $package "
-fi
-if [ ! -z ${kvpackage+x} ]
-  then
-  miscflags="$(echo $miscflags) -m $kvpackage "
-fi
-if [ ! -z ${user+x} ]
-  then
-  miscflags="$(echo $miscflags) -u $user "
-fi
-if [ ! -z ${email+x} ]
-  then
-  miscflags="$(echo $miscflags) -e $email "
-fi
-if [ ! -z ${key+x} ]
-  then
-  miscflags="$(echo $miscflags) -k $key "
-fi
-if [ ! -z ${generate+x} ]
-  then
-  miscflags="$(echo $miscflags) -g "
-fi
-if [ ! -z ${performance+x} ]
-  then
-  miscflags="$(echo $miscflags) -p "
-fi
-if [ ! -z ${yes+x} ]
-  then
-  miscflags="$(echo $miscflags) -y "
-fi
-
 # If using an external file, pull in all variables settable via the installer
-if [ ! -z ${config+x} ]
+if [ ! -z "$config" ]
   then
   cookie=$(grep "^distributed_cookie =" $config/riak.conf | cut -d "=" -f 2 | xargs)
   ringsize=$(grep "^ring_size =" $config/riak.conf | cut -d "=" -f 2 | xargs)
   nodename=$(grep "^nodename = " $config/riak.conf | cut -d "=" -f 2 | xargs)
   interface=$(grep "^listener.http" $config/riak.conf | cut -d "=" -f 2 | xargs)
   backend=$(grep "^storage.backend = " $config/riak.conf | cut -d '=' -f 2 | xargs)
-  if [ -z ${backend+x} ]
+  if [ -z "$backend" ]
     then
     backend="multi"
   fi
@@ -804,7 +715,7 @@ if [ ! -z ${config+x} ]
   echo "You will be using external configuration files located at $config"
 fi
 echo "The node will be called $nodename"
-if [ -z ${joining+x} ]
+if [ -z "$joining" ]
   then
   if [ "$ipaddr" != "127.0.0.1" ] && [ "$ipaddr" != "::1" ]
     then
@@ -815,7 +726,7 @@ if [ -z ${joining+x} ]
 else
   echo "It will be joining a pre-exiting cluster via $joining."
 fi
-echo "The pre-shared cookie is $cookie."
+echo "The pre-shared cookie is \"$cookie\"."
 echo "The ring size is $ringsize."
 echo "The backend is set to $backend."
 echo "Riak's data will be stored under $datadir."
@@ -828,25 +739,21 @@ if [ "$aae" = "disabled" ]
   echo "*********************************************************************************************"
   echo ""
 fi
-if [ ! -z ${search+x} ]
+if [ ! -z "$search" ]
   then
   echo "Yokozuna's JVM settings are: \"$search\"."
 fi
-if [ ! -z ${package+x} ]
+if [ ! -z "$package" ]
   then
   echo "You wish to install a local package located at \"$package\"."
 fi
 echo "The node will be listen for incoming connections from $interface."
 echo ""
 echo "You may wish to take a note of the above information if you are considering adding further nodes to the cluster."
-echo "If you need to abort and re-run or run the same install on another node, you can automate this using:"
-echo ""
-echo "./install-riak.sh -t $type -n $nodename -c $cookie $miscflags-v $subver"
-echo ""
 echo "NOTE: Remember to change the node name and IP address of the interface if making a cluster."
 echo ""
 message="Is the above information correct? If so, answer \"yes\" to proceed or, if not, answer \"no\" to exit the installer"
-if [ "$yes" = 1 ] || yes_or_no "$message"
+if yes_or_no "$message"
   then
   echo "Excellent. In a moment we shall download Riak and begin installation. Please enter the sudo password if prompted."
 else
@@ -855,45 +762,25 @@ else
 fi
 
 ## Check whether local packages exist or if it's a repo based OS
-if [ -z ${package+x} ] || [ "$os" != "alpine" ]
+if [ -z "$package" ] || [ "$os" != "alpine" ]
   then
 ## Chop the subversion up as needed then download
   ver=$(echo $subver | cut -d "." -f 1,2)
   echo "Attempting to get package from $packagerepo/$type/$ver/$subver/$os/$version/"
   package=$(curl $packagerepo/$type/$ver/$subver/$os/$version/ | grep $packagetype | cut -d ">" -f 9 | cut -d "<" -f 1 | grep -v -e ".src." -e "dbgsym" -e "Parent" -e ".sha" | grep OTP$otp)
-  if [ -z ${package+x} ]
+  if [ -z "$package" ]
     then
     echo "No packages of Riak $type version $subver available for your operating system."
-    echo "Please change the desired verion of Riak by calling this installer again with"
-    echo "the following options:"
-    echo ""
-    echo "./install-riak.sh -t $type -n $nodename -c $cookie $miscflags -v [VERSION e.g. 3.0.16]"
-    echo ""
-    echo "You could also attempt specifying an OS override e.g. if you wish to install a 2.1.4"
-    echo "version of Riak KV on Ubuntu Jammy, it might be possible using the package provided"
-    echo "for Ubuntu Trusty (you may have to build some manual dependencies such as OpenSSL 0.98)."
-    echo ""
-    echo "./install-riak.sh -t $type -n $nodename -c $cookie $miscflags -o trusty -v [VERSION e.g. 2.1.4]"
     exit
   fi
-  if [ "$type" = "cs" ] && [ -z ${kvpackage+x} ]
+  if [ "$type" = "cs" ] && [ -z "$kvpackage" ]
     then
     kvver=$(echo $kvsubver | cut -d "." -f 1,2)
     echo "Attempting to get package from $packagerepo/kv/$kvver/$kvsubver/$os/$version/"
     kvpackage=$(curl $packagerepo/kv/$kvver/$kvsubver/$os/$version/ | grep $packagetype | cut -d ">" -f 9 | cut -d "<" -f 1 | grep -v -e ".src." -e "dbgsym" -e "Parent" -e ".sha"  | grep OTP$otp)
-    if [ -z ${kvpackage+x} ]
+    if [ -z "$kvpackage" ]
       then
       echo "No packages of Riak KV version $kvsubver available for your operating system."
-      echo "Please change the desired verion of Riak by calling this installer again with"
-      echo "the following options:"
-      echo ""
-      echo "./install-riak.sh -t $type -n $nodename -c $cookie $miscflags-v [VERSION e.g. 3.0.16]"
-      echo ""
-      echo "You could also attempt specifying an OS override e.g. if you wish to install a 2.1.4"
-      echo "version of Riak KV on Ubuntu Jammy, it might be possible using the package provided"
-      echo "for Ubuntu Trusty (you may have to build some manual dependencies such as OpenSSL 0.98)."
-      echo ""
-      echo "./install-riak.sh -t $type -n $nodename -c $cookie $miscflags-o trusty -v [VERSION e.g. 2.1.4]"
       exit
     fi
     ##get KV packages
@@ -945,7 +832,7 @@ else
     path=sed "s@$packagename@@g" $package
     cd path
     sha=$(ls $package* | grep "sha")
-    if [ ! -z ${sha+x} ]
+    if [ ! -z "$sha" ]
       then
       if $(sha256sum --check $package.sha --status)
         then
@@ -957,7 +844,7 @@ else
     else
       echo "No $package.sha file found so unable to perform sha checksum test."
       message="Proceed without checking file integrity of locally saved package?"
-      if [ "$yes" = 1 ] || yes_or_no "$message"
+      if yes_or_no "$message"
         then
         echo "Proceeding without checking file integrity."
       else
@@ -971,7 +858,7 @@ else
         kvpath=$(sed "s@$kvpackagename@@g" $kvpackage)
         cd path
         sha=$(ls $kvpackage* | grep "sha")
-        if [ ! -z ${sha+x} ]
+        if [ ! -z "$sha" ]
           then
           if $(sha256sum --check $kvpackage.sha --status)
             then
@@ -983,7 +870,7 @@ else
         else
           echo "No $kvpackage.sha file found so unable to perform sha checksum test."
           message="Proceed without checking file integrity of locally saved package?"
-          if [ "$yes" = 1 ] || yes_or_no "$message"
+          if yes_or_no "$message"
             then
             echo "Proceeding without checking file integrity."
           else
@@ -996,16 +883,16 @@ else
 fi
 ##install Riak KV for CS as well if set
 echo "About to install $package with $installer"
-if [ ! -z ${kvpackage+x} ]
+if [ ! -z "$kvpackage" ]
   then
   sudo $installer $kvpackage $package
 else
   sudo $installer $package
 fi
 ## If we installed from a specified package directory, return to the main directory
-if [ ! -z ${current+x} ]; then cd $current; fi
+if [ ! -z "$current" ]; then cd $current; fi
 ## If using local config files, move them into place
-if [ ! -z ${config+x} ]
+if [ ! -z "$config" ]
   then
   sudo mv /etc/riak/riak.conf /etc/riak/riak.bak
   sudo mv /etc/riak/advanced.config /etc/riak/advanced.bak
@@ -1076,7 +963,7 @@ else
     sudo sed -i "s/anti_entropy = active/anti_entropy = passive/g" /etc/riak/riak.conf
     sudo sed -i "s/tictacaae_active = passive/tictacaae_active = active/g" /etc/riak/riak.conf
   fi
-  if [ ! -z ${search+x} ]
+  if [ ! -z "$search" ]
     then
     sudo sed -i "s/search = off/search = on/g" /etc/riak/riak.conf
     sudo sed -i "s/-d64 -Xms 1g -Xmx 1g -XX:+UseStringCache -XX:+UseCompressedOops/$search/g" /etc/riak/riak.conf
@@ -1135,7 +1022,7 @@ if [ "$type" = "cs" ]
   else
     cslocal=$interface
   fi
-  if [ ! -z ${generate+x} ]
+  if [ ! -z "$generate" ]
     then
     netstat -tpln
     curl http://127.0.0.1:8080/test
@@ -1146,7 +1033,7 @@ if [ "$type" = "cs" ]
     key=$(cat ~/secret.txt | cut -d '"' -f 34)
     #secret=$(cat ~/secret.txt | cut -d '"' -f 20)
     secret=$(cat ~/secret.txt | cut -d '"' -f 38)
-    if [ -z ${key+x} ]
+    if [ -z "$key" ]
       then
       echo "CS has failed to start for some ridiculous reason. Sorry, we dropped the ball. Bye!"
     else
@@ -1199,17 +1086,17 @@ if [ "$type" = "cs" ]
       echo "The installer has generated a sample configuration file for s3 which is located at ~/.s3cfg"
       echo "Being in the root of your user folder, s3cmd will automatically use this unless you specify another."
       echo "Depending on how you access, you may need to change the \"proxy_host\" setting in .s3cfg from $cslocal"
-      echo "to an externally accessable IP address." 
+      echo "to an externally accessable IP address."
       echo ""
       echo "The admin key and admin secret can be found in ~/secret.txt and they are $key and $secret accordingly."
     fi
   fi
 fi
 
-if [ ${joining+x} ]
+if [ -n "$joining" ]
   then
   message="In order to join this node to $joining, we will need to start Riak. Proceed?"
-  if [ "$yes" = 1 ] || yes_or_no "$message"
+  if yes_or_no "$message"
     then
     echo "Note: there is a known bug on the first start of Riak that can cause the terminal that launched it"
     echo "to hang as the launch command does not return \"completed\" despite it completing successfully."
@@ -1235,7 +1122,7 @@ if [ ${joining+x} ]
     sudo $riakadmin cluster join $joining
     sudo $riakadmin cluster plan
     message="The above shows the distribution of the cluster both before and after joining. Proceed?"
-    if [ "$yes" = 1 ] || yes_or_no "$message"
+    if yes_or_no "$message"
     then
       $riakadmin cluster commit
       $riakadmin transfers

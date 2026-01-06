@@ -146,6 +146,7 @@ makeScriptTemplateParams m =
                                           m.s.sshScriptTemplateExpertParamsShown)
                                |> Checkbox.setOnChange SshScriptTemplateExpertToggle
                                )
+                         , text "Expert parameters"
                          ]
                  ] ++ (maybeExpertParamsSection m))
         else
@@ -156,7 +157,7 @@ maybeExpertParamsSection m =
         pp = Model.scriptTemplateBy m .name m.s.sshSelectedScriptTemplateName |> .params
              |> List.filter .expert
     in
-        if pp /= [] then
+        if m.s.sshScriptTemplateExpertParamsShown && pp /= [] then
             [ div [ style "display" "grid"
                   , style "grid-template-columns" "auto 1fr"
                   ] (List.map materialParam pp |> List.concat)
