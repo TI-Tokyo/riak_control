@@ -83,6 +83,7 @@ type alias State =
     , sshScriptTemplateSpecs : List Data.SshOps.ScriptTemplate
     , sshTargetHostsStr : String
     , sshSelectedScriptTemplateName : String
+    , sshScriptTemplateExpertParamsShown : Bool
 
     , sshStoredKeys : List Data.SshOps.SshKey
     , sshAddKeyDialogShown : Bool

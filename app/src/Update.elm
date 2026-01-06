@@ -189,6 +189,12 @@ update msg m =
             in
                 ({m | s = {s_ | sshDeleteKeyDialogShown = False}}, Request.SshOps.deleteSshKey m pp)
 
+        SshScriptTemplateExpertToggle ->
+            let s_ = m.s in
+            ( {m | s = {s_ | sshScriptTemplateExpertParamsShown = not s_.sshScriptTemplateExpertParamsShown}}
+            , Cmd.none
+            )
+
         SshSelectedScriptTemplateNameForExecChanged a ->
             let s_ = m.s in
             ( {m | s = {s_ | sshSelectedScriptTemplateName = a}}
@@ -203,9 +209,11 @@ update msg m =
             let
                 s_ = m.s
                 pp0 = Model.scriptTemplateBy m .name m.s.sshSelectedScriptTemplateName |> .params
-                f1 = \{name, value, description} ->
-                    if name == a then {name = name, value = s, description = description}
-                    else {name = name, value = value, description = description}
+                f1 = \{name, value, description, expert} ->
+                    if name == a then
+                        {name = name, value = s, description = description, expert = expert}
+                    else
+                        {name = name, value = value, description = description, expert = expert}
                 pp = List.map f1 pp0
                 f2 = \t ->
                      if t.name == m.s.sshSelectedScriptTemplateName then

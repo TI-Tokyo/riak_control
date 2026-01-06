@@ -80,6 +80,7 @@ decodeSshScriptTemplate =
            |> required "name" string
            |> required "value" string
            |> required "description" string
+           |> optional "expert" bool False
     in
         succeed ScriptTemplate
             |> required "name" string

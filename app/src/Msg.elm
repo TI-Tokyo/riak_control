@@ -77,6 +77,7 @@ type Msg
     | SshScriptInterrupted (Result Http.Error ())
     | ExecSshScriptDone
 
+    | SshScriptTemplateExpertToggle
     | SshTargetHostsChanged String
     | SshScriptTemplateParamChanged String String
     | SshSelectedScriptTemplateNameForExecChanged String

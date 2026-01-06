@@ -60,6 +60,7 @@ type alias TemplateParameter =
     { name : String
     , value : String
     , description : String
+    , expert : Bool
     }
 
 type alias ExecScriptCmdParams =

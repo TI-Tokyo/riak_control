@@ -24,6 +24,7 @@ import Model exposing (Model)
 import Msg exposing (Msg(..))
 import Data.SshOps
 import View.Style
+import View.Shared
 import View.SshOps.Dialog exposing (..)
 import Util
 
@@ -33,6 +34,7 @@ import Material.Button as Button
 import Material.TextField as TextField
 import Material.Select as Select
 import Material.Select.Item as SelectItem
+import Material.Checkbox as Checkbox
 import Material.Typography as Typography
 import RemoteData
 
@@ -126,38 +128,61 @@ goodToExec m =
 makeScriptTemplateParams m =
     let
         pp = Model.scriptTemplateBy m .name m.s.sshSelectedScriptTemplateName |> .params
-        f =
-            \{name, value, description} ->
-                [ div [ style "text-align" "end"
-                      , style "align-self" "center"
-                      , style "font-size" "large"
-                      , style "padding-right" "1em"
-                      , style "font-family" "monospace"
-                      ] [ text name ]
-                , TextField.filled
-                      (TextField.config
-                      |> TextField.setLabel Nothing
-                      |> TextField.setValue (Just value)
-                      |> TextField.setOnInput (SshScriptTemplateParamChanged name)
-                      )
-                , div [ style "grid-column-end" "span 2"
-                      , style "padding-bottom" "2em"
-                      , style "font-size" "small"
-                      , style "color" "#454545"
-                      ] [ text description ]
-                ]
+             |> List.filter (\{expert} -> not expert)
     in
         if pp /= [] then
             div []
-                [ div [ style "font-weight" "bold"
-                      , style "padding-top" "2em"
-                      ] [ text "Script parameters:" ]
-                , div [ style "display" "grid"
-                      , style "grid-template-columns" "auto 1fr"
-                      ] (List.map f pp |> List.concat)
-                ]
+                ([ div [ style "font-weight" "bold"
+                       , style "padding-top" "2em"
+                       ] [ text "Script parameters:" ]
+                 , div [ style "display" "grid"
+                       , style "grid-template-columns" "auto 1fr"
+                       ] (List.map materialParam pp |> List.concat)
+                 , div [ style "padding-top" "1em"
+                       ] [ Checkbox.checkbox
+                               (Checkbox.config
+                               |> Checkbox.setState
+                                    (View.Shared.checkboxStateFromBool
+                                          m.s.sshScriptTemplateExpertParamsShown)
+                               |> Checkbox.setOnChange SshScriptTemplateExpertToggle
+                               )
+                         ]
+                 ] ++ (maybeExpertParamsSection m))
         else
             div [] []
+
+maybeExpertParamsSection m =
+    let
+        pp = Model.scriptTemplateBy m .name m.s.sshSelectedScriptTemplateName |> .params
+             |> List.filter .expert
+    in
+        if pp /= [] then
+            [ div [ style "display" "grid"
+                  , style "grid-template-columns" "auto 1fr"
+                  ] (List.map materialParam pp |> List.concat)
+            ]
+        else
+            []
+
+materialParam {name, value, description} =
+    [ div [ style "grid-column-end" "span 2"
+          , style "padding-top" "2em"
+          , style "font-size" "small"
+          , style "color" "#454545"
+          ] [ text description ]
+    , div [ style "text-align" "end"
+          , style "align-self" "center"
+          , style "font-size" "large"
+          , style "padding-right" "1em"
+          , style "font-family" "monospace"
+          ] [ text name ]
+    , TextField.filled
+          (TextField.config
+          |> TextField.setLabel Nothing
+          |> TextField.setValue (Just value)
+          |> TextField.setOnInput (SshScriptTemplateParamChanged name)
+          )
+    ]
 
 
 makeScriptBlockExecuting m status =

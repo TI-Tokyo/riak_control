@@ -61,7 +61,7 @@ init f =
                 Snackbar.initialQueue Msg.Connection True
                 -- boot
                 False f.riakControlServerUser f.riakControlServerPassword
-                [] "" "(script-template-id)"
+                [] "" "(script-template-id)" False
                 []
                 False "(new key id)" "(new key body)"
                 False "(key id to delete)"
