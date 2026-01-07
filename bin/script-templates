@@ -7,6 +7,16 @@
                 "name": "type"
             },
             {
+                "value": "26",
+                "description": "OTP version (e.g., \"24\", \"26\" etc).",
+                "name": "otp"
+            },
+            {
+                "value": "",
+                "description": "Extra version (e.g., \"-rc0-6-gf9328919\").",
+                "name": "extra_vsn"
+            },
+            {
                 "value": "",
                 "description": "This needs to be name@IP or name@FQDN e.g. dev1@10.2.3.4 or riak@prod01.my.domain.com.",
                 "name": "nodename"

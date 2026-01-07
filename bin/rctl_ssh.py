@@ -58,7 +58,8 @@ def _option_i(f):
 
 _option_o = ["-o", "KbdInteractiveAuthentication=no",
              "-o", "PasswordAuthentication=no",
-             "-o", "UpdateHostKeys=no"]
+             "-o", "UpdateHostKeys=no",
+             "-o", "StrictHostKeyChecking=no"]
 
 def _scp(url, user, idf, f):
     logging.info("copying script %s to %s as %s (using key %s)", f, url, user, idf)

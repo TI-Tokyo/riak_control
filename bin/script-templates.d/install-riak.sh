@@ -1,49 +1,44 @@
 #!/bin/sh
 usage() {
-    echo "Usage: $0 [-t <string>] [-n <string>] [-j <string>] [-c <string>] [-r <int>] [-l <string>] [-v <string>] [-f <string>] [-b <string>] [-a <string>] [-o <string>] [-u <string>] [-e <string>] [-k <string>] [-m <string>] [-p] [-g] [-y] [-h]" 1>&2
+    echo "Usage: $0 [-t TYPE] [-v RIAK_VSN] [-O OTP_VSN] [-X EXTRA_VSN] [-n NODENAME] [-j JOIN_TO]"
+    echo "          [-c COOKIE] [-r RINGSIZE] [-l LOCAL_PKG] [-f LOCAL_CONFIG] [-b BACKEND]"
+    echo "          [-a DATADIR] [-o OS_OVERRIDE]"
+    echo "          [-u CS_ADMIN_USER] [-e CS_ADMIN_EMAIL] [-k CS_ADMIN_KEY] [-m CS_KV_VSN]"
+    echo "          [-p] [-g] [-y] [-h]" 1>&2
     exit 1
 }
 
 ## Read in any user provided flags and assign to the correct variables
-while getopts 't:n:j:c:r:l:v:f:b:d:a:i:o:u:e:k:e:pgyh' c
+while getopts 't:O:n:j:c:r:l:v:f:b:d:a:i:o:u:e:k:e:pgyh' c
 do
-  case $c in
-    t) type=$OPTARG ;;
-    n) nodename=$OPTARG ;;
-    j) joining=$OPTARG ;;
-    c) cookie=$OPTARG ;;
-    r) ringsize=$OPTARG ;;
-    l) package=$OPTARG ;;
-    v) subver=$OPTARG ;;
-    f) config=$OPTARG ;;
-    b) backend=$OPTARG ;;
-    d) datadir=$OPTARG ;;
-    a) aae=$OPTARG ;;
-    i) interface=$OPTARG ;;
-    s) search=$OPTARG ;;
-    o) override=$OPTARG ;;
-    u) user=$OPTARG ;;
-    e) email=$OPTARG ;;
-    k) key=$OPTARG ;;
-    m) kvpackage=$OPTARG ;;
-    p) performance=1 ;;
-    g) generate=yes ;;
-    y) yes=1 ;;
-    h) help=1 ;;
-  esac
+    case $c in
+        t) type=$OPTARG ;;
+        O) otp=$OPTARG ;;
+        X) extra_vsn=$OPTARG ;;
+        n) nodename=$OPTARG ;;
+        j) joining=$OPTARG ;;
+        c) cookie=$OPTARG ;;
+        r) ringsize=$OPTARG ;;
+        l) package=$OPTARG ;;
+        v) subver=$OPTARG ;;
+        f) config=$OPTARG ;;
+        b) backend=$OPTARG ;;
+        d) datadir=$OPTARG ;;
+        a) aae=$OPTARG ;;
+        i) interface=$OPTARG ;;
+        s) search=$OPTARG ;;
+        o) override=$OPTARG ;;
+        u) user=$OPTARG ;;
+        e) email=$OPTARG ;;
+        k) key=$OPTARG ;;
+        m) kvpackage=$OPTARG ;;
+        p) performance=1 ;;
+        g) generate=yes ;;
+        y) yes=1 ;;
+        h) help=1 ;;
+    esac
 done
 
-type=${type:-$type}
-nodename=${nodename:-$nodename}
-joining=${joining:-$joining}
-cookie=${cookie:-$cookie}
-ringsize=${ringsize:-$ringsize}
-subver=${subver:-$subver}
-backend=${backend:-$backend}
-datadir=${datadir:-$datadir}
-aae=${aae:-$aae}
-interface=${interface:-$interface}
-search=${search:-$search}
 override=${override:-$os_override}
 user=${user:-$cs_admin_user}
 email=${email:-$cs_admin_email}
@@ -53,6 +48,7 @@ generate=${generate:-$cs_admin_generate}
 packagerepo=${packagerepo:-https://files.tiot.jp/riak}
 prepare_for_riak_control=${prepare_for_riak_control:-no}
 ssl_bundle_url=${ssl_bundle_url:-}
+
 yes=1
 
 if [ "$help" = 1 ]
@@ -67,6 +63,7 @@ if [ "$help" = 1 ]
   echo "If you use one or more options, questions related to that option will be bypassed in the installer."
   echo ""
   echo "-t    Type of Riak. Valid options are \"kv\", \"cs\" and \"ts\"."
+  echo "-O    OTP version (i.e., 24, 26, etc)."
   echo "-n    Nodename. This needs to be name@IP or name@FQDN e.g. dev1@10.2.3.4 or riak@prod01.my.domain.com"
   echo "-j    Joining. If your node is joining a pre-existing cluster, enter the nodename of an existing node to join."
   echo "-c    Cookie. The pre-shared cookie for all nodes in this cluster. Regular text accepted but no spaces."
@@ -347,8 +344,8 @@ ipaddr=$(echo $ipaddr | cut -d " " -f 1)
 if [ -z "$subver" ]
   then
   case $type in
-  cs) subver="3.2.5"; kvsubver="3.2.0" ;;
-  kv) subver="3.0.16" ;;
+  cs) subver="3.2.5"; kvsubver="3.2.6" ;;
+  kv) subver="3.2.6" ;;
   ts) subver="3.0.1"  ;;
   esac
   echo "No version specified for Riak $(echo $type | tr '[:lower:]' '[:upper:]')."
@@ -369,12 +366,10 @@ if [ "$topver" = "2" ] || [ "$topver" = "1" ]
   riakadmin="riak-admin"
   riakrepl="riak-repl"
   riakcsadmin="riak-cs-admin"
-  otp="riak"
   else
   riakadmin="riak admin"
   riakrepl="riak repl"
   riakcsadmin="riak-cs admin"
-  otp="22"
 fi
 ## In the case of the CS version being set by a flag to the installer, the KV version is not set. Adding the best matches here.
 if [ "$type" = "cs" ] && [ -z ${kvsubver} ]
@@ -767,7 +762,12 @@ if [ -z "$package" ] || [ "$os" != "alpine" ]
 ## Chop the subversion up as needed then download
   ver=$(echo $subver | cut -d "." -f 1,2)
   echo "Attempting to get package from $packagerepo/$type/$ver/$subver/$os/$version/"
-  package=$(curl $packagerepo/$type/$ver/$subver/$os/$version/ | grep $packagetype | cut -d ">" -f 9 | cut -d "<" -f 1 | grep -v -e ".src." -e "dbgsym" -e "Parent" -e ".sha" | grep OTP$otp)
+  package=$(curl --silent $packagerepo/$type/$ver/$subver/$os/$version/ \
+                | grep $packagetype \
+                | grep "<li>" | sed -n 's/.*href="\(.*\)".*/\1/p' \
+                | grep -v -e ".src." -e "dbgsym" -e "Parent" -e ".sha" \
+                | grep OTP$otp \
+                | grep $extra_vsn)
   if [ -z "$package" ]
     then
     echo "No packages of Riak $type version $subver available for your operating system."
