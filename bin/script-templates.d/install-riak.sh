@@ -1,4 +1,13 @@
 #!/bin/sh
+
+missing_req () {
+    echo "This script needs $1 to run."
+    exit 1
+}
+for p in sudo ping curl logrotate; do
+    which $p 1>&2 >/dev/null || missing_req $p
+done
+
 usage() {
     echo "Usage: $0 [-t TYPE] [-v RIAK_VSN] [-O OTP_VSN] [-X EXTRA_VSN] [-n NODENAME] [-j JOIN_TO]"
     echo "          [-c COOKIE] [-r RINGSIZE] [-l LOCAL_PKG] [-f LOCAL_CONFIG] [-b BACKEND]"
@@ -233,25 +242,6 @@ echo ""
 echo "This installer is recommended for new uers to Riak or for those who just need to get a test node up quickly."
 echo "Although basic configuration is available through this installer, please consult the docs on"
 echo "https://www.tiot.jp/riak-docs/ for details on further configuration."
-echo ""
-echo "Please answer the following yes/no questions and provide details when prompted."
-echo "Assuming you decide to begin the install, you may need the sudo password."
-echo "If you choose the wrong answer by mistake, you can drop out of the installer with Ctrl-C and restart it."
-echo ""
-echo "Please note that this installer needs to be run on the intended Riak node and requires an internet connection"
-echo "unless you pre-downloaded the desired package and specified its location and filename with the -l flag when"
-echo "calling this script."
-echo ""
-echo "* For additional installer options such as installing from local storage, please exit and re-run with \"-h\""
-echo ""
-message="Are you ready to proceed?"
-if yes_or_no "$message"
-  then
-  echo "Thank you."
-else
-  echo "Exiting. Have a nice day!"
-  exit
-fi
 
 ## Set type (KV, CS or TS) unless pre-set by the calling command
 if [ -z "$type" ]
@@ -278,30 +268,13 @@ if [ -z "$type" ]
     fi
   fi
 fi
-echo ""
-echo "If you are unhappy with your type selection, remember that you can exit the installer with Ctrl-C and start again"
-echo ""
 
 ## Set node name unless pre-set or using local config files
 
 if [ -z "$nodename" ] && [ -z "$config" ]
   then
-  echo "What node name would you like to give this node? Here are some examples of acceptible formats:"
-  echo ""
-  echo "riak@192.168.10.5"
-  echo "prod1@some.domain.name"
-  echo ""
-  echo "Note how each one has three parts - the local identifier, the \"@\" and the location identifier. All three parts"
-  echo "are needed to generate a nodename that is usable by Riak."
-  echo ""
-  echo "Please note that if using an IP address, that IP address must be allocated uniquely to this node. Also, if using"
-  echo "a fully qualified domain name (FQDN), that must map to an IP address on this node via either DNS or /etc/hosts."
-  echo "Additionally, if you plan to use more than one node in this cluster, do not use a loopback IP address such as "
-  echo "\"127.0.0.1\". However, if you plan to use this as only a standalone node, this loopback address is fine."
-  echo ""
-  echo "Please enter your desired nodename underneath and press enter"
-  read nodename
-  echo ""
+  echo "Missing nodename."
+  exit 1
 else
 ## If a set of config files have been specified, retrieve the nodename from there
   if [ -n "$config" ]
@@ -325,7 +298,7 @@ if [ -z "$ipaddr" ]
     then
 ## Is it resolvable as an IPv4 address via DNS (using `ping` as `dig`` is not installed by default on some OS)
     ipaddr=$(ping $maybeFQDN -c 1 -4 | grep "64 bytes" | cut -d " " -f4)
-    if [ -z $(ipaddr) ]
+    if [ -z "$ipaddr" ]
       then
 ## How about as an IPv6 address?
       ipaddr=$(ping $maybeFQDN -c 1 -6 | grep "64 bytes" | cut -d " " -f4)
@@ -387,67 +360,10 @@ echo ""
 
 if [ -z "$ringsize" ] && [ -z "$config" ]
   then
-  echo "What ring size should your cluster have? This should be a power of 2."
-  if [ "$topver" = "2" ] || [ "$topver" = "1" ]
-    then
-    echo "For 2.x versions of Riak, approximate recommendations are as follows:"
-    echo ""
-    echo "+-------+---------------+"
-    echo "| Nodes |   Ring Size   |"
-    echo "+-------+---------------+"
-    echo "|    ~5 |       64, 128 |"
-    echo "|     6 |  64, 128, 256 |"
-    echo "|  7-10 |      128, 256 |"
-    echo "| 11-12 | 128, 256, 512 |"
-    echo "| 13-15 |      256, 512 |"
-    echo "|   15+ |     512, 1024 |"
-    echo "+-------+---------------+"
-    echo ""
-    echo "These recommendations are for general use but use case specific ring sizes may be larger or smaller than the above numbers." 
-    echo ""
-  else
-    echo "Riak KV 3.x and above use a newer version of OTP that does not suffer from the size restrictions encountered in 2.x."
-    echo "The standard recommended ring size for recent (3.x and higher) versions is 1024."
-    echo "Please note that all nodes in a cluster need to have the same value set for ring size."
-    echo ""
-  fi
-  echo "Please enter your desired ring size underneath."
-  read ringsize
-  echo ""
+  echo "Missing ringsize."
+  exit 1
 fi
 
-## Yokozuna
-
-if [ -n "$search" ] && [ "$type" = "kv" ]
-  then
-  echo "This section is regarding Yokozuna, a search feature that uses Solr from the Apache project."
-  echo "Most use cases do not require Yokozuna, especially as the Solr JVM makes it surprisingly memory hungry."
-  echo "If you need to use Yokozuna, you will have needed to specify leveldb as your backend and use"
-  echo "Legacy AAE."
-  echo ""
-  message="Do you plan to use Yokozuna"
-  if yes_or_no "$message"
-    then
-    echo "As you may be aware, Yokozuna runs a Java Virtual Machine (JVM) which usually needs to be tuned."
-    echo "The default options are:"
-    echo "-d64 -Xms 1g -Xmx 1g -XX:+UseStringCache -XX:+UseCompressedOops"
-    echo ""
-    echo "Not all of these are compatible with all versions of Java. Commonly \"-d64\" and \"-XX:UseStrongCache\""
-    echo "can cause Yokozuna to fail to start. Also, note the minimum and maximum amounts of memory available for"
-    echo "the JVM to use should be adjusted based on your node's physical memory. Usually \"-Xmx\" should be 40-50%"
-    echo "of your node's total memory whilst \"-Xms\" is commonly between 5 and 25% depending on use case. Trial"
-    echo "and error tuning is recommended and you can revisit this setting in /etc/riak/riak.conf near the end of"
-    echo "the file when needed."
-    echo ""
-    echo "Note: when tuning this setting, a restart of Riak is required for the changes to take effect."
-    echo ""
-    echo "Please enter the desired JVM settings. If unsure, copy and paste the default for now and tune later."
-    read search
-  else
-    echo "Leaving Yokozuna disabled as this is the default settting. The JVM will not be used."
-  fi
-  echo ""
-fi
 ## Time for a bit more complicated stuff where we auto-config some things based on
 ## previous user input and other stuff based on extra details we need to know
 
@@ -721,6 +637,11 @@ if [ -z "$joining" ]
 else
   echo "It will be joining a pre-exiting cluster via $joining."
 fi
+if [ -z "$cookie" ]
+then
+    echo "No cookie."
+    exit 1
+fi
 echo "The pre-shared cookie is \"$cookie\"."
 echo "The ring size is $ringsize."
 echo "The backend is set to $backend."
@@ -747,14 +668,7 @@ echo ""
 echo "You may wish to take a note of the above information if you are considering adding further nodes to the cluster."
 echo "NOTE: Remember to change the node name and IP address of the interface if making a cluster."
 echo ""
-message="Is the above information correct? If so, answer \"yes\" to proceed or, if not, answer \"no\" to exit the installer"
-if yes_or_no "$message"
-  then
-  echo "Excellent. In a moment we shall download Riak and begin installation. Please enter the sudo password if prompted."
-else
-  echo "Exiting. Have a nice day!"
-  exit
-fi
+echo "In a moment we shall download Riak and begin installation."
 
 ## Check whether local packages exist or if it's a repo based OS
 if [ -z "$package" ] || [ "$os" != "alpine" ]
@@ -777,7 +691,7 @@ if [ -z "$package" ] || [ "$os" != "alpine" ]
     then
     kvver=$(echo $kvsubver | cut -d "." -f 1,2)
     echo "Attempting to get package from $packagerepo/kv/$kvver/$kvsubver/$os/$version/"
-    kvpackage=$(curl $packagerepo/kv/$kvver/$kvsubver/$os/$version/ | grep $packagetype | cut -d ">" -f 9 | cut -d "<" -f 1 | grep -v -e ".src." -e "dbgsym" -e "Parent" -e ".sha"  | grep OTP$otp)
+    kvpackage=$(curl -s $packagerepo/kv/$kvver/$kvsubver/$os/$version/ | grep $packagetype | cut -d ">" -f 9 | cut -d "<" -f 1 | grep -v -e ".src." -e "dbgsym" -e "Parent" -e ".sha"  | grep OTP$otp)
     if [ -z "$kvpackage" ]
       then
       echo "No packages of Riak KV version $kvsubver available for your operating system."
@@ -785,8 +699,8 @@ if [ -z "$package" ] || [ "$os" != "alpine" ]
     fi
     ##get KV packages
     echo "KV package successfully located. Downloading from $packagerepo/kv/$kvver/$kvsubver/$os/$version/$kvpackage..."
-    curl -O $packagerepo/kv/$kvver/$kvsubver/$os/$version/$kvpackage
-    curl -O $packagerepo/kv/$kvver/$kvsubver/$os/$version/$kvpackage.sha
+    curl -s -O $packagerepo/kv/$kvver/$kvsubver/$os/$version/$kvpackage
+    curl -s -O $packagerepo/kv/$kvver/$kvsubver/$os/$version/$kvpackage.sha
   ##check valid
     if $(sha256sum --check $kvpackage.sha --status)
       then
@@ -798,8 +712,8 @@ if [ -z "$package" ] || [ "$os" != "alpine" ]
   fi
 ##get packages
   echo "$type package successfully located. Downloading from $packagerepo/$type/$ver/$subver/$os/$version/$package..."
-  curl -O $packagerepo/$type/$ver/$subver/$os/$version/$package
-  curl -O $packagerepo/$type/$ver/$subver/$os/$version/$package.sha
+  curl -s -O $packagerepo/$type/$ver/$subver/$os/$version/$package
+  curl -s -O $packagerepo/$type/$ver/$subver/$os/$version/$package.sha
 ##check valid
   if $(sha256sum --check $package.sha --status)
     then
@@ -824,7 +738,7 @@ else
     echo "Adding repository for Riak"
     sudo echo "https://files.tiot.jp/alpine/v3.16/main" >> /etc/apk/repositories
     cd /etc/apk/keys
-    sudo curl -O alpine@tiot.jp.rsa.pub
+    sudo curl -s -O alpine@tiot.jp.rsa.pub
     sudo apk update
     sudo apk add riak=$subver
   else
@@ -972,15 +886,15 @@ else
   if [ "$prepare_for_riak_control" = "yes" ]
   then
     echo "Enabling ssl and https listener"
-    sudo sed -i "s/^#+ +ssl\./ssl./" /etc/riak/riak.conf
-    sudo sed -i "s/#+ +listener.https.internal/listener.https.internal/" /etc/riak/riak.conf
+    sudo sed -i "s/^#* *ssl\./ssl./" /etc/riak/riak.conf
+    sudo sed -i "s/^#* *listener.https.internal/listener.https.internal/" /etc/riak/riak.conf
     sudo sed -i "s/ {riak_core,/ {riak_kv, [{secure_referer_check, false}]},\n {riak_core,/" /etc/riak/advanced.config
   fi
   if [ ! -z ${ssl_bundle_url+x} ]
   then
     echo "Fetching and installing your certificate bundle"
     tmpf=/tmp/riak-ssl-cert-bundle.tar.gz
-    curl -o $tmpf $ssl_bundle_url && sudo tar -C /etc/riak -xzf $tmpf
+    curl -s -o $tmpf $ssl_bundle_url && sudo tar -C /etc/riak -xzf $tmpf
     rm $tmpf
   fi
 fi

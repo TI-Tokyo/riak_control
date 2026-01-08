@@ -152,7 +152,7 @@ def _exec_script(req, send_resp_f, wfile):
 def _parse_hosts(s):
     try:
         o = []
-        r = r'(\w+)@([\w\.-]+)(?:\((\w*)\)|)'
+        r = r'(\w+)@([\w\.-]+) *(?:\((\w*)\)|)'
         for h in re.split(", +", s):
             m = re.search(r, h)
             if m.group(3) in ["", "none", None]:

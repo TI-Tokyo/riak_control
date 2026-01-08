@@ -27,7 +27,7 @@
                 "name": "joining"
             },
             {
-                "value": "",
+                "value": "riak",
                 "description": "The pre-shared cookie for all nodes in this cluster. Regular text accepted but no spaces.",
                 "name": "cookie"
             },
@@ -78,7 +78,7 @@
             },
             {
                 "value": "leveled",
-                "description": "The storage backend. Valid options are \"bitcask\", \"leveldb\" and \"leveled\"(KV>2.9.0).",
+                "description": "The storage backend. Valid options are \"bitcask\", \"leveldb\" and \"leveled\" (KV>2.9.0).",
                 "name": "backend"
             },
             {
