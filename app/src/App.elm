@@ -71,6 +71,7 @@ init f =
                 -- config
                 { riakVersion = "---"
                 , systemVersion = "---"
+                , nodename = ""
                 , uptime = 0
                 , uptimeStr = "---"
                 }

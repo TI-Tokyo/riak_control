@@ -64,7 +64,8 @@ makeTopAppBar m =
         (TopAppBar.config
         |> TopAppBar.setFixed True
         |> TopAppBar.setAttributes [ style "z-index" "20"
-                                   , style "background" "#64a8da" ])
+                                   , style "background" "#64a8da"
+                                   ])
         [ TopAppBar.row []
               [ TopAppBar.section [ TopAppBar.alignStart ]
                     [ IconButton.iconButton
@@ -84,13 +85,22 @@ makeTopAppBar m =
                   [ makeFilterControls m ]
               , TopAppBar.section [ TopAppBar.alignEnd ]
                   [ span [ TopAppBar.alignEnd, style "padding" "0 1em" ]
-                        [ text m.c.riakNodeUrl ]
+                        (makeConnectionInfo m)
                   , span [ TopAppBar.alignEnd ]
-                      [ img [src "images/openriak-logo.png", style "object-fit" "contain"] [] ]
+                      [ img [ src "images/openriak-logo.png"
+                            , style "object-fit" "contain"
+                            ] []
+                      ]
                   ]
               ]
         ]
 
+makeConnectionInfo m =
+    case m.s.activeTab of
+        Msg.SshOps ->
+            [ text m.c.riakControlServerUrl ]
+        _ ->
+            [ text (m.c.riakNodeUrl ++ " (" ++ m.s.serverInfo.nodename ++ ")") ]
 
 listWhat m =
     case m.s.activeTab of
@@ -118,7 +128,7 @@ makeDrawer m =
                                 (ListItem.config
                                 |> ListItem.setOnClick (TabClicked Msg.SshOps)
                                 )
-                                [ text "Boot options" ]
+                                [ text "Setup" ]
                           )
                           [ ListItem.listItem
                                 (ListItem.config
@@ -182,7 +192,7 @@ makeFilterControls m =
 
 activeTabName m =
     case m.s.activeTab of
-        Msg.SshOps -> "Boot options"
+        Msg.SshOps -> "Setup"
         Msg.Connection -> "Connection"
         Msg.Cluster -> "Cluster"
         Msg.Ttaae -> "TictacAAE"

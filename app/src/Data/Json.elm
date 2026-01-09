@@ -105,6 +105,7 @@ decodeServerInfo =
     succeed ServerInfo
         |> required "riak_version" string
         |> required "system_version" string
+        |> optional "nodename" string ""
         |> required "uptime" int
         |> required "uptime_str" string
 

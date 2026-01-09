@@ -77,6 +77,12 @@
                 "name": "ssl_bundle_url"
             },
             {
+                "value": "0.0.0.0:11018",
+                "description": "https listener (address:port). Port should be different from the standard value for http (8098).",
+                "name": "https_listener",
+                "expert": true
+            },
+            {
                 "value": "leveled",
                 "description": "The storage backend. Valid options are \"bitcask\", \"leveldb\" and \"leveled\" (KV>2.9.0).",
                 "name": "backend"
@@ -142,13 +148,13 @@
     {
         "params": [
             {
-                "name": "fafa",
-                "value": "keke",
-                "description": "faficious kek"
+                "name": "jamjar",
+                "value": "mackays",
+                "description": "A string to write to $HOME/jamjar on target host."
             }
         ],
-        "name": "test",
-        "body": "#!/bin/sh\necho $fafa >~/fafa\necho $fafa written to ~/fafa\nfor s in `seq 1 20`; do sleep 1; echo $s $fafa written to ~/fafa againnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn; done\nsleep 1\n",
-        "description": "A test"
+        "name": "Write access test",
+        "body": "#!/bin/sh\necho $jamjar >~/jamjar; if cat ~/jamjar; then echo $jamjar written to ~/jamjar; rm ~/jamjar; else echo \"No write access on this host :(\"; exit 1; fi\n",
+        "description": "A simple script to check that riak_control has a write access to the target host."
     }
 ]

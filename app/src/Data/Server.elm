@@ -24,6 +24,7 @@ module Data.Server exposing (..)
 type alias ServerInfo =
     { riakVersion : String
     , systemVersion : String
+    , nodename : String
     , uptime : Int
     , uptimeStr : String
     }
@@ -31,7 +32,8 @@ type alias ServerInfo =
 emptyServerInfo =
     { riakVersion = ""
     , systemVersion = ""
-    , uptime = 0
+    , nodename = ""
+    , uptime = -1
     , uptimeStr = ""
     }
 

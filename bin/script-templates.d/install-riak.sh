@@ -887,7 +887,7 @@ else
   then
     echo "Enabling ssl and https listener"
     sudo sed -i "s/^#* *ssl\./ssl./" /etc/riak/riak.conf
-    sudo sed -i "s/^#* *listener.https.internal/listener.https.internal/" /etc/riak/riak.conf
+    sudo sed -i "s/^#* *listener.https.internal.*/listener.https.internal = $https_listener/" /etc/riak/riak.conf
     sudo sed -i "s/ {riak_core,/ {riak_kv, [{secure_referer_check, false}]},\n {riak_core,/" /etc/riak/advanced.config
   fi
   if [ ! -z ${ssl_bundle_url+x} ]
@@ -1057,13 +1057,16 @@ if [ -n "$joining" ]
   fi
 fi
 
+$riakstart
+sudo $riakadmin wait-for-service riak_kv
+
 if [ "$prepare_for_riak_control" = "yes" ]
 then
   echo "Enabling security and creating an admin user for Riak Control"
-  $riakadmin security enable
-  $riakadmin security add-user "$riak_control_user" password="$riak_control_password"
-  $riakadmin security grant riak_kv.riak_control on any to "$riak_control_user"
-  $riakadmin security add-source all "$riak_control_pwd_sec_net_source" password
+  sudo $riakadmin security enable
+  sudo $riakadmin security add-user "$riak_control_user" password="$riak_control_password"
+  sudo $riakadmin security grant riak_kv.riak_control on any to "$riak_control_user"
+  sudo $riakadmin security add-source all "$riak_control_pwd_sec_net_source" password
 fi
 
 echo "The installer has now completed. We recommend you look at the documentation available on"

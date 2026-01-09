@@ -51,7 +51,7 @@ serverInfoDetails m =
 serverInfoDetailsContent m =
     div View.Style.cardInnerContent
         [ text
-              ("Connected to: " ++ m.c.riakNodeUrl ++ "\n" ++
+              ("Connected to: " ++ m.c.riakNodeUrl ++ " (" ++ m.s.serverInfo.nodename ++ ")\n" ++
                "Riak version: " ++ m.s.serverInfo.riakVersion ++ " on " ++ m.s.serverInfo.systemVersion ++"\n" ++
                "      Uptime: " ++ m.s.serverInfo.uptimeStr)
         ]
