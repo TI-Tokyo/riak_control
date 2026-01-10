@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -18,7 +18,7 @@
 --
 -- ---------------------------------------------------------------------
 
-module View.Ttaae.AppBarContent exposing
+module View.Vnode.AppBarContent exposing
     ( makeFilterControls
     )
 
@@ -40,7 +40,7 @@ import Material.Select.Item as SelectItem
 
 makeFilterControls m =
     let
-        n = View.Common.selectSortByString SortTtaaeTreeStatus
+        n = View.Common.selectSortByString SortUnsorted
         (k0, kx) =
             case List.map .name m.s.cluster.current of
                 (n0 :: nn) ->
@@ -51,8 +51,8 @@ makeFilterControls m =
         [ Select.outlined
               (Select.config
               |> Select.setLabel (Just "Node")
-              |> Select.setSelected (Just m.s.ttaaeReportShownForNode)
-              |> Select.setOnChange TtaaeTreeShowForNodeChanged
+              |> Select.setSelected (Just m.s.vnodeStatusShownForNode)
+              |> Select.setOnChange VnodeStatusShowForNodeChanged
               )
               (SelectItem.selectItem
                    (SelectItem.config { value = k0 })
@@ -64,18 +64,24 @@ makeFilterControls m =
         , Select.outlined
               (Select.config
               |> Select.setLabel (Just "Sort by")
-              |> Select.setSelected (Just (View.Common.selectSortByString m.s.ttaaeTreeSortBy))
-              |> Select.setOnChange TtaaeTreeSortByFieldChanged
+              |> Select.setSelected (Just (View.Common.selectSortByString m.s.vnodeStatusSortBy))
+              |> Select.setOnChange VnodeStatusSortByFieldChanged
               )
               (SelectItem.selectItem (SelectItem.config { value = n }) n)
               (List.map
                    (\i -> let j = View.Common.selectSortByString i in
                           SelectItem.selectItem (SelectItem.config {value = j}) j)
-                   [ SortTtaaeTreeStatus
-                   , SortTtaaeTreeLastRebuild
-                   , SortTtaaeTreeNextRebuild
-                   , SortTtaaeTreeTotalDirtySegments
+                   [ SortVnodeBEStatusLedgerCacheSize
+                   , SortVnodeBEStatusNActiveJournalFiles
+                   , SortVnodeBEStatusPencillerLastMergeTime
+                   , SortVnodeBEStatusJournalLastCompactionTime
+                   , SortVnodeBEStatusLevelFilesCountTotal
+                   , SortVnodeBEStatusGetCount
+                   , SortVnodeBEStatusHeadCount
+                   , SortVnodeBEStatusPutCount
+                   , SortVnodeStatusCounter
+                   , SortVnodeStatusCounterLease
                    ])
-        , Button.text (Button.config |> Button.setOnClick TtaaeTreeSortOrderChanged)
-            (View.Common.sortOrderText m.s.ttaaeTreeSortOrder)
+        , Button.text (Button.config |> Button.setOnClick VnodeStatusSortOrderChanged)
+            (View.Common.sortOrderText m.s.vnodeStatusSortOrder)
         ]

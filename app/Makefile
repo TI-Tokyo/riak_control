@@ -20,4 +20,8 @@ build: deps
 	@mkdir -p $(WWW_DEST)
 	@$(YARN) run build
 
-.PHONY: clean deps build
+devbuild: deps
+	@mkdir -p $(WWW_DEST)
+	@$(YARN) run build:dev
+
+.PHONY: clean deps build devbuild

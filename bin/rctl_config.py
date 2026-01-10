@@ -1,5 +1,3 @@
-#!/bin/sh
-
 ## Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 ##
 ## This file is provided to you under the Apache License,
@@ -16,12 +14,12 @@
 ## specific language governing permissions and limitations
 ## under the License.
 
-PORT=${RIAK_CONTROL_PORT:-8091}
+import hashlib
 
-script_dir=$(dirname $0)
-
-a=$set_me_from_distro_packaging
-a1=${a:-$RIAK_CONTROL_DOCROOT}
-D=${a1:-$script_dir/../www}
-
-python3 $script_dir/rctl.py --port $PORT --docroot "$D"
+def default_config():
+    return {
+        "admin": {
+            "name": "murzyk",
+            "password": hashlib.sha256(b"synpoliana").hexdigest()
+        }
+    }

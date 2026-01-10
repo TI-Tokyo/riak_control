@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -22,17 +22,23 @@ module App exposing (init, subscriptions, Flags)
 
 import Model exposing (..)
 import Data.Cluster
+import Data.SshOps
 import Update exposing (refreshAll)
 import Msg exposing (Msg(..))
 import View.Common exposing (SortByField(..))
+import Static
 
 import Dict exposing (Dict)
 import Task
 import Time
+import RemoteData
 import Material.Snackbar as Snackbar
 
 type alias Flags =
-    { riakNodeUrl : String
+    { riakControlServerUrl : String
+    , riakControlServerUser : String
+    , riakControlServerPassword : String
+    , riakNodeUrl : String
     , riakAdminUser : String
     , riakAdminPassword : String
     }
@@ -44,35 +50,52 @@ init f =
         haveCreds = f.riakAdminPassword /= ""
         config =
             Config
+                f.riakControlServerUrl f.riakControlServerUser f.riakControlServerPassword
                 f.riakNodeUrl f.riakAdminUser f.riakAdminPassword
                 3000
         state =
             State
                 Data.Cluster.emptyCluster
+                Dict.empty Dict.empty [] Nothing
                 [] [] []
-                Snackbar.initialQueue Msg.General True
+                Snackbar.initialQueue Msg.Connection True
+                -- boot
+                False f.riakControlServerUser f.riakControlServerPassword
+                [] "" "(script-template-id)" False
+                []
+                False "(new key id)" "(new key body)"
+                False "(key id to delete)"
+                "(current-session-id)"
+                Static.awaitingOutput
+                Data.SshOps.ScriptNotStarted
+                -- config
                 { riakVersion = "---"
                 , systemVersion = "---"
+                , nodename = ""
                 , uptime = 0
                 , uptimeStr = "---"
                 }
                 (not haveCreds) f.riakNodeUrl f.riakAdminUser f.riakAdminPassword
                 -- Cluster
-                "(awaiting refresh)" Name True
+                "(awaiting refresh)" SortName True Nothing Nothing
                 False ""  ""
                 "" "" "(replacement)"
+                False
                 -- User
-                "" ["Name"] Name True
+                "" ["Name"] SortName True
                 False "(newUserName)" "(newUserPassword)" Nothing Nothing
                 Nothing Nothing [] []
                 -- Group
-                "" ["Name"] Name True
+                "" ["Name"] SortName True
                 False "" Nothing Nothing
                 -- shared
                 Nothing Nothing  [] "" ""
                 -- TictacAAE
                 Dict.empty ""
-                "" [] TtaaeTreeStatus False
+                "" [] SortTtaaeTreeStatus False
+                -- Vnode
+                Dict.empty ""
+                "" [] SortUnsorted False
         model =
             Model
                 config

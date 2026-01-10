@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -19,10 +19,17 @@
 -- ---------------------------------------------------------------------
 
 module Data.Json exposing
-    ( decodeServerInfo
+    ( decodeSshScriptTemplateList
+    , decodeSshStoredKeyList
+    , decodeSshSession
+    , decodeScriptOutput
+
+    , decodeServerInfo
 
     , decodeCluster
     , decodeClusterActionResult
+
+    , decodeNodeConfig
 
     , decodeUserList
     , decodeGroupList
@@ -30,12 +37,16 @@ module Data.Json exposing
     , decodePermissionList
 
     , decodeTtaaeReport
+
+    , decodeVnodeStatusList
     )
 
+import Data.SshOps exposing (..)
 import Data.Server exposing (..)
 import Data.Cluster exposing (..)
 import Data.Security exposing (..)
-import Data.Ttaae
+import Data.Ttaae as Ttaae
+import Data.Vnode as Vnode
 import Util
 
 import Json.Decode as D exposing (succeed, list, string, int, float, bool, map, dict, nullable, oneOf, null)
@@ -46,13 +57,55 @@ import Time
 import Dict exposing (Dict)
 
 
--- General ------------------------------
+-- SshOps ------------------------------
+
+decodeSshStoredKeyList : D.Decoder (List SshKey)
+decodeSshStoredKeyList =
+    list decodeSshStoredKey
+
+decodeSshStoredKey =
+    succeed SshKey
+        |> required "name" string
+        |> required "body" string
+        |> required "created" string
+
+
+decodeSshScriptTemplateList : D.Decoder (List ScriptTemplate)
+decodeSshScriptTemplateList =
+    list decodeSshScriptTemplate
+
+decodeSshScriptTemplate =
+    let
+        tp = succeed TemplateParameter
+           |> required "name" string
+           |> required "value" string
+           |> required "description" string
+           |> optional "expert" bool False
+    in
+        succeed ScriptTemplate
+            |> required "name" string
+            |> required "body" string
+            |> required "params" (list tp)
+
+decodeSshSession =
+    succeed SshSession
+        |> required "session_id" string
+
+decodeScriptOutput =
+    succeed ScriptOutput
+        |> required "session_id" string
+        |> required "finished" bool
+        |> required "output" string
+
+
+-- Connection ------------------------------
 
 decodeServerInfo : D.Decoder ServerInfo
 decodeServerInfo =
     succeed ServerInfo
         |> required "riak_version" string
         |> required "system_version" string
+        |> optional "nodename" string ""
         |> required "uptime" int
         |> required "uptime_str" string
 
@@ -69,18 +122,19 @@ decodeCluster =
         |> required "down_nodes" (list string)
 
 
-decodeClusterActionResult : D.Decoder ClusterActionResult
+decodeClusterActionResult : D.Decoder ActionResult
 decodeClusterActionResult =
-    succeed ClusterActionResult
+    succeed ActionResult
         |> required "result" string
 
 currentMember =
     succeed CurrentMember
         |> required "name" string
         |> required "status" currentMemberStatus
-        |> required "system_info" decodeServerInfo
+        |> optional "system_info" decodeServerInfo Data.Server.emptyServerInfo
         |> required "is_me" bool
         |> required "reachable" bool
+        |> optional "services" (list string) []
         |> optional "ring_pct" float -1
         |> optional "pending_pct" float -1
         |> optional "mem_total" int -1
@@ -124,6 +178,10 @@ transferStatsState =
     map Data.Cluster.transferStatsStateFromStr string
 
 
+decodeNodeConfig =
+    succeed ConfigResult
+        |> required "result" string
+
 
 -- Security ------------------------------
 
@@ -162,12 +220,12 @@ decodePermissionList =
 
 
 -- TictacAAE
-decodeTtaaeReport : D.Decoder (Dict String (List Data.Ttaae.TtaaeTree))
+decodeTtaaeReport : D.Decoder (Dict String (List Ttaae.TtaaeTree))
 decodeTtaaeReport =
     dict (list ttaaeTree)
 
 ttaaeTree =
-    succeed Data.Ttaae.TtaaeTree
+    succeed Ttaae.TtaaeTree
         |> required "partition" string
         |> required "status" ttaeTreeStatus
         |> required "last_rebuild" string
@@ -176,4 +234,81 @@ ttaaeTree =
         |> required "controller_pid" string
 
 ttaeTreeStatus =
-    map Data.Ttaae.ttaeTreeStatusFromStr string
+    map Ttaae.ttaeTreeStatusFromStr string
+
+
+-- Vnode ------------------------------
+
+decodeVnodeStatusList : D.Decoder (List Vnode.VnodeStatus)
+decodeVnodeStatusList =
+    list vnodeStatus
+
+vnodeStatus =
+    succeed Vnode.VnodeStatus
+        |> required "idx" string
+        |> required "backend_status" backendStatus
+        |> required "vnodeid" string
+        |> required "counter" int
+        |> required "counter_lease" int
+        |> required "counter_lease_size" int
+        |> required "counter_leasing" bool
+
+backendStatus =
+    succeed Vnode.BackendStatus
+        |> required "mod" string
+        |> required "status" specificBackendStatus
+
+specificBackendStatus =
+    oneOf [ map Vnode.Leveled leveledStatus ]
+
+leveledStatus =
+    succeed Vnode.LeveledStatus
+        |> optional "ledger_cache_size" int -1
+        |> optional "n_active_journal_files" int -1
+        |> optional "avg_compaction_score" float -1.0
+        |> optional "level_files_count" (list countByLevel) []
+        |> optional "penciller_inmem_cache_size" int -1
+        |> optional "penciller_work_backlog_status" pencillerWorkBacklogStatus {workItems = -1, backlog = False, l0Full = False}
+        |> optional "penciller_last_merge_time" string "n/a"
+        |> optional "journal_last_compaction_time" string "n/a"
+        |> optional "journal_last_compaction_result" journalCompactionResult {filesCompacted = -1, score = -1.0}
+        |> optional "get_sample_count" int -1
+        |> optional "get_body_time" int -1
+        |> optional "head_sample_count" int -1
+        |> optional "head_rsp_time" int -1
+        |> optional "put_sample_count" int -1
+        |> optional "put_prep_time" int -1
+        |> optional "put_ink_time" int -1
+        |> optional "put_mem_time" int -1
+        |> optional "fetch_count_by_level" fetchCountByLevel Vnode.dummyFetchCountByLevel
+
+countByLevel =
+    succeed Vnode.CountByLevel
+        |> required "level" int
+        |> required "count" int
+
+pencillerWorkBacklogStatus =
+    succeed Vnode.PencillerWorkBacklogStatus
+        |> required "work_items" int
+        |> required "backlog" bool
+        |> required "l0_full" bool
+
+journalCompactionResult =
+    succeed Vnode.JournalCompactionResult
+        |> required "files_compacted" int
+        |> required "score" float
+
+fetchCountByLevel =
+    succeed Vnode.FetchCountByLevel
+        |> required "not_found" ctStat
+        |> required "mem" ctStat
+        |> required "0" ctStat
+        |> required "1" ctStat
+        |> required "2" ctStat
+        |> required "3" ctStat
+        |> required "lower" ctStat
+
+ctStat =
+    succeed Vnode.CTStat
+        |> required "count" int
+        |> required "time" int

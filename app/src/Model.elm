@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -22,18 +22,24 @@ module Model exposing
     ( Model
     , Config
     , State
+    , scriptTemplateBy
     , userBy
     , groupBy
+    , nodeBy
+    , clusterIsStable
     )
 
+import Data.SshOps
 import Data.Server exposing (..)
 import Data.Cluster exposing (..)
 import Data.Security exposing (..)
-import Data.Ttaae exposing (..)
+import Data.Ttaae
+import Data.Vnode
 
 import Msg
 import View.Common exposing (SortOrder, SortByField)
 
+import RemoteData
 import Material.Snackbar as Snackbar
 import Time
 import Dict
@@ -46,7 +52,10 @@ type alias Model =
     }
 
 type alias Config =
-    { riakNodeUrl : String
+    { riakControlServerUrl : String
+    , riakControlServerUser : String
+    , riakControlServerPassword : String
+    , riakNodeUrl : String
     , riakAdminUser : String
     , riakAdminPassword : String
     , refreshEvery : Float
@@ -54,6 +63,10 @@ type alias Config =
 
 type alias State =
     { cluster : Cluster
+    , nodeAdvancedConfigs : Dict.Dict String String
+    , nodeAppEnvs : Dict.Dict String String
+    , rollingRestartQueue : List Data.Cluster.RestartingNode
+    , nodeBeingRestartedNow : Maybe Data.Cluster.RestartingNode
     , users : List User
     , groups : List Group
     , permissions : List String
@@ -62,7 +75,28 @@ type alias State =
     , activeTab : Msg.Tab
     , topDrawerOpen : Bool
 
-    -- general
+    -- boot/sshops options
+    , rctlAdminCredsDialogShown : Bool
+    , rctlAdminCredsNewUser : String
+    , rctlAdminCredsNewPassword : String
+
+    , sshScriptTemplateSpecs : List Data.SshOps.ScriptTemplate
+    , sshTargetHostsStr : String
+    , sshSelectedScriptTemplateName : String
+    , sshScriptTemplateExpertParamsShown : Bool
+
+    , sshStoredKeys : List Data.SshOps.SshKey
+    , sshAddKeyDialogShown : Bool
+    , sshNewKeyName : String
+    , sshNewKeyBody : String
+    , sshDeleteKeyDialogShown : Bool
+    , sshKeyNameToDelete : String
+
+    , sshCurrentSessionId : String
+    , sshScriptOutput : String
+    , sshScriptExecutionStatus : Data.SshOps.SshScriptExecutionStatus
+
+    -- connection
     , serverInfo : ServerInfo
     --
     , configDialogShown : Bool
@@ -74,6 +108,8 @@ type alias State =
     , notReadyMessage : String
     , clusterMemberSortBy : SortByField
     , clusterMemberSortOrder : SortOrder
+    , nodeAppEnvShownFor : Maybe String
+    , nodeAdvancedConfigShownFor : Maybe String
     --
     , addNodeDialogShown : Bool
     , newNodeToJoin : String
@@ -81,6 +117,7 @@ type alias State =
     , replaceDialogShownFor : String
     , forceReplaceDialogShownFor : String
     , replaceNodeWith : String
+    , rollingRestartRequestShown : Bool
 
     -- users
     , userFilterValue : String
@@ -124,7 +161,22 @@ type alias State =
     , ttaaeTreeFilterIn : List String
     , ttaaeTreeSortBy : SortByField
     , ttaaeTreeSortOrder : SortOrder
+
+    -- Vnode
+    , vnodeStatus : Dict.Dict String (List Data.Vnode.VnodeStatus)
+    , vnodeStatusShownForNode : String
+    , vnodeStatusFilterValue : String
+    , vnodeStatusFilterIn : List String
+    , vnodeStatusSortBy : SortByField
+    , vnodeStatusSortOrder : SortOrder
     }
+
+
+scriptTemplateBy : Model -> (Data.SshOps.ScriptTemplate -> String) -> String -> Data.SshOps.ScriptTemplate
+scriptTemplateBy m by a =
+    case List.filter (\x -> a == by x) m.s.sshScriptTemplateSpecs of
+        [] -> Data.SshOps.dummyScriptTemplate
+        u :: _ -> u
 
 
 userBy : Model -> (User -> String) -> String -> User
@@ -138,3 +190,27 @@ groupBy m by a =
     case List.filter (\x -> a == by x) m.s.groups of
         [] -> Data.Security.dummyGroup
         g :: _ -> g
+
+
+nodeBy : Model -> (CurrentMember -> String) -> String -> Maybe CurrentMember
+nodeBy m by a =
+    case List.filter (\x -> a == by x) m.s.cluster.current of
+        [] -> Nothing
+        g :: _ -> Just g
+
+
+clusterIsStable : Model -> Bool
+clusterIsStable m =
+    case ( m.s.cluster.current == []
+         , m.s.cluster.transfers == []
+         , Maybe.withDefault {name = "", lastUptime = -1} m.s.nodeBeingRestartedNow |> .name |> nodeBy m .name
+         ) of
+        (True, _, _) ->   -- no cluster view (e.g., claimant down)
+            False
+        (_, False, _) ->  -- transfers ongoing
+            False
+        (_, _, Just n) ->
+            (n.status == Data.Cluster.Valid) &&
+                (List.member "riak_kv" n.services)
+        (_, _, Nothing) ->
+            m.s.nodeBeingRestartedNow == Nothing

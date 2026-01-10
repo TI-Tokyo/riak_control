@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -86,7 +86,7 @@ sort m aa =
     let
         aa0 =
             case m.s.userSortBy of
-                Name -> List.sortBy .name aa
+                SortName -> List.sortBy .name aa
                 _ -> aa
     in
         if m.s.userSortOrder then aa0 else List.reverse aa0

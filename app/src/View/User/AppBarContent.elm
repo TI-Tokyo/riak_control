@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -41,7 +41,7 @@ import Material.ChipSet.Filter as FilterChipSet
 
 
 makeFilterControls m =
-    let n = View.Common.selectSortByString Name in
+    let n = View.Common.selectSortByString SortName in
     [ TextField.outlined
           (TextField.config
           |> TextField.setLabel (Just "Filter by")
@@ -59,7 +59,7 @@ makeFilterControls m =
           (List.map
                (\i -> let j = View.Common.selectSortByString i in
                       SelectItem.selectItem (SelectItem.config {value = j}) j)
-               [Name])
+               [])
     , Button.text (Button.config |> Button.setOnClick UserSortOrderChanged)
             (View.Common.sortOrderText m.s.userSortOrder)
     ]

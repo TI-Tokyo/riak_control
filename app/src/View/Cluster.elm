@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -25,6 +25,7 @@ module View.Cluster exposing
 import Model exposing (Model)
 import Msg exposing (Msg(..))
 import Data.Cluster
+import View.Cluster.Dialog
 import View.Common exposing (SortByField(..))
 import View.Shared
 import View.Style
@@ -35,16 +36,11 @@ import Html.Attributes exposing (attribute, style, src)
 import Material.Card as Card
 import Material.Button as Button
 import Material.IconButton as IconButton
-import Material.TextField as TextField
 import Material.List as List
 import Material.List.Item as ListItem
 import Material.Menu as Menu
-import Material.Dialog as Dialog
 import Material.Fab as Fab
 import Material.Typography as Typography
-import Material.Select as Select
-import Material.Select.Item as SelectItem
-import Material.Switch as Switch
 import Iso8601
 import Dict
 import Numeral
@@ -58,11 +54,15 @@ makeContent m =
 
 makeProperContent m =
     div View.Style.topContent
-        [ makeTransfers m
+        [ makeRollingRestartProgress m
+        , makeTransfers m
         , makeAddNodeFab m
-        , makeAddNodeDialog m
         , makeCluster m
-        , maybeMakeReplacementDialog m
+        , View.Cluster.Dialog.maybeMakeAddNodeDialog m
+        , View.Cluster.Dialog.maybeMakeReplacementDialog m
+        , View.Cluster.Dialog.maybeMakeNodeAppEnvDialog m
+        , View.Cluster.Dialog.maybeMakeNodeAdvancedConfigDialog m
+        , View.Cluster.Dialog.maybePromptRollingRestartDialog m
         ]
 
 makeCluster m =
@@ -79,7 +79,7 @@ makeCluster m =
     ]
 
 makeAddNodeFab m =
-    if m.s.addNodeDialogShown then
+    if m.s.addNodeDialogShown || m.s.rollingRestartQueue /= [] then
         div [] []
     else
         div []
@@ -90,46 +90,6 @@ makeAddNodeFab m =
                   )
                   (Fab.icon "add")
             ]
-
-makeAddNodeDialog m =
-    if m.s.addNodeDialogShown then
-        div []
-            [ Dialog.confirmation
-                  (Dialog.config
-                  |> Dialog.setOpen True
-                  |> Dialog.setOnClose AddNodeDialogCancelled
-                  )
-                  { title = "Add node to cluster"
-                  , content =
-                        [ div [ style "display" "grid"
-                              , style "grid-template-columns" "1"
-                              , style "row-gap" "0.3em"
-                              ]
-                              [ TextField.filled
-                                    (TextField.config
-                                    |> TextField.setLabel (Just "Node to join")
-                                    |> TextField.setValue (Just m.s.newNodeToJoin)
-                                    |> TextField.setOnInput NewClusterNodeChanged
-                                    |> TextField.setAttributes [ attribute "spellCheck" "false" ]
-                                    )
-                              ]
-                        ]
-                  , actions =
-                        [ Button.text
-                              (Button.config |> Button.setOnClick AddNodeDialogCancelled)
-                              "Cancel"
-                        , Button.text
-                              (Button.config
-                              |> Button.setOnClick PlanNodeJoin
-                              |> Button.setAttributes [ Dialog.defaultAction ]
-                              )
-                              "Add"
-                        ]
-                  }
-            ]
-    else
-        div [] []
-
 
 
 -- current cluster
@@ -143,12 +103,22 @@ makeCurrentCluster m =
                     div [] [ text "(cluster is empty)" ]
                 rr ->
                     div View.Style.card rr
+        rrButtonDisabled =
+            not (Model.clusterIsStable m)
+        maybeRRButton =
+            if m.s.rollingRestartQueue == [] && m.s.cluster.stagedChanges == [] then
+                [ Button.text (Button.config
+                              |> Button.setDisabled rrButtonDisabled
+                              |> Button.setOnClick PromptBeginRollingRestart)
+                      "Rolling Restart" ]
+            else
+                []
     in
         div ([ style "padding" "1em"
              ] ++ (if haveStaged then [style "border-right" "solid grey"] else []))
-            [ section "Current Cluster"
-            , members
-            ]
+            ([ section "Current Cluster"
+             , members
+             ] ++ maybeRRButton)
 
 makeCurrentMember m u =
     let
@@ -157,8 +127,9 @@ makeCurrentMember m u =
                   [ text txt ]
              )
         menu =
-            div [ Menu.surfaceAnchor ]
-                        [ Button.text (Button.config |> Button.setOnClick (NodeMenuOpen u.name)) "..."
+            if m.s.rollingRestartQueue == [] then
+                div [ Menu.surfaceAnchor ]
+                    [ Button.text (Button.config |> Button.setOnClick (NodeMenuOpen u.name)) "..."
                         , Menu.menu
                               (Menu.config
                               |> Menu.setOpen (m.s.nodeMenuOpenedFor == u.name)
@@ -169,8 +140,13 @@ makeCurrentMember m u =
                               , li "Force Replace" (AskPlanNodeForceReplace u.name)
                               , li "Down" (PlanNodeDown u.name)
                               , li "Stop" (PlanNodeStop u.name)
+                              , li "App env" (GetNodeAppEnv u.name)
+                              , li "advanced.config" (GetNodeAdvancedConfig u.name)
+                              , li "Restart" (SignalNodeRestart u.name)
                               ]
                         ]
+            else
+                div [] []
         paint =
             case u.status of
                 Data.Cluster.Valid -> []
@@ -179,20 +155,20 @@ makeCurrentMember m u =
                 Data.Cluster.Joining -> [ style "background" "green" ]
                 _ -> []
     in
-    Card.card Card.config
-        { blocks =
-              ( Card.block <|
-                    div View.Style.cardInnerHeader
-                    [ text u.name ]
-              , [ Card.block <|
-                      div (View.Style.cardInnerContent ++ paint)
+        Card.card Card.config
+            { blocks =
+                  ( Card.block <|
+                        div View.Style.cardInnerHeader
+                        [ text u.name ]
+                  , [ Card.block <|
+                          div (View.Style.cardInnerContent ++ paint)
                           [ currentCardContent m u |> text
                           , menu
                           ]
-                ]
-              )
-        , actions = currentMemberCardActions m u
-        }
+                    ]
+                  )
+            , actions = currentMemberCardActions m u
+            }
 
 currentCardContent m u =
     let
@@ -300,60 +276,15 @@ finalMemberCardContent m u =
     " Ring/Pending %: " ++ (mf u.ringPct) ++ " / " ++ (mf u.pendingPct)
 
 
-maybeMakeReplacementDialog m =
-    case (m.s.replaceDialogShownFor, m.s.forceReplaceDialogShownFor) of
-        ("", "") -> div [] []
-        (a, "") ->
-            div []
-                (makeReplacementDialog
-                     m ("Replace node " ++ a)
-                     PlanNodeReplaceDialogConfirmed
-                     PlanNodeReplaceDialogCancelled)
-        ("", a) ->
-            div []
-                (makeReplacementDialog
-                     m ("Force replace node " ++ a)
-                     PlanNodeForceReplaceDialogConfirmed
-                     PlanNodeForceReplaceDialogCancelled)
-        (_, _) -> div [] []
-
-makeReplacementDialog m a m1 m2 =
-    [ Dialog.confirmation
-          (Dialog.config |> Dialog.setOpen True |> Dialog.setOnClose m2)
-          { title = a
-          , content = [ TextField.filled
-                            (TextField.config
-                            |> TextField.setLabel (Just "With")
-                            |> TextField.setRequired True
-                            |> TextField.setValue (Just m.s.replaceNodeWith)
-                            |> TextField.setOnInput PlanNodeReplaceWithChanged
-                            |> TextField.setAttributes [ attribute "spellCheck" "false" ]
-                            )
-                      ]
-                  , actions =
-                        [ Button.text
-                              (Button.config
-                              |> Button.setOnClick m2
-                              ) "Cancel"
-                        , Button.text
-                              (Button.config
-                              |> Button.setOnClick m1
-                              |> Button.setAttributes [ Dialog.defaultAction ]
-                              ) "Ok"
-                        ]
-          }
-    ]
-
-
 sortCurrent m aa =
     let
         aa0 =
             case m.s.clusterMemberSortBy of
-                Name -> List.sortBy .name aa
-                MemTotal -> List.sortBy .memTotal aa
-                MemErlang -> List.sortBy .memErlang aa
-                MemUsed -> List.sortBy .memUsed aa
---                Uptime -> List.sortBy (.systemInfo >> .uptime) aa
+                SortName -> List.sortBy .name aa
+                SortMemTotal -> List.sortBy .memTotal aa
+                SortMemErlang -> List.sortBy .memErlang aa
+                SortMemUsed -> List.sortBy .memUsed aa
+                SortUptime -> List.sortBy (.systemInfo >> .uptime) aa
                 _ -> aa
     in
         if m.s.clusterMemberSortOrder then aa0 else List.reverse aa0
@@ -362,7 +293,7 @@ sortPlanned m aa =
     let
         aa0 =
             case m.s.clusterMemberSortBy of
-                Name -> List.sortBy .name aa
+                SortName -> List.sortBy .name aa
                 _ -> aa
     in
         if m.s.clusterMemberSortOrder then aa0 else List.reverse aa0
@@ -378,6 +309,22 @@ section a =
         , style "font-variant-caps" "small-caps"
         ] [ text a ]
 
+
+makeRollingRestartProgress m =
+    if m.s.rollingRestartQueue == [] then
+        div [] []
+    else
+        let
+            endMsg =
+                case m.s.rollingRestartQueue of
+                    [] -> ""
+                    n :: _ -> ", next is " ++ n.name
+            -- _ = Debug.log "m.s.rollingRestartQueue" m.s.rollingRestartQueue
+        in
+            div [ style "color" "red"
+                ] [ text <| "Rolling restart in progress: restarting now "
+                        ++ (Maybe.withDefault {name = "", lastUptime = -1} m.s.nodeBeingRestartedNow |> .name)
+                        ++ endMsg ]
 
 makeTransfers m =
     if m.s.cluster.transfers == [] then

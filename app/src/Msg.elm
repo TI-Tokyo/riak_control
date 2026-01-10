@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -24,6 +24,7 @@ module Msg exposing
     , getNewTime
     )
 
+import Data.SshOps
 import Data.Security exposing (User, Group, Grant)
 import Data.Server exposing
     ( ServerInfo
@@ -31,26 +32,68 @@ import Data.Server exposing
     )
 import Data.Cluster exposing (Cluster, CurrentMember)
 import Data.Ttaae
+import Data.Vnode
+
 import Task
 import Http
 import Time
+import RemoteData
 import Material.Snackbar as Snackbar
 import File exposing (File)
 import Dict exposing (Dict)
 
 
 type Tab
-    = General
+    = SshOps
+    | Connection
     | Cluster
+    | Vnode
     | Ttaae
     | Users
     | Groups
 
 type Msg
-    = NoOp
-    | Discard String
+    -- SshOps
+    ----------
+    = RefreshBootOptions
+    | RctlEditAdminCredsDialogCancelled
+    | RctlEditAdminCredsDialogConfirmed
+    | RctlAdminCredsNameChanged String
+    | RctlAdminCredsPasswordChanged String
+    | ShowRctlEditAdminCredsDialog
 
-    -- General
+    | GetSshScriptTemplateList
+    | GotSshScriptTemplateList (Result Http.Error (List Data.SshOps.ScriptTemplate))
+    | GetSshKeyList
+    | GotSshKeyList (Result Http.Error (List Data.SshOps.SshKey))
+    | StoreSshKey
+    | SshKeyStored (Result Http.Error ())
+    | DeleteSshKey
+    | SshKeyDeleted (Result Http.Error ())
+    | ExecSshScript
+    | SshScriptExecuting (Result Http.Error Data.SshOps.SshSession)
+    | GotScriptOutput (Result Http.Error Data.SshOps.ScriptOutput)
+    | ExecSshScriptInterrupt
+    | SshScriptInterrupted (Result Http.Error ())
+    | ExecSshScriptDone
+
+    | SshScriptTemplateExpertToggle
+    | SshTargetHostsChanged String
+    | SshScriptTemplateParamChanged String String
+    | SshSelectedScriptTemplateNameForExecChanged String
+
+    | ShowAddSshKeyDialog
+    | SshNewKeyNameChanged String
+    | SshNewKeyBodyChanged String
+    | SshAddKeyDialogCancelled
+    | SshAddKeyDialogConfirmed
+
+    | ShowDeleteSshKeyDialog
+    | SshKeyNameForDeletionChanged String
+    | SshDeleteKeyDialogCancelled
+    | SshDeleteKeyDialogConfirmed
+
+    -- Connection
     ----------
     | Ping
     | TimedPong (Result Http.Error Int)
@@ -71,23 +114,23 @@ type Msg
     | NodeMenuOpen String
     | NodeMenuClose
     | PlanClear
-    | PlanCleared (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanCleared (Result Http.Error Data.Cluster.ActionResult)
     | PlanCommit
-    | PlanCommitted (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanCommitted (Result Http.Error Data.Cluster.ActionResult)
     | PlanNodeJoin
-    | PlanNodeJoined (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeJoined (Result Http.Error Data.Cluster.ActionResult)
     | PlanNodeLeave String
-    | PlanNodeLeft (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeLeft (Result Http.Error Data.Cluster.ActionResult)
     | PlanNodeRemove String
-    | PlanNodeRemoved (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeRemoved (Result Http.Error Data.Cluster.ActionResult)
     | PlanNodeReplace String String
-    | PlanNodeReplaced (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeReplaced (Result Http.Error Data.Cluster.ActionResult)
     | PlanNodeForceReplace String String
-    | PlanNodeForceReplaced (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeForceReplaced (Result Http.Error Data.Cluster.ActionResult)
     | PlanNodeDown String
-    | PlanNodeDowned (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeDowned (Result Http.Error Data.Cluster.ActionResult)
     | PlanNodeStop String
-    | PlanNodeStopped (Result Http.Error Data.Cluster.ClusterActionResult)
+    | PlanNodeStopped (Result Http.Error Data.Cluster.ActionResult)
 
     | AskPlanNodeReplace String
     | PlanNodeReplaceDialogConfirmed
@@ -97,6 +140,29 @@ type Msg
     | PlanNodeForceReplaceDialogCancelled
     | PlanNodeReplaceWithChanged String
 
+    | GetNodeAppEnv String
+    | GotNodeAppEnv (Result Http.Error Data.Cluster.ConfigResult)
+    | GetNodeAdvancedConfig String
+    | GotNodeAdvancedConfig (Result Http.Error Data.Cluster.ConfigResult)
+    | PutNodeAdvancedConfig String String
+    | PuttedNodeAdvancedConfig (Result Http.Error ())
+
+    | NodeAppEnvDialogDismissed
+
+    | NodeAdvancedConfigChanged String
+    | NodeAdvancedConfigDialogConfirmed
+    | NodeAdvancedConfigDialogCancelled
+
+    | SignalNodeRestart String
+    | SignalledNodeRestart (Result Http.Error ())
+
+    | PromptBeginRollingRestart
+    | BeginRollingRestartConfirmed
+    | BeginRollingRestartCancelled
+    | BeginRollingRestart
+    | AttemptNodeRestart
+    | WaitForNode Data.Cluster.RestartingNode
+
     -- TictacAAE
     | GetTtaaeReport
     | GotTtaaeReport (Result Http.Error (Dict String (List Data.Ttaae.TtaaeTree)))
@@ -104,6 +170,14 @@ type Msg
     | TtaaeTreeSortByFieldChanged String
     | TtaaeTreeSortOrderChanged
     | TtaaeTreeShowForNodeChanged String
+
+    -- Vnode
+    | GetVnodeStatus
+    | GotVnodeStatus (Result Http.Error (List Data.Vnode.VnodeStatus))
+
+    | VnodeStatusSortByFieldChanged String
+    | VnodeStatusSortOrderChanged
+    | VnodeStatusShowForNodeChanged String
 
     -- Users
     | ListUsers
@@ -198,6 +272,7 @@ type Msg
 
     | NewTime Time.Posix
     | Tick Time.Posix
+    | NoOp
 
 
 getNewTime : Cmd Msg

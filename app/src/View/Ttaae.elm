@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -80,10 +80,10 @@ sort m aa =
     let
         aa0 =
             case m.s.ttaaeTreeSortBy of
-                TtaaeTreeStatus -> List.sortWith (Data.Ttaae.compareByTreeStatus .status) aa
-                TtaaeTreeLastRebuild -> List.sortBy .lastRebuild aa
-                TtaaeTreeNextRebuild -> List.sortBy .nextRebuild aa
-                TtaaeTreeTotalDirtySegments -> List.sortBy .totalDirtySegments aa
+                SortTtaaeTreeStatus -> List.sortWith (Data.Ttaae.compareByTreeStatus .status) aa
+                SortTtaaeTreeLastRebuild -> List.sortBy .lastRebuild aa
+                SortTtaaeTreeNextRebuild -> List.sortBy .nextRebuild aa
+                SortTtaaeTreeTotalDirtySegments -> List.sortBy .totalDirtySegments aa
                 _ -> aa
     in
         if m.s.ttaaeTreeSortOrder then aa0 else List.reverse aa0

@@ -1,5 +1,3 @@
-#!/bin/sh
-
 ## Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 ##
 ## This file is provided to you under the Apache License,
@@ -16,12 +14,31 @@
 ## specific language governing permissions and limitations
 ## under the License.
 
-PORT=${RIAK_CONTROL_PORT:-8091}
+CONFIG = {}
+SSH_KEYS = []
+SCRIPT_TEMPLATES = []
+ACTIVE_SSH_SESSIONS = {}
 
-script_dir=$(dirname $0)
+DATADIR = "."
+ETCDIR = "."  # to be set in main()
 
-a=$set_me_from_distro_packaging
-a1=${a:-$RIAK_CONTROL_DOCROOT}
-D=${a1:-$script_dir/../www}
+def find_key(name):
+    global SSH_KEYS
+    for k in SSH_KEYS:
+        if k['name'] == name:
+            return k
 
-python3 $script_dir/rctl.py --port $PORT --docroot "$D"
+def find_template(name):
+    global SCRIPT_TEMPLATES
+    for t in SCRIPT_TEMPLATES:
+        if t['name'] == name:
+            return t
+
+
+class RctlException(Exception):
+    msg = None
+    status = 0
+    def __init__(self, s, m):
+        self.status = s
+        self.msg = m
+        super().__init__(self.msg)

@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------
 //
-// Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+// Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 //
 // This file is provided to you under the Apache License,
 // Version 2.0 (the "License"); you may not use this file
@@ -26,6 +26,9 @@ const { Elm } = require("./Main.elm");
 const app = Elm.Main.init({
     node: document.getElementById('root'),
     flags: {
+        riakControlServerUrl: location.href,
+        riakControlServerUser: "murzyk",
+        riakControlServerPassword: "synpoliana",
         riakNodeUrl: "https://127.0.0.1:11018",
         riakAdminUser: "murzyk",
         riakAdminPassword: "kolochava"

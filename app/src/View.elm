@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2024 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -20,11 +20,14 @@
 
 module View exposing (view)
 
-import View.General
+import View.SshOps
+import View.Connection
 import View.Cluster
 import View.Cluster.AppBarContent
 import View.Ttaae
 import View.Ttaae.AppBarContent
+import View.Vnode
+import View.Vnode.AppBarContent
 import View.User
 import View.User.AppBarContent
 import View.Group
@@ -61,7 +64,8 @@ makeTopAppBar m =
         (TopAppBar.config
         |> TopAppBar.setFixed True
         |> TopAppBar.setAttributes [ style "z-index" "20"
-                                   , style "background" "#64a8da" ])
+                                   , style "background" "#64a8da"
+                                   ])
         [ TopAppBar.row []
               [ TopAppBar.section [ TopAppBar.alignStart ]
                     [ IconButton.iconButton
@@ -81,19 +85,30 @@ makeTopAppBar m =
                   [ makeFilterControls m ]
               , TopAppBar.section [ TopAppBar.alignEnd ]
                   [ span [ TopAppBar.alignEnd, style "padding" "0 1em" ]
-                        [ text m.c.riakNodeUrl ]
+                        (makeConnectionInfo m)
                   , span [ TopAppBar.alignEnd ]
-                      [ img [src "images/openriak-logo.png", style "object-fit" "contain"] [] ]
+                      [ img [ src "images/openriak-logo.png"
+                            , style "object-fit" "contain"
+                            ] []
+                      ]
                   ]
               ]
         ]
 
+makeConnectionInfo m =
+    case m.s.activeTab of
+        Msg.SshOps ->
+            [ text m.c.riakControlServerUrl ]
+        _ ->
+            [ text (m.c.riakNodeUrl ++ " (" ++ m.s.serverInfo.nodename ++ ")") ]
 
 listWhat m =
     case m.s.activeTab of
-        Msg.General -> GetServerInfo
+        Msg.SshOps -> RefreshBootOptions
+        Msg.Connection -> GetServerInfo
         Msg.Cluster -> GetCluster
         Msg.Ttaae -> GetTtaaeReport
+        Msg.Vnode -> GetVnodeStatus
         Msg.Users -> ListUsers
         Msg.Groups -> ListGroups
 
@@ -111,15 +126,25 @@ makeDrawer m =
                     [ List.list List.config
                           ( ListItem.listItem
                                 (ListItem.config
-                                |> ListItem.setOnClick (TabClicked Msg.General)
+                                |> ListItem.setOnClick (TabClicked Msg.SshOps)
                                 )
-                                [ text "General" ]
+                                [ text "Setup" ]
                           )
                           [ ListItem.listItem
+                                (ListItem.config
+                                |> ListItem.setOnClick (TabClicked Msg.Connection)
+                                )
+                                [ text "Connection" ]
+                          , ListItem.listItem
                                 (ListItem.config
                                 |> ListItem.setOnClick (TabClicked Msg.Cluster)
                                 )
                                 [ itemWithCount "Cluster" m.s.cluster.current ]
+                          , ListItem.listItem
+                                (ListItem.config
+                                |> ListItem.setOnClick (TabClicked Msg.Vnode)
+                                )
+                                [ text "Vnode" ]
                           , ListItem.listItem
                                 (ListItem.config
                                 |> ListItem.setOnClick (TabClicked Msg.Ttaae)
@@ -147,24 +172,30 @@ itemWithCount s a =
 
 makeContents m =
     case m.s.activeTab of
-        Msg.General -> View.General.makeContent m
+        Msg.SshOps -> View.SshOps.makeContent m
+        Msg.Connection -> View.Connection.makeContent m
         Msg.Cluster -> View.Cluster.makeContent m
         Msg.Ttaae -> View.Ttaae.makeContent m
+        Msg.Vnode -> View.Vnode.makeContent m
         Msg.Users -> View.User.makeContent m
         Msg.Groups -> View.Group.makeContent m
 
 makeFilterControls m =
     case m.s.activeTab of
-        Msg.General -> div [] []
+        Msg.SshOps -> div [] []
+        Msg.Connection -> div [] []
         Msg.Cluster -> div View.Style.filterAndSort (View.Cluster.AppBarContent.makeFilterControls m)
         Msg.Ttaae -> div View.Style.filterAndSort (View.Ttaae.AppBarContent.makeFilterControls m)
+        Msg.Vnode -> div View.Style.filterAndSort (View.Vnode.AppBarContent.makeFilterControls m)
         Msg.Users -> div View.Style.filterAndSort (View.User.AppBarContent.makeFilterControls m)
         Msg.Groups -> div View.Style.filterAndSort (View.Group.AppBarContent.makeFilterControls m)
 
 activeTabName m =
     case m.s.activeTab of
-        Msg.General -> "General"
+        Msg.SshOps -> "Setup"
+        Msg.Connection -> "Connection"
         Msg.Cluster -> "Cluster"
         Msg.Ttaae -> "TictacAAE"
+        Msg.Vnode -> "Vnode"
         Msg.Users -> "Users"
         Msg.Groups -> "Groups"

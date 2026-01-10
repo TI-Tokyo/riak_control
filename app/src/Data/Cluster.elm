@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -36,6 +36,7 @@ type alias CurrentMember =
     , systemInfo : Data.Server.ServerInfo
     , isMe : Bool
     , reachable : Bool
+    , services : List String
     , ringPct : Float
     , pendingPct : Float
     , memTotal : Int
@@ -167,6 +168,9 @@ stageActionFromStr a =
         "force replace" -> ForceReplace
         _ -> BAD_STAGE_ACTION
 
+type Action
+    = PlanAction
+    | ConfigAction
 
 type PlanAction
     = Clear
@@ -183,5 +187,21 @@ type StageChange
     | NodeStop String
 
 
-type alias ClusterActionResult =
+type alias ActionResult =
     { result : String }
+
+type alias ConfigResult =
+    { result : String }
+
+type ConfigAction
+    = GetNodeAppEnv String
+    | GetNodeAdvancedConfig String
+    | PutNodeAdvancedConfig String String
+    | SignalRestart String
+
+
+
+type alias RestartingNode =
+    { name : String
+    , lastUptime : Int
+    }

@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -29,6 +29,12 @@ module Request.Cluster exposing
     , stageForceReplace
     , stageDown
     , stageStop
+
+    , getNodeAppEnv
+    , getNodeAdvancedConfig
+    , putNodeAdvancedConfig
+
+    , signalRestart
     )
 
 import Model exposing (Model)
@@ -119,6 +125,42 @@ stageStop : Model -> String -> Cmd Msg
 stageStop m a =
     actionRequest m (Apply (Data.Cluster.NodeStop a)) PlanNodeStopped
 
+getNodeAppEnv : Model -> String -> Cmd Msg
+getNodeAppEnv m a =
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
+        |> HttpBuilder.post
+        |> HttpBuilder.withJsonBody (configActionEncoder (Data.Cluster.GetNodeAppEnv a))
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withExpect (Http.expectJson GotNodeAppEnv Data.Json.decodeNodeConfig)
+        |> HttpBuilder.request
+
+getNodeAdvancedConfig : Model -> String -> Cmd Msg
+getNodeAdvancedConfig m a =
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
+        |> HttpBuilder.post
+        |> HttpBuilder.withJsonBody (configActionEncoder (Data.Cluster.GetNodeAdvancedConfig a))
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withExpect (Http.expectJson GotNodeAdvancedConfig Data.Json.decodeNodeConfig)
+        |> HttpBuilder.request
+
+putNodeAdvancedConfig : Model -> String -> String -> Cmd Msg
+putNodeAdvancedConfig m a b =
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
+        |> HttpBuilder.post
+        |> HttpBuilder.withJsonBody (configActionEncoder (Data.Cluster.PutNodeAdvancedConfig a b))
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withExpect (Http.expectWhatever PuttedNodeAdvancedConfig)
+        |> HttpBuilder.request
+
+signalRestart : Model -> String -> Cmd Msg
+signalRestart m a =
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
+        |> HttpBuilder.post
+        |> HttpBuilder.withJsonBody (configActionEncoder (Data.Cluster.SignalRestart a))
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withExpect (Http.expectWhatever SignalledNodeRestart)
+        |> HttpBuilder.request
+
 
 actionRequest m action msg =
     Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
@@ -132,28 +174,72 @@ clusterActionEncoder a =
     case a of
         Clear ->
             Json.Encode.object
-                [ ("plan", Json.Encode.string "clear") ]
+                [ ("action", Json.Encode.string "clear_plan") ]
         Commit ->
             Json.Encode.object
-                [ ("plan", Json.Encode.string "commit") ]
+                [ ("action", Json.Encode.string "commit_plan") ]
         Apply (Data.Cluster.NodeJoin b) ->
             Json.Encode.object
-                [ ("stage", Json.Encode.object [ ("join", Json.Encode.string b)]) ]
+                [ ("action", Json.Encode.string "stage_join")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+                ]
         Apply (Data.Cluster.NodeLeave b) ->
             Json.Encode.object
-                [ ("stage", Json.Encode.object [ ("leave", Json.Encode.string b)]) ]
+                [ ("action", Json.Encode.string "stage_leave")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+                ]
         Apply (Data.Cluster.NodeRemove b) ->
             Json.Encode.object
-                [ ("stage", Json.Encode.object [ ("remove", Json.Encode.string b)]) ]
+                [ ("action", Json.Encode.string "stage_remove")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+                ]
         Apply (Data.Cluster.NodeReplace b c) ->
             Json.Encode.object
-                [ ("stage", Json.Encode.object [ ("replace", Json.Encode.string (b++":"++c))]) ]
+                [ ("action", Json.Encode.string "stage_replace")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b)
+                                                , ("with", Json.Encode.string c)
+                                                ])
+                ]
         Apply (Data.Cluster.NodeForceReplace b c) ->
             Json.Encode.object
-                [ ("stage", Json.Encode.object [ ("force_replace", Json.Encode.string (b++":"++c))]) ]
+                [ ("action", Json.Encode.string "stage_force_replace")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b)
+                                                , ("with", Json.Encode.string c)
+                                                ])
+                ]
         Apply (Data.Cluster.NodeDown b) ->
             Json.Encode.object
-                [ ("node", Json.Encode.object [ ("down", Json.Encode.string b)]) ]
+                [ ("action", Json.Encode.string "down_node")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+                ]
         Apply (Data.Cluster.NodeStop b) ->
             Json.Encode.object
-                [ ("node", Json.Encode.object [ ("stop", Json.Encode.string b)]) ]
+                [ ("action", Json.Encode.string "stop_node")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+                ]
+
+configActionEncoder a =
+    case a of
+        Data.Cluster.GetNodeAppEnv b ->
+            Json.Encode.object
+                [ ("action", Json.Encode.string "get_app_env")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+                ]
+        Data.Cluster.GetNodeAdvancedConfig b ->
+            Json.Encode.object
+                [ ("action", Json.Encode.string "get_advanced_config")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+                ]
+        Data.Cluster.PutNodeAdvancedConfig b c ->
+            Json.Encode.object
+                [ ("action", Json.Encode.string "put_advanced_config")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b)
+                                                , ("config", Json.Encode.string c)
+                                                ])
+                ]
+        Data.Cluster.SignalRestart b ->
+            Json.Encode.object
+                [ ("action", Json.Encode.string "restart")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string b)
+                                                ])
+                ]

@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -25,16 +25,22 @@ module Update exposing
 
 import Model exposing (..)
 import Msg exposing (Msg(..))
+import Request.SshOps
 import Request.Admin
 import Request.Cluster
 import Request.Security
 import Request.Ttaae
+import Request.Vnode
+import Data.SshOps
+import Data.Server
 import Data.Cluster exposing (emptyCluster)
 import Data.Security exposing (dummyUser, dummyGroup)
 import Data.Ttaae
+import Data.Vnode
 import Data.Json
 import View.Common
 import Util
+import Static
 
 import Time
 import Task exposing (attempt, perform, andThen, succeed, sequence)
@@ -42,6 +48,8 @@ import Platform.Cmd
 import Dict exposing (Dict)
 import Json.Decode
 import Http
+import Process
+import RemoteData
 import Material.Snackbar as Snackbar
 
 
@@ -59,7 +67,240 @@ update msg m =
             , Cmd.none
             )
 
-        -- ServerInfo
+        -- Rctl Admin Creds
+        ------------------------------
+        ShowRctlEditAdminCredsDialog ->
+            let s_ = m.s in
+            ({m | s = {s_ | rctlAdminCredsDialogShown = True}}, Cmd.none)
+        RctlAdminCredsNameChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | rctlAdminCredsNewUser = a}}, Cmd.none)
+        RctlAdminCredsPasswordChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | rctlAdminCredsNewPassword = a}}, Cmd.none)
+        RctlEditAdminCredsDialogCancelled ->
+            let s_ = m.s in
+            ({m | s = {s_ | rctlAdminCredsDialogShown = False}}, Cmd.none)
+        RctlEditAdminCredsDialogConfirmed ->
+            let
+                c_ = m.c
+                s_ = m.s
+            in
+                ( {m | s = {s_ | rctlAdminCredsDialogShown = False}
+                    , c = {c_ | riakControlServerUser = s_.rctlAdminCredsNewUser
+                              , riakControlServerPassword = s_.rctlAdminCredsNewPassword}}
+                , Cmd.none
+                )
+
+        -- SshOps
+        ------------------------------
+        RefreshBootOptions ->
+            (m, Cmd.batch [ Request.SshOps.listSshScriptTemplates m
+                          , Request.SshOps.listSshStoredKeys m
+                          ])
+        GetSshScriptTemplateList ->
+            (m, Request.SshOps.listSshScriptTemplates m)
+        GotSshScriptTemplateList (Ok aa) ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshScriptTemplateSpecs = aa}}, Cmd.none)
+        GotSshScriptTemplateList (Err err) ->
+            ( handleHttpError m "Failed to get a list of script templates: " err
+            , Cmd.none
+            )
+
+        GetSshKeyList ->
+            (m, Request.SshOps.listSshStoredKeys m)
+        GotSshKeyList (Ok aa) ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshStoredKeys = aa}}, Cmd.none)
+        GotSshKeyList (Err err) ->
+            ( handleHttpError m "Failed to get a list of stored ssh keys: " err
+            , Cmd.none
+            )
+
+        StoreSshKey ->
+            let
+                pp = { name = m.s.sshNewKeyName
+                     , body = m.s.sshNewKeyBody
+                     }
+            in
+                (m, Request.SshOps.storeSshKey m pp)
+        SshKeyStored (Ok ()) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Stored ssh key " ++ m.s.sshNewKeyName)) m.s.msgQueue}}
+            , Request.SshOps.listSshStoredKeys m
+            )
+        SshKeyStored (Err err) ->
+            ( handleHttpError m "Failed to store ssh key: " err
+            , Cmd.none
+            )
+
+        DeleteSshKey ->
+            let
+                pp = { name = m.s.sshKeyNameToDelete }
+            in
+                (m, Request.SshOps.deleteSshKey m pp)
+        SshKeyDeleted (Ok ()) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Deleted ssh key " ++ m.s.sshKeyNameToDelete)) m.s.msgQueue}}
+            , Request.SshOps.listSshStoredKeys m
+            )
+        SshKeyDeleted (Err err) ->
+            ( handleHttpError m "Failed to delete ssh key: " err
+            , Cmd.none
+            )
+
+        ShowAddSshKeyDialog ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshAddKeyDialogShown = True}}, Cmd.none)
+        SshNewKeyNameChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshNewKeyName = a}}, Cmd.none)
+        SshNewKeyBodyChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshNewKeyBody = a}}, Cmd.none)
+        SshAddKeyDialogCancelled ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshAddKeyDialogShown = False}}, Cmd.none)
+        SshAddKeyDialogConfirmed ->
+            let
+                s_ = m.s
+                pp = { name = m.s.sshNewKeyName, body = m.s.sshNewKeyBody }
+            in
+                ({m | s = {s_ | sshAddKeyDialogShown = False}}, Request.SshOps.storeSshKey m pp)
+
+        ShowDeleteSshKeyDialog ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshDeleteKeyDialogShown = True}}, Cmd.none)
+        SshKeyNameForDeletionChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshKeyNameToDelete = a}}, Cmd.none)
+
+        SshDeleteKeyDialogCancelled ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshDeleteKeyDialogShown = False}}, Cmd.none)
+
+        SshDeleteKeyDialogConfirmed ->
+            let
+                s_ = m.s
+                pp = { name = m.s.sshNewKeyName }
+            in
+                ({m | s = {s_ | sshDeleteKeyDialogShown = False}}, Request.SshOps.deleteSshKey m pp)
+
+        SshScriptTemplateExpertToggle ->
+            let s_ = m.s in
+            ( {m | s = {s_ | sshScriptTemplateExpertParamsShown = not s_.sshScriptTemplateExpertParamsShown}}
+            , Cmd.none
+            )
+
+        SshSelectedScriptTemplateNameForExecChanged a ->
+            let s_ = m.s in
+            ( {m | s = {s_ | sshSelectedScriptTemplateName = a}}
+            , Cmd.none
+            )
+
+        SshTargetHostsChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | sshTargetHostsStr = a}}, Cmd.none)
+
+        SshScriptTemplateParamChanged a s ->
+            let
+                s_ = m.s
+                pp0 = Model.scriptTemplateBy m .name m.s.sshSelectedScriptTemplateName |> .params
+                f1 = \{name, value, description, expert} ->
+                    if name == a then
+                        {name = name, value = s, description = description, expert = expert}
+                    else
+                        {name = name, value = value, description = description, expert = expert}
+                pp = List.map f1 pp0
+                f2 = \t ->
+                     if t.name == m.s.sshSelectedScriptTemplateName then
+                         {t | params = pp}
+                     else
+                         t
+                tt = List.map f2 m.s.sshScriptTemplateSpecs
+            in
+                ({m | s = {s_ | sshScriptTemplateSpecs = tt}}, Cmd.none)
+
+        ExecSshScript ->
+            let
+                tpp = Model.scriptTemplateBy m .name m.s.sshSelectedScriptTemplateName |> .params
+                rpp = { hosts = m.s.sshTargetHostsStr
+                      , scriptTemplateName = m.s.sshSelectedScriptTemplateName
+                      , scriptTemplateParams = tpp
+                      }
+            in
+                (m, Request.SshOps.execSshScript m rpp)
+        SshScriptExecuting (Ok {sessionId}) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | sshCurrentSessionId = sessionId
+                           , sshScriptExecutionStatus = Data.SshOps.ScriptRunning}}
+            , Request.SshOps.getScriptOutput m {sessionId = sessionId}
+            )
+        SshScriptExecuting (Err err) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | sshScriptExecutionStatus = Data.SshOps.ScriptFinished
+                           , msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Failed to execute script: " ++ (explainHttpError err))) m.s.msgQueue}}
+            , Cmd.none
+            )
+
+        GotScriptOutput (Ok {sessionId, finished, output})  ->
+            let
+                s_ = m.s
+                newOutput =
+                    if s_.sshScriptOutput == Static.awaitingOutput then
+                        output
+                    else
+                        s_.sshScriptOutput ++ output
+                (newExecStatus, cmd) =
+                    if finished then
+                        ( Data.SshOps.ScriptFinished
+                        , Cmd.none
+                        )
+                    else
+                        ( Data.SshOps.ScriptRunning
+                        , Request.SshOps.getScriptOutput m {sessionId = sessionId}
+                        )
+            in
+                ( {m | s = {s_ | sshScriptExecutionStatus = newExecStatus
+                               , sshScriptOutput = newOutput}}
+                , cmd
+                )
+        GotScriptOutput (Err err)  ->
+            let s_ = m.s in
+            ( {m | s = {s_ | sshScriptExecutionStatus = Data.SshOps.ScriptFinished
+                           , msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Failed to get script output: " ++ (explainHttpError err))) s_.msgQueue}}
+            , Cmd.none
+            )
+
+        ExecSshScriptInterrupt ->
+            let s_ = m.s in
+            (m, Request.SshOps.interruptSshScript m {sessionId = m.s.sshCurrentSessionId})
+
+        SshScriptInterrupted (Ok ()) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | sshScriptExecutionStatus = Data.SshOps.ScriptFinished
+                           , msgQueue = Snackbar.addMessage
+                            (Snackbar.message "Script interrupted") s_.msgQueue}}
+            , Cmd.none
+            )
+        SshScriptInterrupted (Err err) ->
+            ( handleHttpError m "Failed to interrupt script: " err
+            , Cmd.none
+            )
+
+        ExecSshScriptDone ->
+            let s_ = m.s in
+            ( {m | s = {s_ | sshScriptExecutionStatus = Data.SshOps.ScriptNotStarted
+                           , sshScriptOutput = Static.awaitingOutput}}
+            , Cmd.none
+            )
+
+        -- Connection
         ------------------------------
         Ping ->
             let
@@ -141,16 +382,30 @@ update msg m =
         GetCluster ->
             (m, Request.Cluster.getCluster m)
         GotCluster (Ok a) ->
-            let s_ = m.s in
-            ({m | s = { s_ | cluster = a
-                           , notReadyMessage = ""}}, Cmd.none)
+            let
+                s_ = m.s
+                prevT = s_.ttaaeReportShownForNode
+                prevV = s_.vnodeStatusShownForNode
+                thisNode = connectedNode a
+            in
+                ( {m | s = {s_ | cluster = a
+                               , notReadyMessage = ""
+                               , ttaaeReportShownForNode = if prevT == "" then thisNode else prevT
+                               , vnodeStatusShownForNode = if prevV == "" then thisNode else prevV
+                               }
+                  }
+                , Cmd.none
+                )
         GotCluster (Err (Http.BadStatus 425)) ->
             let s_ = m.s in
-            ({m | s = {s_ | notReadyMessage = "ring not ready"}}
+            ({m | s = {s_ | cluster = Data.Cluster.emptyCluster
+                          , notReadyMessage = "ring not ready"}}
             , Cmd.none
             )
         GotCluster (Err err) ->
-            ( handleHttpError m "Failed to fetch cluster status: " err
+            let s_ = m.s in
+            ({m | s = {s_ | cluster = Data.Cluster.emptyCluster
+                          , notReadyMessage = explainHttpError err}}
             , Cmd.none
             )
 
@@ -313,22 +568,169 @@ update msg m =
             , Cmd.none
             )
 
+        GetNodeAppEnv a ->
+            (m, Request.Cluster.getNodeAppEnv m a)
+        GotNodeAppEnv (Ok r) ->
+            let
+                s_ = m.s
+                newNodeAppEnvs = Dict.insert s_.nodeMenuOpenedFor r.result s_.nodeAppEnvs
+            in
+                ( {m | s = {s_ | nodeMenuOpenedFor = ""
+                               , nodeAppEnvs = newNodeAppEnvs
+                               , nodeAppEnvShownFor = Just s_.nodeMenuOpenedFor}}
+                , Cmd.none
+                )
+        GotNodeAppEnv (Err err) ->
+            ( handleHttpError m "Failed to get node app envs: " err
+            , Cmd.none
+            )
+        NodeAppEnvDialogDismissed ->
+            let s_ = m.s in
+            ({m | s = {s_ | nodeAppEnvShownFor = Nothing}}, Cmd.none)
+
+
+        GetNodeAdvancedConfig a ->
+            (m, Request.Cluster.getNodeAdvancedConfig m a)
+        GotNodeAdvancedConfig (Ok r) ->
+            let
+                s_ = m.s
+                newNodeAdvancedConfigs = Dict.insert s_.nodeMenuOpenedFor r.result s_.nodeAdvancedConfigs
+            in
+                ( {m | s = {s_ | nodeMenuOpenedFor = ""
+                               , nodeAdvancedConfigs = newNodeAdvancedConfigs
+                               , nodeAdvancedConfigShownFor = Just s_.nodeMenuOpenedFor}}
+                , Cmd.none
+                )
+        GotNodeAdvancedConfig (Err err) ->
+            ( handleHttpError m "Failed to get node advanced.config: " err
+            , Cmd.none
+            )
+
+        PutNodeAdvancedConfig a b ->
+            (m, Request.Cluster.putNodeAdvancedConfig m a b)
+        PuttedNodeAdvancedConfig (Ok ()) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | nodeMenuOpenedFor = ""
+                           , nodeAdvancedConfigShownFor = Nothing}}
+            , Cmd.none
+            )
+        PuttedNodeAdvancedConfig (Err err) ->
+            ( handleHttpError m "Failed to put node advanced.config: " err
+            , Cmd.none
+            )
+
+        NodeAdvancedConfigChanged a ->
+            let
+                s_ = m.s
+                n = s_.nodeAdvancedConfigShownFor |> Maybe.withDefault ""
+            in
+                ({m | s = {s_ | nodeAdvancedConfigs = Dict.insert n a s_.nodeAdvancedConfigs}}, Cmd.none)
+        NodeAdvancedConfigDialogConfirmed ->
+            let
+                s_ = m.s
+                node = Maybe.withDefault "" m.s.nodeAdvancedConfigShownFor
+                cfg = Maybe.withDefault "" (Dict.get node m.s.nodeAdvancedConfigs)
+            in
+                ( {m | s = {s_ | nodeAdvancedConfigShownFor = Nothing}}
+                , perform (\_ -> PutNodeAdvancedConfig node cfg)
+                    Time.now
+                )
+        NodeAdvancedConfigDialogCancelled ->
+            let s_ = m.s in
+            ({m | s = {s_ | nodeAdvancedConfigShownFor = Nothing}}, Cmd.none)
+
+        SignalNodeRestart a ->
+            let s_ = m.s in
+            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Restarting " ++ a)) m.s.msgQueue}}
+            , Request.Cluster.signalRestart m a
+            )
+        SignalledNodeRestart (Ok ()) ->
+            (m, Cmd.none)
+        SignalledNodeRestart (Err err) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
+                            (Snackbar.message ("Failed to signal node restart: " ++ (explainHttpError err))) m.s.msgQueue}}
+            , Cmd.none
+            )
+
+        PromptBeginRollingRestart ->
+            let s_ = m.s in
+            ( {m | s = {s_ | rollingRestartRequestShown = True}}
+            , Cmd.none
+            )
+        BeginRollingRestartConfirmed ->
+            let s_ = m.s in
+            ( {m | s = {s_ | rollingRestartRequestShown = False}}
+            , perform (\_ -> BeginRollingRestart) Time.now
+            )
+        BeginRollingRestartCancelled ->
+            let s_ = m.s in
+            ( {m | s = {s_ | rollingRestartRequestShown = False}}
+            , Cmd.none
+            )
+        BeginRollingRestart ->
+            let
+                s_ = m.s
+                claimantLast = (\a b -> if a.claimant then GT else LT)
+                rp = s_.cluster.current
+                   |> List.sortWith claimantLast
+                   |> List.map (\{name, systemInfo} -> { name = name
+                                                       , lastUptime = systemInfo.uptime
+                                                       })
+            in
+                ( {m | s = {s_ | nodeBeingRestartedNow = Nothing
+                               , rollingRestartQueue = rp}}
+                , perform (\_ -> AttemptNodeRestart) Time.now
+                )
+
+        AttemptNodeRestart ->
+            let s_ = m.s in
+            if s_.rollingRestartQueue == [] then
+                ( {m | s = {s_ | nodeBeingRestartedNow = Nothing
+                               , msgQueue = Snackbar.addMessage
+                                     (Snackbar.message ("rolling restart completed")) m.s.msgQueue}}
+                , Cmd.none
+                )
+            else
+                if Model.clusterIsStable m then
+                    let
+                        (n0, nn) = Util.headAndTail s_.rollingRestartQueue {name = "", lastUptime = 0}
+                    in
+                        ( {m | s = {s_ | rollingRestartQueue = nn
+                                       , nodeBeingRestartedNow = Just n0}}
+                        , Cmd.batch [ perform (\_ -> SignalNodeRestart n0.name) Time.now
+                                    , perform (\_ -> WaitForNode n0) (Process.sleep 5000
+                                                                     |> andThen (\_ -> Time.now))
+                                    ]
+                        )
+                else
+                    ( m
+                    , perform (\_ -> AttemptNodeRestart) (Process.sleep 5000
+                                                         |> andThen (\_ -> Time.now))
+                    )
+        WaitForNode n ->
+            let
+                currentUptime =
+                    case Model.nodeBy m .name n.name of
+                        Nothing ->
+                            -1
+                        Just cm ->
+                            cm.systemInfo.uptime
+            in
+                if currentUptime /= -1 && currentUptime < n.lastUptime then
+                    (m, perform (\_ -> AttemptNodeRestart) Time.now)
+                else
+                    (m, perform (\_ -> WaitForNode n) (Process.sleep 5000 |> andThen (\_ -> Time.now)))
+
+
         -- TictacAAE
         ------------------------------
         GetTtaaeReport ->
             (m, Request.Ttaae.getReport m m.s.ttaaeReportShownForNode)
         GotTtaaeReport (Ok r) ->
-            let
-                s_ = m.s
-                prevShownFor = s_.ttaaeReportShownForNode
-                thisNode = m.s.cluster.current
-                           |> List.filterMap (\{isMe, name} -> if isMe then Just name else Nothing)
-                           |> List.head
-                           |> Maybe.withDefault ""
-            in
-                ({m | s = {s_ | ttaaeReport = r
-                              , ttaaeReportShownForNode =
-                               if prevShownFor == "" then thisNode else prevShownFor}}, Cmd.none)
+            let s_ = m.s in
+            ({m | s = {s_ | ttaaeReport = r}}, Cmd.none)
         GotTtaaeReport (Err err) ->
             ( handleHttpError m "Failed to get ttaae report: " err
             , Cmd.none
@@ -344,6 +746,35 @@ update msg m =
         TtaaeTreeShowForNodeChanged a ->
             let s_ = m.s in
             ({m | s = {s_ | ttaaeReportShownForNode = a}}, Request.Ttaae.getReport m a)
+
+
+        -- Vnode
+        ------------------------------
+        GetVnodeStatus ->
+            (m, Request.Vnode.getVnodeStatus m m.s.vnodeStatusShownForNode)
+        GotVnodeStatus (Ok r) ->
+            let
+                s_ = m.s
+                prevVnodeStatus = s_.vnodeStatus
+            in
+                ( {m | s = {s_ | vnodeStatus = Dict.insert s_.vnodeStatusShownForNode r prevVnodeStatus}}
+                , Cmd.none
+                )
+        GotVnodeStatus (Err err) ->
+            ( handleHttpError m "Failed to get vnode status: " err
+            , Cmd.none
+            )
+
+        VnodeStatusSortByFieldChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | vnodeStatusSortBy = View.Common.stringToSortBy a}}, Cmd.none)
+        VnodeStatusSortOrderChanged ->
+            let s_ = m.s in
+            ({m | s = {s_ | vnodeStatusSortOrder = not s_.vnodeStatusSortOrder}}, Cmd.none)
+
+        VnodeStatusShowForNodeChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | vnodeStatusShownForNode = a}}, Request.Vnode.getVnodeStatus m a)
 
 
         -- User
@@ -656,27 +1087,31 @@ update msg m =
             ({m|t = t}, Cmd.none)
 
         -- system
-        NoOp ->
-            (m, Cmd.none)
-        Discard _ ->
-            (m, Cmd.none)
-
         Tick a ->
-            if m.s.activeTab == Msg.Cluster then
-                ({ m | t = a}, Request.Cluster.getCluster m)
+            if m.s.activeTab == Msg.Cluster || m.s.rollingRestartQueue /= [] then
+                ({m | t = a}, Request.Cluster.getCluster m)
             else
                 (m, Cmd.none)
+        NoOp ->
+            (m, Cmd.none)
+
 
 refreshTabMsg m t =
     case t of
-        Msg.General -> Request.Admin.getServerInfo m
+        Msg.SshOps -> Cmd.batch [ Request.SshOps.listSshStoredKeys m
+                                , Request.SshOps.listSshScriptTemplates m
+                                ]
+        Msg.Connection -> Request.Admin.getServerInfo m
         Msg.Cluster -> Request.Cluster.getCluster m
         Msg.Users -> Request.Security.listUsers m
         Msg.Groups -> Request.Security.listGroups m
         Msg.Ttaae -> Request.Ttaae.getReport m m.s.ttaaeReportShownForNode
+        Msg.Vnode -> Request.Vnode.getVnodeStatus m m.s.vnodeStatusShownForNode
 
 refreshAll m =
-    Cmd.batch [ Request.Admin.getServerInfo m
+    Cmd.batch [ Request.SshOps.listSshStoredKeys m
+              , Request.SshOps.listSshScriptTemplates m
+              , Request.Admin.getServerInfo m
               , Request.Cluster.getCluster m
               , Request.Security.listUsers m
               , Request.Security.listGroups m
@@ -730,3 +1165,10 @@ handleClusterActionResult m a r =
 
 refreshCluster =
     perform (\_ -> GetCluster) Time.now
+
+
+connectedNode c =
+    c.current
+        |> List.filterMap (\{isMe, name} -> if isMe then Just name else Nothing)
+        |> List.head
+        |> Maybe.withDefault ""

@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -21,16 +21,26 @@
 module View.Common exposing (..)
 
 type SortByField
-    = Name
-    | MemTotal
-    | MemErlang
-    | MemUsed
-    | Uptime
-    | TtaaeTreeStatus
-    | TtaaeTreeNextRebuild
-    | TtaaeTreeLastRebuild
-    | TtaaeTreeTotalDirtySegments
-    | Unsorted
+    = SortName
+    | SortMemTotal
+    | SortMemErlang
+    | SortMemUsed
+    | SortUptime
+    | SortTtaaeTreeStatus
+    | SortTtaaeTreeNextRebuild
+    | SortTtaaeTreeLastRebuild
+    | SortTtaaeTreeTotalDirtySegments
+    | SortVnodeBEStatusLedgerCacheSize
+    | SortVnodeBEStatusNActiveJournalFiles
+    | SortVnodeBEStatusPencillerLastMergeTime
+    | SortVnodeBEStatusJournalLastCompactionTime
+    | SortVnodeBEStatusLevelFilesCountTotal
+    | SortVnodeBEStatusGetCount
+    | SortVnodeBEStatusHeadCount
+    | SortVnodeBEStatusPutCount
+    | SortVnodeStatusCounter
+    | SortVnodeStatusCounterLease
+    | SortUnsorted
 
 type alias SortOrder = Bool
 
@@ -39,27 +49,47 @@ sortOrderText =
 
 selectSortByString a =
     case a of
-        Name -> "Name"
-        MemTotal -> "Memory (total)"
-        MemErlang -> "Memory (Erlang)"
-        MemUsed -> "Memory (riak)"
-        Uptime -> "Uptime"
-        TtaaeTreeStatus -> "Tree status"
-        TtaaeTreeNextRebuild -> "Next rebuild"
-        TtaaeTreeLastRebuild -> "Last rebuild"
-        TtaaeTreeTotalDirtySegments -> "Total dirty segments"
-        Unsorted -> "None"
+        SortName -> "Name"
+        SortMemTotal -> "Memory (total)"
+        SortMemErlang -> "Memory (Erlang)"
+        SortMemUsed -> "Memory (riak)"
+        SortUptime -> "Uptime"
+        SortTtaaeTreeStatus -> "Tree status"
+        SortTtaaeTreeNextRebuild -> "Next rebuild"
+        SortTtaaeTreeLastRebuild -> "Last rebuild"
+        SortTtaaeTreeTotalDirtySegments -> "Total dirty segments"
+        SortVnodeBEStatusLedgerCacheSize -> "Ledger cache (# keys)"
+        SortVnodeBEStatusNActiveJournalFiles -> "# active journal files"
+        SortVnodeBEStatusPencillerLastMergeTime -> "Penciller last merge time"
+        SortVnodeBEStatusJournalLastCompactionTime -> "Journal last compaction time"
+        SortVnodeBEStatusLevelFilesCountTotal -> "Level files count (Total)"
+        SortVnodeBEStatusGetCount -> "GET count"
+        SortVnodeBEStatusHeadCount -> "HEAD count"
+        SortVnodeBEStatusPutCount -> "PUT count"
+        SortVnodeStatusCounter -> "Counter"
+        SortVnodeStatusCounterLease -> "Counter lease"
+        SortUnsorted -> "None"
 
 stringToSortBy a =
     case a of
-        "Name" -> Name
-        "Memory (total)" -> MemTotal
-        "Memory (Erlang)" -> MemErlang
-        "Memory (riak)" -> MemUsed
-        "Uptime" -> Uptime
-        "Tree status" -> TtaaeTreeStatus
-        "Next rebuild" -> TtaaeTreeNextRebuild
-        "Last rebuild" -> TtaaeTreeLastRebuild
-        "Total dirty segments" -> TtaaeTreeTotalDirtySegments
-        _ -> Unsorted
+        "Name" -> SortName
+        "Memory (total)" -> SortMemTotal
+        "Memory (Erlang)" -> SortMemErlang
+        "Memory (riak)" -> SortMemUsed
+        "Uptime" -> SortUptime
+        "Tree status" -> SortTtaaeTreeStatus
+        "Next rebuild" -> SortTtaaeTreeNextRebuild
+        "Last rebuild" -> SortTtaaeTreeLastRebuild
+        "Total dirty segments" -> SortTtaaeTreeTotalDirtySegments
+        "Ledger cache (# keys)" -> SortVnodeBEStatusLedgerCacheSize
+        "# active journal files" -> SortVnodeBEStatusNActiveJournalFiles
+        "Penciller last merge time" -> SortVnodeBEStatusPencillerLastMergeTime
+        "Journal last compaction time" -> SortVnodeBEStatusJournalLastCompactionTime
+        "Level files count (Total)" -> SortVnodeBEStatusLevelFilesCountTotal
+        "GET count" -> SortVnodeBEStatusGetCount
+        "HEAD count" -> SortVnodeBEStatusHeadCount
+        "PUT count" -> SortVnodeBEStatusPutCount
+        "Counter" -> SortVnodeStatusCounter
+        "Counter lease" -> SortVnodeStatusCounterLease
+        _ -> SortUnsorted
 

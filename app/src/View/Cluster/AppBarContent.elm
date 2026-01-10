@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -39,7 +39,7 @@ import Material.Select.Item as SelectItem
 
 
 makeFilterControls m =
-    let n = View.Common.selectSortByString Uptime in
+    let n = View.Common.selectSortByString SortUptime in
     [ Select.outlined
           (Select.config
           |> Select.setLabel (Just "Sort by")
@@ -50,7 +50,10 @@ makeFilterControls m =
           (List.map
                (\i -> let j = View.Common.selectSortByString i in
                       SelectItem.selectItem (SelectItem.config {value = j}) j)
-               [MemTotal, MemErlang, MemUsed])
+               [ SortMemTotal
+               , SortMemErlang
+               , SortMemUsed
+               ])
     , Button.text (Button.config |> Button.setOnClick ClusterMemberSortOrderChanged)
             (View.Common.sortOrderText m.s.clusterMemberSortOrder)
     ]

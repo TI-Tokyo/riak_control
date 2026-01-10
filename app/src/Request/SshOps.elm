@@ -1,0 +1,168 @@
+-- ---------------------------------------------------------------------
+--
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
+--
+-- This file is provided to you under the Apache License,
+-- Version 2.0 (the "License"); you may not use this file
+-- except in compliance with the License.  You may obtain
+-- a copy of the License at
+--
+--   http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing,
+-- software distributed under the License is distributed on an
+-- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+-- KIND, either express or implied.  See the License for the
+-- specific language governing permissions and limitations
+-- under the License.
+--
+-- ---------------------------------------------------------------------
+
+module Request.SshOps exposing
+    ( listSshStoredKeys
+    , listSshScriptTemplates
+    , storeSshKey
+    , deleteSshKey
+    , execSshScript
+    , interruptSshScript
+    , getScriptOutput
+    )
+
+import Model exposing (Model)
+import Data.SshOps exposing (..)
+import Data.Json
+import Msg exposing (Msg(..))
+import Util
+import Request.Util exposing (..)
+
+import Http
+import HttpBuilder
+import HttpBuilder.Task
+import Url.Builder
+import Json.Encode exposing (string, object, list)
+import RemoteData
+import Base64
+
+
+listSshStoredKeys : Model -> Cmd Msg
+listSshStoredKeys m =
+    Url.Builder.crossOrigin m.c.riakControlServerUrl [] []
+        |> HttpBuilder.post
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withJsonBody listSshKeysEncoder
+        |> HttpBuilder.withExpect (Http.expectJson GotSshKeyList Data.Json.decodeSshStoredKeyList)
+        |> HttpBuilder.request
+
+listSshKeysEncoder =
+    object
+        [ ("command", string "ListSshKeys") ]
+
+
+listSshScriptTemplates : Model -> Cmd Msg
+listSshScriptTemplates m =
+    Url.Builder.crossOrigin m.c.riakControlServerUrl [] []
+        |> HttpBuilder.post
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withJsonBody listSshScriptTemplatesEncoder
+        |> HttpBuilder.withExpect (Http.expectJson GotSshScriptTemplateList Data.Json.decodeSshScriptTemplateList)
+        |> HttpBuilder.request
+
+listSshScriptTemplatesEncoder =
+    object
+        [ ("command", string "ListScriptTemplates") ]
+
+
+storeSshKey : Model -> StoreKeyCmdParams -> Cmd Msg
+storeSshKey m pp =
+    Url.Builder.crossOrigin m.c.riakControlServerUrl [] []
+        |> HttpBuilder.post
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withJsonBody (storeSshKeyCommandEncoder pp)
+        |> HttpBuilder.withExpect (Http.expectWhatever SshKeyStored)
+        |> HttpBuilder.request
+
+storeSshKeyCommandEncoder {name, body} =
+    object
+        [ ("command", string "StoreSshKey")
+        , ("name", string name)
+        , ("body", string body)
+        ]
+
+deleteSshKey : Model -> DeleteKeyCmdParams -> Cmd Msg
+deleteSshKey m pp =
+    Url.Builder.crossOrigin m.c.riakControlServerUrl [] []
+        |> HttpBuilder.post
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withJsonBody (deleteSshKeyCommandEncoder pp)
+        |> HttpBuilder.withExpect (Http.expectWhatever SshKeyStored)
+        |> HttpBuilder.request
+
+deleteSshKeyCommandEncoder {name} =
+    object
+        [ ("command", string "DeleteSshKey")
+        , ("name", string name)
+        ]
+
+execSshScript : Model -> ExecScriptCmdParams -> Cmd Msg
+execSshScript m pp =
+    Url.Builder.crossOrigin m.c.riakControlServerUrl [] []
+        |> HttpBuilder.post
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withJsonBody (execSshScriptEncoder pp)
+        |> HttpBuilder.withExpect (Http.expectJson SshScriptExecuting Data.Json.decodeSshSession)
+        |> HttpBuilder.request
+
+execSshScriptEncoder {hosts, scriptTemplateName, scriptTemplateParams} =
+    let
+        pp = List.map
+             (\{name, value} ->
+                  (name, string value))
+                 scriptTemplateParams
+    in
+        object
+            [ ("command", string "ExecScript")
+            , ("hosts", string hosts)
+            , ("script_name", string scriptTemplateName)
+            , ("params", object pp)
+            ]
+
+
+interruptSshScript : Model -> InterruptScriptCmdParams -> Cmd Msg
+interruptSshScript m pp =
+    Url.Builder.crossOrigin m.c.riakControlServerUrl [] []
+        |> HttpBuilder.post
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withJsonBody (interruptSshScriptEncoder pp)
+        |> HttpBuilder.withExpect (Http.expectWhatever SshScriptInterrupted)
+        |> HttpBuilder.request
+
+interruptSshScriptEncoder {sessionId} =
+    object
+        [ ("command", string "InterruptScript")
+        , ("session_id", string sessionId)
+        ]
+
+
+getScriptOutput : Model -> GetScriptOutputCmdParams -> Cmd Msg
+getScriptOutput m pp =
+    Url.Builder.crossOrigin m.c.riakControlServerUrl [] []
+        |> HttpBuilder.post
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withJsonBody (getScriptOutputCommandEncoder pp)
+        |> HttpBuilder.withExpect (Http.expectJson GotScriptOutput Data.Json.decodeScriptOutput)
+        |> HttpBuilder.request
+
+getScriptOutputCommandEncoder {sessionId} =
+    object
+        [ ("command", string "GetScriptOutput")
+        , ("session_id", string sessionId)
+        ]
+
+
+stdHeaders m =
+    let ct = "application/json" in
+    [ ("accept", ct)
+    , ("content-type", ct)
+    , ("authorization",
+        "Basic " ++ (Base64.encode (m.c.riakControlServerUser ++ ":" ++ m.c.riakControlServerPassword)))
+    ]

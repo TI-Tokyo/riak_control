@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -24,10 +24,18 @@ module Data.Server exposing (..)
 type alias ServerInfo =
     { riakVersion : String
     , systemVersion : String
+    , nodename : String
     , uptime : Int
     , uptimeStr : String
     }
 
+emptyServerInfo =
+    { riakVersion = ""
+    , systemVersion = ""
+    , nodename = ""
+    , uptime = -1
+    , uptimeStr = ""
+    }
 
 type alias ServerConfig =
     {}

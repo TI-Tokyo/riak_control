@@ -11,15 +11,23 @@ all: compile
 compile:
 	@$(MAKE) -C app build
 
+devcompile:
+	@$(MAKE) -C app devbuild
+
 clean:
 	@$(MAKE) -C app clean
 
-rel: compile
-	@rm -rf rel/out || :
+install:
+	@rm -rf rel/out
 	@mkdir -p rel/out/www rel/out/bin
 	@cp -a app/build/* rel/out/www
-	@cp -a bin/riak-control rel/out/bin
+	@cp -a bin/riak-control bin/rctl*.py bin/script-templates bin/script-templates.d rel/out/bin
 	@echo "Release generated in rel/out"
+
+
+rel: compile install
+
+devrel: devcompile install
 
 package:
 	@echo "Assuming `make rel` has been run."

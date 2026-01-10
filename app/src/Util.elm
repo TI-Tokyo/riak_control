@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -25,6 +25,14 @@ import DateTime
 import Iso8601
 import Regex
 import Json.Print
+
+headAndTail l defaultHd =
+    case l of
+        a0 :: aa ->
+            (a0, aa)
+        _ ->
+            (defaultHd, [])
+
 
 
 isoDateToPosix : String -> Time.Posix

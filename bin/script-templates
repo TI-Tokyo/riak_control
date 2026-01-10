@@ -1,0 +1,160 @@
+[
+    {
+        "params": [
+            {
+                "value": "kv",
+                "description": "Type of Riak. Valid options are \"kv\", \"cs\" and \"ts\".",
+                "name": "type"
+            },
+            {
+                "value": "26",
+                "description": "OTP version (e.g., \"24\", \"26\" etc).",
+                "name": "otp"
+            },
+            {
+                "value": "",
+                "description": "Extra version (e.g., \"-rc0-6-gf9328919\").",
+                "name": "extra_vsn"
+            },
+            {
+                "value": "",
+                "description": "This needs to be name@IP or name@FQDN e.g. dev1@10.2.3.4 or riak@prod01.my.domain.com.",
+                "name": "nodename"
+            },
+            {
+                "value": "",
+                "description": "If your node is joining a pre-existing cluster, enter the nodename of an existing node to join",
+                "name": "joining"
+            },
+            {
+                "value": "riak",
+                "description": "The pre-shared cookie for all nodes in this cluster. Regular text accepted but no spaces.",
+                "name": "cookie"
+            },
+            {
+                "value": "1024",
+                "description": "Ring size. The number of shards in the database. Needs to be a power of 2. Recommend 1024 for 3.x versions.",
+                "name": "ringsize"
+            },
+            {
+                "value": "https://files.tiot.jp/riak",
+                "description": "Base URL of package repository",
+                "name": "packagerepo",
+                "expert": true
+            },
+            {
+                "value": "3.4.0",
+                "description": "The version number of the type of Riak you are installing e.g. for KV \"3.0.16\" or \"3.2.1\".",
+                "name": "subver"
+            },
+            {
+                "value": "no",
+                "description": "Prepare for Riak Control (e.g., enable security, create an admin user, install certificate and key).",
+                "name": "prepare_for_riak_control",
+                "expert": true
+            },
+            {
+                "value": "rctl-admin",
+                "description": "Riak Control user",
+                "name": "riak_control_user",
+                "expert": true
+            },
+            {
+                "value": "*****",
+                "description": "Riak Control user password",
+                "name": "riak_control_password",
+                "expert": true
+            },
+            {
+                "value": "127.0.0.1/32",
+                "description": "Address mask to pass to \"riak admin security add-source\"",
+                "name": "riak_control_pwd_sec_net_source",
+                "expert": true
+            },
+            {
+                "value": "",
+                "description": "URL to fetch ceritificate bundle (with cert.pem, key.pem and cacertfile.pem, tar-gzipped) to install on this node.",
+                "name": "ssl_bundle_url"
+            },
+            {
+                "value": "0.0.0.0:11018",
+                "description": "https listener (address:port). Port should be different from the standard value for http (8098).",
+                "name": "https_listener",
+                "expert": true
+            },
+            {
+                "value": "leveled",
+                "description": "The storage backend. Valid options are \"bitcask\", \"leveldb\" and \"leveled\" (KV>2.9.0).",
+                "name": "backend"
+            },
+            {
+                "value": "/var/lib/riak",
+                "description": "The path where Riak stores the actual data.",
+                "name": "datadir",
+                "expert": true
+            },
+            {
+                "value": "tictac",
+                "description": "The type of Active Anti-Entropy. Valid options are \"legacy\" and \"tictac\" (KV>2.9.0).",
+                "name": "aae",
+                "expert": true
+            },
+            {
+                "value": "0.0.0.0",
+                "description": "The IP of the interface that Riak will listen on.",
+                "name": "interface"
+            },
+            {
+                "value": "",
+                "description": "Settings for the JVM if you plan to use Yokozuna (KV<3.0.0).",
+                "name": "search",
+                "expert": true
+            },
+            {
+                "value": "",
+                "description": "Override the OS version the script auto detects, e.g. \"-o trusty\" when on 2.1.3 with Ubuntu Jammy or \"-o 7\" with rhel 9. This is useful when using an OS for which a package does not exist for your desired version.",
+                "name": "os_override",
+                "expert": true
+            },
+            {
+                "value": "",
+                "description": "(CS) Admin user name.",
+                "name": "cs_admin_user",
+                "expert": true
+            },
+            {
+                "value": "",
+                "description": "(CS) Admin user email.",
+                "name": "cs_admin_email",
+                "expert": true
+            },
+            {
+                "value": "",
+                "description": "(CS) Admin user key.",
+                "name": "cs_admin_key",
+                "expert": true
+            },
+            {
+                "value": "yes",
+                "description": "(CS) Generate admin user key.",
+                "name": "cs_admin_generate",
+                "expert": true
+            }
+        ],
+        "file": "install-riak.sh",
+        "name": "Install from package",
+        "description": "A script to download, install, configure and start a riak node, or join an existing cluster."
+    },
+    {
+        "params": [
+            {
+                "name": "jamjar",
+                "value": "mackays",
+                "description": "A string to write to $HOME/jamjar on target host."
+            }
+        ],
+        "name": "Write access test",
+        "body": "#!/bin/sh\necho $jamjar >~/jamjar; if cat ~/jamjar; then echo $jamjar written to ~/jamjar; rm ~/jamjar; else echo \"No write access on this host :(\"; exit 1; fi\n",
+        "description": "A simple script to check that riak_control has a write access to the target host."
+    }
+]
