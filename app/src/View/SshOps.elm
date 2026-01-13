@@ -35,6 +35,7 @@ import Material.TextField as TextField
 import Material.Select as Select
 import Material.Select.Item as SelectItem
 import Material.Checkbox as Checkbox
+import Material.FormField as FormField
 import Material.Typography as Typography
 import RemoteData
 
@@ -86,15 +87,18 @@ makeScriptBlockWaiting m =
     let
         (t0, tt) =
             Util.headAndTail m.s.sshScriptTemplateSpecs Data.SshOps.dummyScriptTemplate
+        selectedTemplate = Model.scriptTemplateBy m .name m.s.sshSelectedScriptTemplateName
     in
         div [ style "flex-direction" "rows" ]
             [ div [ style "display" "grid"
                   , style "grid-template-columns" "30em auto"
-                  ] [ div [ style "grid-column-end" "span 2" ]
-                          [ text "Target hosts, following this pattern: "
-                          , code [] [ text "user@host (key-name)" ]
-                          , text " (key-name is optional, and is one of the keys added above)."
-                          ]
+                  ] [ div [ style "grid-column-end" "span 2"
+                          , style "padding-bottom" "0.5em"
+                          , style "color" "grey"
+                          ] [ text "Target host, following this pattern: "
+                            , code [] [ text "user@host (key-name)" ]
+                            , text " (key-name is optional, and is one of the keys added above)."
+                            ]
                     , TextField.filled
                           (TextField.config
                           |> TextField.setLabel (Just "Target hosts")
@@ -141,16 +145,6 @@ makeScriptTemplateParams m =
                  , div [ style "display" "grid"
                        , style "grid-template-columns" "auto 1fr"
                        ] (List.map materialParam pp |> List.concat)
-                 , div [ style "padding-top" "1em"
-                       ] [ Checkbox.checkbox
-                               (Checkbox.config
-                               |> Checkbox.setState
-                                    (View.Shared.checkboxStateFromBool
-                                          m.s.sshScriptTemplateExpertParamsShown)
-                               |> Checkbox.setOnChange SshScriptTemplateExpertToggle
-                               )
-                         , text "Expert parameters"
-                         ]
                  ] ++ (maybeExpertParamsSection m))
         else
             div [] []
@@ -159,20 +153,38 @@ maybeExpertParamsSection m =
     let
         pp = Model.scriptTemplateBy m .name m.s.sshSelectedScriptTemplateName |> .params
              |> List.filter .expert
+        ppBlock =
+            if m.s.sshScriptTemplateExpertParamsShown then
+                [ div [ style "display" "grid"
+                      , style "grid-template-columns" "auto 1fr"
+                      ] (List.map materialParam pp |> List.concat)
+                ]
+            else
+                []
     in
-        if m.s.sshScriptTemplateExpertParamsShown && pp /= [] then
-            [ div [ style "display" "grid"
-                  , style "grid-template-columns" "auto 1fr"
-                  ] (List.map materialParam pp |> List.concat)
-            ]
+        if pp /= [] then
+            [ div [ style "padding-top" "1em"
+                  ] [ FormField.formField
+                          (FormField.config
+                          |> FormField.setLabel (Just "Expert parameters")
+                          )
+                          [ Checkbox.checkbox
+                                (Checkbox.config
+                                |> Checkbox.setState
+                                     (View.Shared.checkboxStateFromBool
+                                          m.s.sshScriptTemplateExpertParamsShown)
+                                |> Checkbox.setOnChange SshScriptTemplateExpertToggle
+                                )
+                          ]
+                    ]
+            ] ++ ppBlock
         else
             []
 
 materialParam {name, value, description} =
     [ div [ style "grid-column-end" "span 2"
           , style "padding-top" "2em"
-          , style "font-size" "small"
-          , style "color" "#454545"
+          , style "color" "grey"
           ] [ text description ]
     , div [ style "text-align" "end"
           , style "align-self" "center"
