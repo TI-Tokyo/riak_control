@@ -185,7 +185,7 @@ update msg m =
         SshDeleteKeyDialogConfirmed ->
             let
                 s_ = m.s
-                pp = { name = m.s.sshNewKeyName }
+                pp = { name = m.s.sshKeyNameToDelete }
             in
                 ({m | s = {s_ | sshDeleteKeyDialogShown = False}}, Request.SshOps.deleteSshKey m pp)
 

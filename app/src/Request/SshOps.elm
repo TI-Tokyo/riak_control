@@ -94,7 +94,7 @@ deleteSshKey m pp =
         |> HttpBuilder.post
         |> HttpBuilder.withHeaders (stdHeaders m)
         |> HttpBuilder.withJsonBody (deleteSshKeyCommandEncoder pp)
-        |> HttpBuilder.withExpect (Http.expectWhatever SshKeyStored)
+        |> HttpBuilder.withExpect (Http.expectWhatever SshKeyDeleted)
         |> HttpBuilder.request
 
 deleteSshKeyCommandEncoder {name} =
