@@ -27,10 +27,8 @@ def _load_config():
             rctl_globals.CONFIG = json.load(f)
     except:
         rctl_globals.CONFIG = rctl_config.default_config()
-        logging.info("Config not found: using defaults (admin user: %s, password: %s)",
-                     rctl_globals.CONFIG['admin']['name'],
-                     base64.b64decode(
-                         rctl_globals.CONFIG['admin']['password']))
+        logging.info("Config not found: using defaults (admin user: %s)",
+                     rctl_globals.CONFIG['admin']['name'])
 
 def _load_globals():
     try:
