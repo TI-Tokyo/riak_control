@@ -52,6 +52,7 @@ dummySshKey =
 
 type alias ScriptTemplate =
     { name : String
+    , description : String
     , body : String
     , params : List TemplateParameter
     }
@@ -79,6 +80,7 @@ type alias GetScriptOutputCmdParams =
 
 dummyScriptTemplate =
     { name = ""
+    , description = ""
     , body = ""
     , params = []
     }

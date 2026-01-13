@@ -112,6 +112,9 @@ makeScriptBlockWaiting m =
                           (List.map
                                (\{name} -> SelectItem.selectItem (SelectItem.config {value = name}) name)
                                tt)
+                    , div [ style "padding-top" "1em"
+                          , style "grid-column-end" "span 2"
+                          ] [ text selectedTemplate.description ]
                     ]
             , makeScriptTemplateParams m
             , Button.text

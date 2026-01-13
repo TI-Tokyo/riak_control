@@ -84,6 +84,7 @@ decodeSshScriptTemplate =
     in
         succeed ScriptTemplate
             |> required "name" string
+            |> required "description" string
             |> required "body" string
             |> required "params" (list tp)
 
