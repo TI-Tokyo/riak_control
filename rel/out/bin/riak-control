@@ -32,6 +32,10 @@ a=$rctl_pkg_datadir
 a1=${a:-$RIAK_CONTROL_DATADIR}
 DATADIR=${a1:-$script_dir/..}
 
+a=$rctl_pkg_logdir
+a1=${a:-$RIAK_CONTROL_LOGDIR}
+LOGDIR=${a1:-$script_dir/..}
+
 python3 $script_dir/rctl.py \
 	--port "$PORT" \
-	--docroot "$DOCROOT" --etcdir "$ETCDIR" --datadir "$DATADIR"
+	--docroot "$DOCROOT" --etcdir "$ETCDIR" --datadir "$DATADIR" --logdir "$LOGDIR"
