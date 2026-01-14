@@ -1,4 +1,6 @@
 usr/share/riak-control
 etc/riak-control
+etc/default/riak-control
 var/lib/riak-control
 var/log/riak-control
+

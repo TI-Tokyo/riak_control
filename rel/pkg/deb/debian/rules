@@ -21,6 +21,7 @@ install:
 	dh_installdirs
 	dh_install
 	dh_installman
+	dh_installsystemd
 	dh_fixperms
 
 # We have nothing to do by default.

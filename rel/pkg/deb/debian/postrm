@@ -1,9 +1,15 @@
 #!/bin/sh
 set -e
 
+user=riak-control
+
 case "$1" in
     purge)
-        rm -rf /var/lib/riak-control
+        rm -rf /var/log/riak-control /var/lib/riak-control /var/run/riak-control \
+	   /etc/riak-control
+        pkill -u $user || true
+        deluser --quiet --system $user
+        delgroup --quiet --system --only-if-empty $user || true
     ;;
 
     remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)

@@ -5,6 +5,24 @@
 
 set -e
 
+user=riak-control
+if ! getent group $user >/dev/null; then
+    addgroup --system $user
+fi
+
+if ! getent passwd $user >/dev/null; then
+    adduser --ingroup $user \
+            --home /var/lib/riak-control \
+            --disabled-password \
+            --system --shell /bin/bash --no-create-home \
+            --gecos "Riak Control" $user
+fi
+
+for i in lib log; do
+    chown -R $user:$user /var/$i/riak
+done
+chown -R $user:$user /etc/riak-control
+
 case "$1" in
     configure)
     ;;

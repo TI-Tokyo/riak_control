@@ -1,0 +1,10 @@
+[Unit]
+Description=Riak Control Server
+
+[Service]
+User=riak-control
+ExecStart=/usr/sbin/riak-control
+EnvironmentFile=-/etc/default/riak-control
+
+[Install]
+WantedBy=multi-user.target
