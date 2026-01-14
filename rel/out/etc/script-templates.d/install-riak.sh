@@ -5,7 +5,7 @@ missing_req () {
     exit 1
 }
 for p in sudo ping curl logrotate; do
-    which $p 1>&2 >/dev/null || missing_req $p
+    sudo which $p 1>&2 >/dev/null || missing_req $p
 done
 
 usage() {
@@ -167,9 +167,9 @@ if [ "$os" = "amzn" ]
     fi
   fi
 fi
-if [ "$os" = "centos" ]; then os="rhel"; packagetype="rpm"; installer="yum localinstall -y "; fi
-if [ "$os" = "ol" ]; then os="oracle"; packagetype="rpm"; installer="yum localinstall -y "; fi
-if [ "$os" = "rhel" ]; then packagetype="rpm"; installer="yum localinstall -y "; fi
+if [ "$os" = "centos" ]; then os="rhel"; packagetype="rpm"; installer="rpm -i --nodeps "; fi
+if [ "$os" = "ol" ]; then os="oracle"; packagetype="rpm"; installer="rpm -i --nodeps "; fi
+if [ "$os" = "rhel" ]; then packagetype="rpm"; installer="rpm -i --nodeps "; fi
 if [ "$os" = "suse" ]; then os="rhel"; packagetype="rpm"; installer="zypper install "; fi
 if [ "$os" = "ubuntu" ]
   then

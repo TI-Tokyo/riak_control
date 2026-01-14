@@ -1,6 +1,6 @@
-# Riak 3.2.4 Release Notes
+# Riak Control 3.4.1 Release Notes
 
-Released Juline xx, 2025.
+Released January 14, 2026.
 
 ## General
 

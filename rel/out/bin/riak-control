@@ -20,8 +20,18 @@ PORT=${RIAK_CONTROL_PORT:-8091}
 
 script_dir=$(dirname $0)
 
-a=$set_me_from_distro_packaging
+a=$rctl_pkg_docroot
 a1=${a:-$RIAK_CONTROL_DOCROOT}
-D=${a1:-$script_dir/../www}
+DOCROOT=${a1:-$script_dir/../www}
 
-python3 $script_dir/rctl.py --port $PORT --docroot "$D"
+a=$rctl_pkg_etcdir
+a1=${a:-$RIAK_CONTROL_ETCDIR}
+ETCDIR=${a1:-$script_dir/../etc}
+
+a=$rctl_pkg_datadir
+a1=${a:-$RIAK_CONTROL_DATADIR}
+DATADIR=${a1:-$script_dir/..}
+
+python3 $script_dir/rctl.py \
+	--port "$PORT" \
+	--docroot "$DOCROOT" --etcdir "$ETCDIR" --datadir "$DATADIR"

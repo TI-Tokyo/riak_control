@@ -19,7 +19,7 @@ clean:
 
 install:
 	@rm -rf rel/out
-	@mkdir -p rel/out/{bin,etc}
+	@mkdir -p rel/out/{bin,etc,www}
 	@cp -a app/build/* rel/out/www
 	@cp -a bin/riak-control bin/rctl*.py \
 	   rel/out/bin
