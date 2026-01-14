@@ -4,11 +4,13 @@
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
 
-ROOTDIR := debian/riak-cs-control
+ROOTDIR := debian/riak-control
 
 build:
 	mv www rc_www
-	sed -i 's|.set_me_from_distro_packaging|/var/lib/rc_www|' bin/riak-control
+	sed -i 's|\$rctl_pkg_docroot|/usr/share/riak-control|' bin/riak-control
+	sed -i 's|\$rctl_pkg_etcdir|/etc/riak-control|' bin/riak-control
+	sed -i 's|\$rctl_pkg_datadir|/var/lib/riak-control|' bin/riak-control
 
 clean:
 

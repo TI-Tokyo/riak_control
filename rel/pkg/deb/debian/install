@@ -1,2 +1,4 @@
 bin/riak-control usr/bin/
-rc_www var/lib/
+bin/rctl*.py usr/bin/
+etc/* etc/riak-control/
+www usr/share/riak-control

@@ -1,2 +1,3 @@
-var/lib/rc_www
-bin/riak-control
+usr/share/riak-control
+etc/riak-control
+usr/share/riak-control

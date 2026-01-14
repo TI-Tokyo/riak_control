@@ -19,9 +19,12 @@ clean:
 
 install:
 	@rm -rf rel/out
-	@mkdir -p rel/out/www rel/out/bin
+	@mkdir -p rel/out/{bin,etc}
 	@cp -a app/build/* rel/out/www
-	@cp -a bin/riak-control bin/rctl*.py bin/script-templates bin/script-templates.d rel/out/bin
+	@cp -a bin/riak-control bin/rctl*.py \
+	   rel/out/bin
+	@cp -a rel/files/rctl.conf rel/files/script-templates rel/files/script-templates.d \
+	   rel/out/etc
 	@echo "Release generated in rel/out"
 
 
