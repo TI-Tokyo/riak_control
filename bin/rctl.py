@@ -53,9 +53,10 @@ def main():
     parser.add_argument("-r", "--docroot", help = "Document root")
     parser.add_argument("-d", "--datadir", default = ".", help = "Path under which data will be kept")
     parser.add_argument("-c", "--etcdir", default = os.path.dirname(sys.argv[0]), help = "Path to read script templates from")
+    parser.add_argument("-l", "--logdir", default = os.path.dirname(sys.argv[0]), help = "Path to write logs to")
     args = parser.parse_args()
 
-    logging.basicConfig(filename = "console.log",
+    logging.basicConfig(filename = args.logdir + "/console.log",
                         format = "%(asctime)s.%(msecs)03d %(levelname)s %(message)s",
                         datefmt = "%c",
                         level = logging.INFO)

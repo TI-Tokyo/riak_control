@@ -3,7 +3,7 @@ set -e
 
 case "$1" in
     purge)
-        pkill riak-control || true
+        rm -rf /var/lib/riak-control
     ;;
 
     remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
