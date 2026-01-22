@@ -83,52 +83,70 @@ makeProperContent m =
 backendStatusToCells s =
     case s of
         Vnode.Leveled a ->
-            [ cellr (String.fromInt a.ledgerCacheSize |> naIf "-1")
-            , cellr (String.fromInt a.nActiveJournalFiles |> naIf "-1")
-            , cellr (Numeral.format "0.00" a.avgCompactionScore |> naIf "-1.00")
-            , cell (countByLevelToStr a.levelFilesCount |> naIf "")
-            , cellr (String.fromInt a.pencillerInmemCacheSize |> naIf "-1")
+            [ cellr (itoa a.ledgerCacheSize)
+            , cellr (itoa a.nActiveJournalFiles)
+            , cellr (ftoa a.avgCompactionScore)
+            , cell (countByLevelToStr a.levelFilesCount)
+            , cellr (itoa a.pencillerInmemCacheSize)
             , cell (pencillerWorkBacklogStatusToStr a.pencillerWorkBacklogStatus)
-            , cell a.pencillerLastMergeTime
-            , cell a.journalLastCompactionTime
+            , cell (Maybe.withDefault "n/a" a.pencillerLastMergeTime)
+            , cell (Maybe.withDefault "n/a" a.journalLastCompactionTime)
             , cell (journalLastCompactionResultToStr a.journalLastCompactionResult)
-            , cell (String.join "/" (List.map String.fromInt [a.getSampleCount, a.headSampleCount, a.putSampleCount]))
+            , cell (String.join "/" (List.filterMap itoa2 [a.getSampleCount, a.headSampleCount, a.putSampleCount]))
             , cellr (fetchCountByLevelToStr a.fetchCountByLevel)
             ]
-naIf a b =
-    if a == b then "n/a" else b
+itoa a =
+    case a of
+        Just x -> String.fromInt x
+        Nothing -> "n/a"
+itoa2 a =
+    case a of
+        Just x -> Just (String.fromInt x)
+        Nothing -> Nothing
+ftoa a =
+    case a of
+        Just x -> Numeral.format "0.00" x
+        Nothing -> "n/a"
 
 ledgerCacheSizeToStr {size, memory} =
     (String.fromInt size) ++ "(" ++ (String.fromInt memory) ++ ")"
 
-countByLevelToStr ll =
-    let f = \{level, count} -> (String.fromInt level) ++ ":" ++ (String.fromInt count)
-    in List.map f ll |> String.join " "
+countByLevelToStr aa =
+    let
+        f =
+            \{level, count} ->
+                (String.fromInt level) ++ ":" ++ (String.fromInt count)
+    in
+        case aa of
+            Just ll ->
+                List.map f ll |> String.join " "
+            Nothing -> "n/a"
 
-journalLastCompactionResultToStr {filesCompacted, score} =
-    if filesCompacted == -1 then
-        "n/a"
-    else
-        (String.fromInt filesCompacted) ++ ":" ++ (Numeral.format "0.00" score)
+journalLastCompactionResultToStr a =
+    case a of
+        Just {filesCompacted, score} ->
+            (String.fromInt filesCompacted) ++ ":" ++ (Numeral.format "0.00" score)
+        Nothing -> "n/a"
 
-pencillerWorkBacklogStatusToStr {workItems, backlog, l0Full} =
-    if workItems == -1 then
-        "n/a"
-    else
-        (String.fromInt workItems) ++ " " ++ (boolToStr backlog) ++ " " ++ (boolToStr l0Full)
+pencillerWorkBacklogStatusToStr a =
+    case a of
+        Just {workItems, backlog, l0Full} ->
+            (String.fromInt workItems) ++ " " ++ (boolToStr backlog) ++ " " ++ (boolToStr l0Full)
+        Nothing -> "n/a"
 
 
-fetchCountByLevelToStr {notFound, mem, zero, one, two, three, lower} =
-    if notFound.count + mem.count + zero.count + one.count + two.count + three.count + lower.count == 0 then
-        "n/a"
-    else
-        "notf: "++(String.fromInt notFound.count)++", "++(String.fromInt notFound.time)++" | "++
-        "mem: "++(String.fromInt mem.count)++", "++(String.fromInt mem.time)++" | "++
-        "L0: "++(String.fromInt zero.count)++", "++(String.fromInt zero.time)++" | "++
-        "L1: "++(String.fromInt one.count)++", "++(String.fromInt one.time)++" | "++
-        "L2: "++(String.fromInt two.count)++", "++(String.fromInt two.time)++" | "++
-        "L3: "++(String.fromInt three.count)++", "++(String.fromInt three.time)++" | "++
-        "L4+: "++(String.fromInt lower.count)++", "++(String.fromInt lower.time)
+fetchCountByLevelToStr a =
+    case a of
+        Just {notFound, mem, zero, one, two, three, lower} ->
+            "notf: "++(String.fromInt notFound.count)++", "++(String.fromInt notFound.time)++" | "++
+            "mem: "++(String.fromInt mem.count)++", "++(String.fromInt mem.time)++" | "++
+            "L0: "++(String.fromInt zero.count)++", "++(String.fromInt zero.time)++" | "++
+            "L1: "++(String.fromInt one.count)++", "++(String.fromInt one.time)++" | "++
+            "L2: "++(String.fromInt two.count)++", "++(String.fromInt two.time)++" | "++
+            "L3: "++(String.fromInt three.count)++", "++(String.fromInt three.time)++" | "++
+            "L4+: "++(String.fromInt lower.count)++", "++(String.fromInt lower.time)
+        Nothing ->
+            "n/a"
 
 backendStatusToColName s =
     case s of
@@ -153,25 +171,34 @@ sort m aa =
         sCmp f =
             \a b ->
                 case (a.backendStatus.status, b.backendStatus.status) of
-                (Vnode.Leveled s1, Vnode.Leveled s2) ->
-                    if f s1 > f s2 then
-                        GT
-                    else if f s1 < f s2 then
-                             LT
-                         else
-                             EQ
+                    (Vnode.Leveled s1, Vnode.Leveled s2) ->
+                        case (f s1, f s2) of
+                            (Just s1f, Just s2f) ->
+                                if s1f > s2f then
+                                    GT
+                                else if s1f < s2f then
+                                         LT
+                                     else
+                                         EQ
+                            _ -> EQ
         lfcCmp =
-            let lfc = List.foldl (\{count} q -> count + q) 0 in
-            \a b ->
-                case (a.backendStatus.status, b.backendStatus.status) of
-                (Vnode.Leveled s1, Vnode.Leveled s2) ->
-                    let (k1, k2) = (lfc s1.levelFilesCount, lfc s2.levelFilesCount) in
-                    if k1 > k2 then
-                        GT
-                    else if k1 < k2 then
-                             LT
-                         else
-                             EQ
+            let
+                lfc =
+                    \d ->
+                        case d of
+                            Just dd -> List.foldl (\{count} q -> count + q) 0 dd
+                            Nothing -> 0
+            in
+                \a b ->
+                    case (a.backendStatus.status, b.backendStatus.status) of
+                        (Vnode.Leveled s1, Vnode.Leveled s2) ->
+                            let (k1, k2) = (lfc s1.levelFilesCount, lfc s2.levelFilesCount) in
+                            if k1 > k2 then
+                                GT
+                            else if k1 < k2 then
+                                     LT
+                                 else
+                                     EQ
         aa0 =
             case m.s.vnodeStatusSortBy of
                 SortVnodeBEStatusLedgerCacheSize -> List.sortWith (sCmp .ledgerCacheSize) aa

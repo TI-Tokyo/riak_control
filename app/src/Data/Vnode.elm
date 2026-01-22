@@ -39,26 +39,26 @@ type SpecificBackendStatus
     = Leveled LeveledStatus
 
 type alias LeveledStatus =
-    { ledgerCacheSize : Int
-    , nActiveJournalFiles : Int
-    , avgCompactionScore : Float
-    , levelFilesCount : List CountByLevel
-    , pencillerInmemCacheSize : Int
-    , pencillerWorkBacklogStatus : PencillerWorkBacklogStatus
-    , pencillerLastMergeTime : String -- Time.Posix
-    , journalLastCompactionTime : String -- Time.Posix
-    , journalLastCompactionResult : JournalCompactionResult
+    { ledgerCacheSize : Maybe Int
+    , nActiveJournalFiles : Maybe Int
+    , avgCompactionScore :Maybe Float
+    , levelFilesCount : Maybe (List CountByLevel)
+    , pencillerInmemCacheSize : Maybe Int
+    , pencillerWorkBacklogStatus : Maybe PencillerWorkBacklogStatus
+    , pencillerLastMergeTime : Maybe String -- Time.Posix
+    , journalLastCompactionTime : Maybe String -- Time.Posix
+    , journalLastCompactionResult : Maybe JournalCompactionResult
 
-    , getSampleCount : Int
-    , getBodyTime : Int
-    , headSampleCount : Int
-    , headRspTime : Int
-    , putSampleCount : Int
-    , putPrepTime : Int
-    , putInkTime : Int
-    , putMemTime : Int
+    , getSampleCount : Maybe Int
+    , getBodyTime : Maybe Int
+    , headSampleCount : Maybe Int
+    , headRspTime : Maybe Int
+    , putSampleCount : Maybe Int
+    , putPrepTime : Maybe Int
+    , putInkTime : Maybe Int
+    , putMemTime : Maybe Int
 
-    , fetchCountByLevel : FetchCountByLevel
+    , fetchCountByLevel : Maybe FetchCountByLevel
     }
 
 type alias CountByLevel =
