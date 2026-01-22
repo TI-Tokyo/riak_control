@@ -180,6 +180,10 @@ sort m aa =
                                          LT
                                      else
                                          EQ
+                            (Just _, Nothing) ->
+                                GT
+                            (Nothing, Just _) ->
+                                LT
                             _ -> EQ
         lfcCmp =
             let
@@ -219,7 +223,7 @@ cell a = DataTable.cell ([ style "text-align" "left" ] ++ (maybeGrey a)) [ text 
 cellr a = DataTable.cell ([ style "text-align" "right" ] ++ (maybeGrey a)) [ text a ]
 
 maybeGrey a =
-    if a == "n/a" then [ style "color" "#ababab" ] else []
+    if a == "n/a" then [ style "color" "#cbcbcb" ] else []
 
 boolToStr a =
     case a of
