@@ -37,6 +37,10 @@ type alias BackendStatus =
 
 type SpecificBackendStatus
     = Leveled LeveledStatus
+    | Leveldb LeveldbStatus
+
+type alias LeveldbStatus =
+    {}
 
 type alias LeveledStatus =
     { ledgerCacheSize : Maybe Int

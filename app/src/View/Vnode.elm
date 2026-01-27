@@ -95,6 +95,8 @@ backendStatusToCells s =
             , cell (String.join "/" (List.filterMap itoa2 [a.getSampleCount, a.headSampleCount, a.putSampleCount]))
             , cellr (fetchCountByLevelToStr a.fetchCountByLevel)
             ]
+        Vnode.Leveldb _ ->
+            [ cell "(not supported)" ]
 itoa a =
     case a of
         Just x -> String.fromInt x
@@ -185,6 +187,8 @@ sort m aa =
                             (Nothing, Just _) ->
                                 LT
                             _ -> EQ
+                    _ ->
+                        EQ
         lfcCmp =
             let
                 lfc =
@@ -203,6 +207,8 @@ sort m aa =
                                      LT
                                  else
                                      EQ
+                        _ ->
+                            EQ
         aa0 =
             case m.s.vnodeStatusSortBy of
                 SortVnodeBEStatusLedgerCacheSize -> List.sortWith (sCmp .ledgerCacheSize) aa

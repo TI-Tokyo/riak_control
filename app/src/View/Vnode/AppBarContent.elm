@@ -27,6 +27,7 @@ import Msg exposing (Msg(..))
 import View.Common exposing (SortByField(..))
 import View.Shared
 import View.Style
+import Util
 
 import Html exposing (Html, text, div, img)
 import Html.Attributes exposing (attribute, style, src)
@@ -42,11 +43,7 @@ makeFilterControls m =
     let
         n = View.Common.selectSortByString SortUnsorted
         (k0, kx) =
-            case List.map .name m.s.cluster.current of
-                (n0 :: nn) ->
-                    (n0, nn)
-                _ ->
-                    ("??", [])
+            Util.headAndTail (List.map .name m.s.cluster.current) "??"
     in
         [ Select.outlined
               (Select.config
