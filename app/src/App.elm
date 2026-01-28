@@ -95,7 +95,7 @@ init f =
                 "" [] SortTtaaeTreeStatus False
                 -- Vnode
                 Dict.empty ""
-                "" [] SortUnsorted False
+                "" [] SortUnsorted False False
         model =
             Model
                 config

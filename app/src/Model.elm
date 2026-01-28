@@ -169,6 +169,7 @@ type alias State =
     , vnodeStatusFilterIn : List String
     , vnodeStatusSortBy : SortByField
     , vnodeStatusSortOrder : SortOrder
+    , vnodeStatusExtended : Bool
     }
 
 

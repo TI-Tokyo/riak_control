@@ -776,6 +776,10 @@ update msg m =
             let s_ = m.s in
             ({m | s = {s_ | vnodeStatusShownForNode = a}}, Request.Vnode.getVnodeStatus m a)
 
+        VnodeStatusExtendedToggle ->
+            let s_ = m.s in
+            ({m | s = {s_ | vnodeStatusExtended = not s_.vnodeStatusExtended}}, Cmd.none)
+
 
         -- User
         ------------------------------

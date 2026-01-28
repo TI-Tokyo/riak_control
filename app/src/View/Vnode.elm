@@ -42,7 +42,7 @@ import Numeral
 
 makeContent m =
     if m.s.vnodeStatus == Dict.empty then
-        div [ style "align-content" "center" ] [text "nothing to show" ]
+        div [ style "align-content" "center" ] [ text "nothing to show" ]
     else
         makeProperContent m
 
@@ -50,15 +50,21 @@ makeProperContent m =
     let
         row = \{idx, vnodeId, backendStatus, counter, counterLease, counterLeaseSize, counterLeasing} ->
                   DataTable.row []
-                      ([ cell idx
-                       , cell (humanReadable backendStatus.mod)
-                       ] ++ (backendStatusToCells backendStatus.status) ++
-                       [ cellr (String.fromInt counter)
-                       , cellr (String.fromInt counterLease)
-                       , cellr (String.fromInt counterLeaseSize)
-                       , cell (boolToStr counterLeasing)
-                       , cell vnodeId
-                       ])
+                      (if m.s.vnodeStatusExtended then
+                           [ cell idx
+                           , cell (humanReadable backendStatus.mod)
+                           ] ++ (backendStatusToCells m.s.vnodeStatusExtended backendStatus.status) ++
+                           [ cellr (String.fromInt counter)
+                           , cellr (String.fromInt counterLease)
+                           , cellr (String.fromInt counterLeaseSize)
+                           , cell (boolToStr counterLeasing)
+                           , cell vnodeId
+                           ]
+                       else
+                           [ cell idx
+                           ] ++ (backendStatusToCells m.s.vnodeStatusExtended backendStatus.status) ++
+                           [ cellr (String.fromInt counter)
+                           ])
         report = Dict.get m.s.vnodeStatusShownForNode m.s.vnodeStatus
                |> Maybe.withDefault [] |> sort m
     in
@@ -66,35 +72,50 @@ makeProperContent m =
             [ DataTable.dataTable DataTable.config
                   { thead =
                         [ DataTable.row []
-                              ([ cell "Partition"
-                               , cell "Backend"
-                               ] ++ (backendStatusToColName "riak_kv_leveled_backend") ++
-                               [ cell "Counter"
-                               , cell "Counter Lease"
-                               , cell "Counter Lease Size"
-                               , cell "Counter Leasing"
-                               , cell "Vnode ID"
-                               ])
+                              (if m.s.vnodeStatusExtended then
+                                   [ cell "Partition"
+                                   , cell "Backend"
+                                   ] ++ (backendStatusToColName m.s.vnodeStatusExtended "riak_kv_leveled_backend") ++
+                                   [ cell "Counter"
+                                   , cell "Counter Lease"
+                                   , cell "Counter Lease Size"
+                                   , cell "Counter Leasing"
+                                   , cell "Vnode ID"
+                                   ]
+                               else
+                                   [ cell "Partition"
+                                   ] ++ (backendStatusToColName m.s.vnodeStatusExtended "riak_kv_leveled_backend") ++
+                                   [ cell "Counter"
+                                   ])
                         ]
                   , tbody = List.map row report
               }
         ]
 
-backendStatusToCells s =
+backendStatusToCells extended s =
     case s of
         Vnode.Leveled a ->
-            [ cellr (itoa a.ledgerCacheSize)
-            , cellr (itoa a.nActiveJournalFiles)
-            , cellr (ftoa a.avgCompactionScore)
-            , cell (countByLevelToStr a.levelFilesCount)
-            , cellr (itoa a.pencillerInmemCacheSize)
-            , cell (pencillerWorkBacklogStatusToStr a.pencillerWorkBacklogStatus)
-            , cell (Maybe.withDefault "n/a" a.pencillerLastMergeTime)
-            , cell (Maybe.withDefault "n/a" a.journalLastCompactionTime)
-            , cell (journalLastCompactionResultToStr a.journalLastCompactionResult)
-            , cell (String.join "/" (List.filterMap itoa2 [a.getSampleCount, a.headSampleCount, a.putSampleCount]))
-            , cellr (fetchCountByLevelToStr a.fetchCountByLevel)
-            ]
+            if extended then
+                [ cellr (itoa a.ledgerCacheSize)
+                , cellr (itoa a.nActiveJournalFiles)
+                , cellr (ftoa a.avgCompactionScore)
+                , cell (countByLevelToStr a.levelFilesCount)
+                , cellr (itoa a.pencillerInmemCacheSize)
+                , cell (pencillerWorkBacklogStatusToStr a.pencillerWorkBacklogStatus)
+                , cell (Maybe.withDefault "n/a" a.pencillerLastMergeTime)
+                , cell (Maybe.withDefault "n/a" a.journalLastCompactionTime)
+                , cell (journalLastCompactionResultToStr a.journalLastCompactionResult)
+                , cell (String.join "/" (List.filterMap itoa2 [a.getSampleCount, a.headSampleCount, a.putSampleCount]))
+                , cellr (fetchCountByLevelToStr a.fetchCountByLevel)
+                ]
+            else
+                [ cellr (itoa a.ledgerCacheSize)
+                , cellr (itoa a.nActiveJournalFiles)
+                , cell (countByLevelToStr a.levelFilesCount)
+                , cell (Maybe.withDefault "n/a" a.pencillerLastMergeTime)
+                , cell (journalLastCompactionResultToStr a.journalLastCompactionResult)
+                , cell (String.join "/" (List.filterMap itoa2 [a.getSampleCount, a.headSampleCount, a.putSampleCount]))
+                ]
         Vnode.Leveldb _ ->
             [ cell "(not supported)" ]
 itoa a =
@@ -150,21 +171,30 @@ fetchCountByLevelToStr a =
         Nothing ->
             "n/a"
 
-backendStatusToColName s =
+backendStatusToColName extended s =
     case s of
         "riak_kv_leveled_backend" ->
-            [ cell "Ledger Cache"
-            , cell "# Active Journal Files"
-            , cell "Avg Compaction Score"
-            , cell "Level Files Count"
-            , cell "Penciller Inmem Cache"
-            , cell "Penciller Work Backlog Status"
-            , cell "Penciller Last Merge Time"
-            , cell "Journal Last Compaction Time"
-            , cell "Journal Last Compaction Result"
-            , cell "GET/HEAD/PUT Count"
-            , cell "Recent Fetch Count by Level"
-            ]
+            if extended then
+                [ cell "Ledger Cache"
+                , cell "# Active Journal Files"
+                , cell "Avg Compaction Score"
+                , cell "Level Files Count"
+                , cell "Penciller Inmem Cache"
+                , cell "Penciller Work Backlog Status"
+                , cell "Penciller Last Merge Time"
+                , cell "Journal Last Compaction Time"
+                , cell "Journal Last Compaction Result"
+                , cell "GET/HEAD/PUT Count"
+                , cell "Recent Fetch Count by Level"
+                ]
+            else
+                [ cell "Ledger Cache"
+                , cell "# Active Journal Files"
+                , cell "Level Files Count"
+                , cell "Penciller Last Merge Time"
+                , cell "Journal Last Compaction Result"
+                , cell "GET/HEAD/PUT Count"
+                ]
         _ ->
             []
 

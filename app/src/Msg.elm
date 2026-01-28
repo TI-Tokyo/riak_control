@@ -178,6 +178,7 @@ type Msg
     | VnodeStatusSortByFieldChanged String
     | VnodeStatusSortOrderChanged
     | VnodeStatusShowForNodeChanged String
+    | VnodeStatusExtendedToggle
 
     -- Users
     | ListUsers

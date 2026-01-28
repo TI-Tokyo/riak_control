@@ -33,9 +33,11 @@ import Html exposing (Html, text, div, img)
 import Html.Attributes exposing (attribute, style, src)
 import Material.Button as Button
 import Material.TextField as TextField
-import Material.Typography as Typography
 import Material.Select as Select
 import Material.Select.Item as SelectItem
+import Material.Checkbox as Checkbox
+import Material.FormField as FormField
+import Material.Typography as Typography
 
 
 
@@ -81,4 +83,16 @@ makeFilterControls m =
                    ])
         , Button.text (Button.config |> Button.setOnClick VnodeStatusSortOrderChanged)
             (View.Common.sortOrderText m.s.vnodeStatusSortOrder)
+        , FormField.formField
+              (FormField.config
+              |> FormField.setLabel (Just "Extended")
+              )
+              [ Checkbox.checkbox
+                    (Checkbox.config
+                    |> Checkbox.setState
+                         (View.Shared.checkboxStateFromBool
+                              m.s.vnodeStatusExtended)
+                    |> Checkbox.setOnChange VnodeStatusExtendedToggle
+                    )
+              ]
         ]
