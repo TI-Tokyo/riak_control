@@ -37,12 +37,12 @@ a1=${a:-$RIAK_CONTROL_LOGDIR}
 LOGDIR=${a1:-$script_dir/..}
 
 cmd="python3 $script_dir/rctl.py \
- --port \"$PORT\" \
- --docroot \"$DOCROOT\" --etcdir \"$ETCDIR\" --datadir \"$DATADIR\" --logdir \"$LOGDIR\""
+ --port $PORT \
+ --docroot $DOCROOT --etcdir $ETCDIR --datadir $DATADIR --logdir $LOGDIR"
 
 u=riak-control
 
-if [ $UID = 0 ] then
+if [ $UID = 0 ]; then
     sudo -H -E -u $u -- "$cmd"
 else
     $cmd
