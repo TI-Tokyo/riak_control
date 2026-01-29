@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -51,7 +51,7 @@ makeProperContent m =
         row = \{idx, vnodeId, backendStatus, counter, counterLease, counterLeaseSize, counterLeasing} ->
                   DataTable.row []
                       (if m.s.vnodeStatusExtended then
-                           [ cell idx
+                           [ cellr idx
                            , cell (humanReadable backendStatus.mod)
                            ] ++ (backendStatusToCells m.s.vnodeStatusExtended backendStatus.status) ++
                            [ cellr (String.fromInt counter)
@@ -61,7 +61,7 @@ makeProperContent m =
                            , cell vnodeId
                            ]
                        else
-                           [ cell idx
+                           [ cellr idx
                            ] ++ (backendStatusToCells m.s.vnodeStatusExtended backendStatus.status) ++
                            [ cellr (String.fromInt counter)
                            ])
@@ -241,6 +241,7 @@ sort m aa =
                             EQ
         aa0 =
             case m.s.vnodeStatusSortBy of
+                SortUnsorted -> List.sortBy (.idx >> String.toInt >> Maybe.withDefault 0) aa |> List.reverse
                 SortVnodeBEStatusLedgerCacheSize -> List.sortWith (sCmp .ledgerCacheSize) aa
                 SortVnodeBEStatusNActiveJournalFiles -> List.sortWith (sCmp .nActiveJournalFiles) aa
                 SortVnodeBEStatusPencillerLastMergeTime -> List.sortWith (sCmp .pencillerLastMergeTime) aa
