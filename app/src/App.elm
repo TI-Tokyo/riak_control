@@ -92,7 +92,7 @@ init f =
                 Nothing Nothing  [] "" ""
                 -- TictacAAE
                 Dict.empty ""
-                "" [] SortTtaaeTreeStatus False
+                "" [] SortUnsorted False
                 -- Vnode
                 Dict.empty ""
                 "" [] SortUnsorted False False

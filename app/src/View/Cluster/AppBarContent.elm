@@ -39,7 +39,7 @@ import Material.Select.Item as SelectItem
 
 
 makeFilterControls m =
-    let n = View.Common.selectSortByString SortUptime in
+    let n = View.Common.selectSortByString SortName in
     [ Select.outlined
           (Select.config
           |> Select.setLabel (Just "Sort by")
@@ -50,7 +50,9 @@ makeFilterControls m =
           (List.map
                (\i -> let j = View.Common.selectSortByString i in
                       SelectItem.selectItem (SelectItem.config {value = j}) j)
-               [ SortMemTotal
+               [ SortName
+               , SortUptime
+               , SortMemTotal
                , SortMemErlang
                , SortMemUsed
                ])

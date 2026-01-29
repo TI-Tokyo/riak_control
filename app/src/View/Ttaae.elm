@@ -48,13 +48,14 @@ makeContent m =
 makeProperContent m =
     let
         cell = (\a -> DataTable.cell [] [ text a ])
+        cellr = (\a -> DataTable.cell [ style "text-align" "right" ] [ text a ])
         row = (\{partition, status, lastRebuild, nextRebuild, totalDirtySegments, controllerPid} ->
                    DataTable.row []
-                          [ cell partition
+                          [ cellr partition
                           , cell (Data.Ttaae.ttaeTreeStatusToStr status)
                           , cell lastRebuild
                           , cell nextRebuild
-                          , cell (String.fromInt totalDirtySegments)
+                          , cellr (String.fromInt totalDirtySegments)
                           , cell controllerPid
                           ])
         report = Dict.get m.s.ttaaeReportShownForNode m.s.ttaaeReport
@@ -80,6 +81,7 @@ sort m aa =
     let
         aa0 =
             case m.s.ttaaeTreeSortBy of
+                SortUnsorted -> List.sortBy (.partition >> String.toInt >> Maybe.withDefault 0) aa |> List.reverse
                 SortTtaaeTreeStatus -> List.sortWith (Data.Ttaae.compareByTreeStatus .status) aa
                 SortTtaaeTreeLastRebuild -> List.sortBy .lastRebuild aa
                 SortTtaaeTreeNextRebuild -> List.sortBy .nextRebuild aa

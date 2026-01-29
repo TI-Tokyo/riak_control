@@ -70,7 +70,8 @@ makeFilterControls m =
               (List.map
                    (\i -> let j = View.Common.selectSortByString i in
                           SelectItem.selectItem (SelectItem.config {value = j}) j)
-                   [ SortVnodeBEStatusLedgerCacheSize
+                   [ SortUnsorted
+                   , SortVnodeBEStatusLedgerCacheSize
                    , SortVnodeBEStatusNActiveJournalFiles
                    , SortVnodeBEStatusPencillerLastMergeTime
                    , SortVnodeBEStatusJournalLastCompactionTime
