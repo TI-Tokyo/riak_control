@@ -163,7 +163,7 @@ type alias State =
     , ttaaeTreeSortOrder : SortOrder
 
     -- Vnode
-    , vnodeStatus : Dict.Dict String (List Data.Vnode.VnodeStatus)
+    , vnodeStatus : List Data.Vnode.VnodeStatus
     , vnodeStatusShownForNode : String
     , vnodeStatusFilterValue : String
     , vnodeStatusFilterIn : List String

@@ -94,7 +94,7 @@ init f =
                 Dict.empty ""
                 "" [] SortUnsorted False
                 -- Vnode
-                Dict.empty ""
+                [] ""
                 "" [] SortUnsorted False False
         model =
             Model

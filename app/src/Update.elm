@@ -753,13 +753,10 @@ update msg m =
         GetVnodeStatus ->
             (m, Request.Vnode.getVnodeStatus m m.s.vnodeStatusShownForNode)
         GotVnodeStatus (Ok r) ->
-            let
-                s_ = m.s
-                prevVnodeStatus = s_.vnodeStatus
-            in
-                ( {m | s = {s_ | vnodeStatus = Dict.insert s_.vnodeStatusShownForNode r prevVnodeStatus}}
-                , Cmd.none
-                )
+            let s_ = m.s in
+            ( {m | s = {s_ | vnodeStatus = r}}
+            , Cmd.none
+            )
         GotVnodeStatus (Err err) ->
             ( handleHttpError m "Failed to get vnode status: " err
             , Cmd.none

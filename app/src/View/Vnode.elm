@@ -36,12 +36,11 @@ import Material.List as List
 import Material.List.Item as ListItem
 import Material.DataTable as DataTable
 import Material.Typography as Typography
-import Dict
 import Numeral
 
 
 makeContent m =
-    if m.s.vnodeStatus == Dict.empty then
+    if m.s.vnodeStatus == [] then
         div [ style "align-content" "center" ] [ text "nothing to show" ]
     else
         makeProperContent m
@@ -65,8 +64,7 @@ makeProperContent m =
                            ] ++ (backendStatusToCells m.s.vnodeStatusExtended backendStatus.status) ++
                            [ cellr (String.fromInt counter)
                            ])
-        report = Dict.get m.s.vnodeStatusShownForNode m.s.vnodeStatus
-               |> Maybe.withDefault [] |> sort m
+        report = m.s.vnodeStatus |> sort m
     in
         div View.Style.topContent
             [ DataTable.dataTable DataTable.config
