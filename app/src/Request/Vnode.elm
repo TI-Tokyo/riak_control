@@ -38,11 +38,7 @@ import Json.Decode
 
 getVnodeStatus : Model -> String -> Cmd Msg
 getVnodeStatus m a =
-    let
-        -- a = m.s.vnodeStatusShownForNode
-        b = Vnode.All
-    in
-        actionRequest m (Vnode.GetVnodeStatusAction a b) GotVnodeStatus
+    actionRequest m (Vnode.GetVnodeStatusAction a Vnode.All) GotVnodeStatus
 
 actionRequest m req msg =
     Url.Builder.crossOrigin m.c.riakNodeUrl [ "vnode" ] []
