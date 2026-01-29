@@ -109,4 +109,7 @@ init f =
 
 subscriptions : Model -> Sub Msg
 subscriptions m =
-    Time.every m.c.refreshEvery Tick
+    if m.s.activeTab == Msg.Cluster then
+        Time.every m.c.refreshEvery Tick
+    else
+        Sub.none
