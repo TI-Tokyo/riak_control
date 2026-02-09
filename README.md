@@ -1,5 +1,7 @@
 # Riak Control
 
+Announcement and discussions in https://github.com/OpenRiak/riak/discussions/18.
+
 **Riak Control** is a standalone companion application for OpenRiak.
 It provides a web-based UI for:
 
