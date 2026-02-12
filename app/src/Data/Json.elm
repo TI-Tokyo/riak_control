@@ -264,24 +264,27 @@ specificBackendStatus =
 
 leveledStatus =
     succeed Vnode.LeveledStatus
-        |> required "ledger_cache_size" (nullable int)
-        |> required "n_active_journal_files" (nullable int)
-        |> required "avg_compaction_score" (nullable float)
-        |> required "level_files_count" (nullable (list countByLevel))
-        |> required "penciller_inmem_cache_size" (nullable int)
-        |> required "penciller_work_backlog_status" (nullable pencillerWorkBacklogStatus)
-        |> required "penciller_last_merge_time" (nullable string)
-        |> required "journal_last_compaction_time" (nullable string)
-        |> required "journal_last_compaction_result" (nullable journalCompactionResult)
-        |> required "get_sample_count" (nullable int)
+        |> required "fetch_count_by_level" (nullable fetchCountByLevel)
         |> required "get_body_time" (nullable int)
-        |> required "head_sample_count" (nullable int)
+        |> required "get_sample_count" (nullable int)
         |> required "head_rsp_time" (nullable int)
-        |> required "put_sample_count" (nullable int)
-        |> required "put_prep_time" (nullable int)
+        |> required "head_sample_count" (nullable int)
+        |> required "journal_last_compaction_duration" (nullable int)
+        |> required "journal_last_compaction_max" (nullable float)
+        |> required "journal_last_compaction_mean" (nullable float)
+        |> required "journal_last_compaction_runlength" (nullable int)
+        |> required "journal_last_compaction_score" (nullable float)
+        |> required "journal_last_compaction_time" (nullable string)
+        |> required "ledger_cache_size" (nullable int)
+        |> required "level_files_count" (nullable (list countByLevel))
+        |> required "n_active_journal_files" (nullable int)
+        |> required "penciller_inmem_cache_size" (nullable int)
+        |> required "penciller_last_merge_time" (nullable string)
+        |> required "penciller_work_backlog_status" (nullable pencillerWorkBacklogStatus)
         |> required "put_ink_time" (nullable int)
         |> required "put_mem_time" (nullable int)
-        |> required "fetch_count_by_level" (nullable fetchCountByLevel)
+        |> required "put_prep_time" (nullable int)
+        |> required "put_sample_count" (nullable int)
 
 countByLevel =
     succeed Vnode.CountByLevel
@@ -293,11 +296,6 @@ pencillerWorkBacklogStatus =
         |> required "work_items" int
         |> required "backlog" bool
         |> required "l0_full" bool
-
-journalCompactionResult =
-    succeed Vnode.JournalCompactionResult
-        |> required "files_compacted" int
-        |> required "score" float
 
 fetchCountByLevel =
     succeed Vnode.FetchCountByLevel

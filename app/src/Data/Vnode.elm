@@ -43,26 +43,27 @@ type alias LeveldbStatus =
     {}
 
 type alias LeveledStatus =
-    { ledgerCacheSize : Maybe Int
-    , nActiveJournalFiles : Maybe Int
-    , avgCompactionScore :Maybe Float
-    , levelFilesCount : Maybe (List CountByLevel)
-    , pencillerInmemCacheSize : Maybe Int
-    , pencillerWorkBacklogStatus : Maybe PencillerWorkBacklogStatus
-    , pencillerLastMergeTime : Maybe String -- Time.Posix
-    , journalLastCompactionTime : Maybe String -- Time.Posix
-    , journalLastCompactionResult : Maybe JournalCompactionResult
-
-    , getSampleCount : Maybe Int
+    { fetchCountByLevel : Maybe FetchCountByLevel
     , getBodyTime : Maybe Int
-    , headSampleCount : Maybe Int
+    , getSampleCount : Maybe Int
     , headRspTime : Maybe Int
-    , putSampleCount : Maybe Int
-    , putPrepTime : Maybe Int
+    , headSampleCount : Maybe Int
+    , journalLastCompactionDuration : Maybe Int
+    , journalLastCompactionMax : Maybe Float
+    , journalLastCompactionMean : Maybe Float
+    , journalLastCompactionRunlength : Maybe Int
+    , journalLastCompactionScore : Maybe Float
+    , journalLastCompactionTime : Maybe String
+    , ledgerCacheSize : Maybe Int
+    , levelFilesCount : Maybe (List CountByLevel)
+    , nActiveJournalFiles : Maybe Int
+    , pencillerInmemCacheSize : Maybe Int
+    , pencillerLastMergeTime : Maybe String -- Time.Posix
+    , pencillerWorkBacklogStatus : Maybe PencillerWorkBacklogStatus
     , putInkTime : Maybe Int
     , putMemTime : Maybe Int
-
-    , fetchCountByLevel : Maybe FetchCountByLevel
+    , putSampleCount : Maybe Int
+    , putPrepTime : Maybe Int
     }
 
 type alias CountByLevel =
@@ -74,11 +75,6 @@ type alias PencillerWorkBacklogStatus =
     { workItems : Int
     , backlog : Bool
     , l0Full : Bool
-    }
-
-type alias JournalCompactionResult =
-    { filesCompacted : Int
-    , score : Float
     }
 
 type alias FetchCountByLevel =

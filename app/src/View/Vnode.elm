@@ -60,7 +60,7 @@ makeProperContent m =
                            , cell vnodeId
                            ]
                        else
-                           [ cellr idx
+                           [ cellr (ellipsize idx)
                            ] ++ (backendStatusToCells m.s.vnodeStatusExtended backendStatus.status) ++
                            [ cellr (String.fromInt counter)
                            ])
@@ -95,23 +95,35 @@ backendStatusToCells extended s =
         Vnode.Leveled a ->
             if extended then
                 [ cellr (itoa a.ledgerCacheSize)
-                , cellr (itoa a.nActiveJournalFiles)
-                , cellr (ftoa a.avgCompactionScore)
                 , cell (countByLevelToStr a.levelFilesCount)
+
                 , cellr (itoa a.pencillerInmemCacheSize)
                 , cell (pencillerWorkBacklogStatusToStr a.pencillerWorkBacklogStatus)
                 , cell (Maybe.withDefault "n/a" a.pencillerLastMergeTime)
-                , cell (Maybe.withDefault "n/a" a.journalLastCompactionTime)
-                , cell (journalLastCompactionResultToStr a.journalLastCompactionResult)
-                , cell (String.join "/" (List.filterMap itoa2 [a.getSampleCount, a.headSampleCount, a.putSampleCount]))
+
+                , cellr (itoa a.nActiveJournalFiles)
+                , cellr (Maybe.withDefault "n/a" a.journalLastCompactionTime)
+                , cellr (itoa a.journalLastCompactionDuration)
+                , cellr (ftoa a.journalLastCompactionScore)
+                , cellr (ftoa a.journalLastCompactionMean)
+                , cellr (ftoa a.journalLastCompactionMax)
+                , cellr (itoa a.journalLastCompactionRunlength)
+
                 , cellr (fetchCountByLevelToStr a.fetchCountByLevel)
+                , cell (String.join "/" (List.filterMap itoa2 [a.getSampleCount, a.headSampleCount, a.putSampleCount]))
                 ]
             else
                 [ cellr (itoa a.ledgerCacheSize)
-                , cellr (itoa a.nActiveJournalFiles)
                 , cell (countByLevelToStr a.levelFilesCount)
+
+                , cellr (itoa a.pencillerInmemCacheSize)
                 , cell (Maybe.withDefault "n/a" a.pencillerLastMergeTime)
-                , cell (journalLastCompactionResultToStr a.journalLastCompactionResult)
+
+                , cellr (itoa a.nActiveJournalFiles)
+                , cellr (Maybe.withDefault "n/a" a.journalLastCompactionTime)
+                , cellr (ftoa a.journalLastCompactionScore)
+                , cellr (ftoa a.journalLastCompactionMean)
+
                 , cell (String.join "/" (List.filterMap itoa2 [a.getSampleCount, a.headSampleCount, a.putSampleCount]))
                 ]
         Vnode.Leveldb _ ->
@@ -174,23 +186,32 @@ backendStatusToColName extended s =
         "riak_kv_leveled_backend" ->
             if extended then
                 [ cell "Ledger Cache"
-                , cell "# Active Journal Files"
-                , cell "Avg Compaction Score"
-                , cell "Level Files Count"
-                , cell "Penciller Inmem Cache"
-                , cell "Penciller Work Backlog Status"
-                , cell "Penciller Last Merge Time"
-                , cell "Journal Last Compaction Time"
-                , cell "Journal Last Compaction Result"
+                , cell "Level Files"
+
+                , cell "Pcl Cache"
+                , cell "Pcl Backlog"
+                , cell "Pcl Last Merge"
+
+                , cell "# Jnl Files"
+                , cell "Jnl Last Cmp Time"
+                , cell "Jnl Last Cmp Dur"
+                , cell "Jnl Last Cmp Score"
+                , cell "Jnl Last Cmp Max"
+                , cell "Jnl Last Cmp Avg"
+                , cell "Jnl Last Cmp Runlen"
+
+                , cell "Fetch Counts"
                 , cell "GET/HEAD/PUT Count"
-                , cell "Recent Fetch Count by Level"
                 ]
             else
                 [ cell "Ledger Cache"
-                , cell "# Active Journal Files"
-                , cell "Level Files Count"
-                , cell "Penciller Last Merge Time"
-                , cell "Journal Last Compaction Result"
+                , cell "Level Files"
+                , cell "Pcl Cache"
+                , cell "Pcl Last Merge"
+                , cell "# Jnl Files"
+                , cell "Jnl Last Cmp Time"
+                , cell "Jnl Last Cmp Score"
+                , cell "Jnl Last Cmp Avg"
                 , cell "GET/HEAD/PUT Count"
                 ]
         _ ->
@@ -271,3 +292,12 @@ humanReadable a =
         "riak_kv_leveldb_backend" -> "leveldb"
         "riak_kv_bitcask_backend" -> "bitcask"
         _ -> a
+
+
+ellipsize a =
+    if a == "0" then a else
+        let
+            l = String.left 4 a
+            r = String.right 4 a
+        in
+            l ++ ".." ++ r
