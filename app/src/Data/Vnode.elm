@@ -20,6 +20,8 @@
 
 module Data.Vnode exposing (..)
 
+import Dict as Dict
+
 type alias VnodeStatus =
     { idx : String
     , backendStatus : BackendStatus
@@ -30,24 +32,68 @@ type alias VnodeStatus =
     , counterLeasing : Bool
     }
 
-type alias BackendStatus =
-    { mod : String
-    , status : SpecificBackendStatus
-    }
-
-type SpecificBackendStatus
+type BackendStatus
     = Leveled LeveledStatus
     | Leveldb LeveldbStatus
+    | Memory MemoryStatus
+    | Bitcask BitcaskStatus
+    | Multi MultiStatus
+    | PrefixMulti MultiStatus
 
 type alias LeveldbStatus =
-    {}
+    { compactions : Maybe Int
+    , filesSizeMb : Maybe Int
+    , fixedIndexes : Bool
+    , level : Maybe Int
+    , readBlockError : String
+    , readMb : Maybe Int
+    , time : Maybe Int
+    , writeMb : Maybe Int
+    }
+
+type alias MemoryStatus =
+    { putObjSize : Int
+    , usedMemory : Int
+    , dataTableStatus : EtsTableStatus
+    , indexTableStatus : EtsTableStatus
+    }
+
+type alias EtsTableStatus =
+    { compressed : Bool
+    , decentralizedCounters : Bool
+    , heir : String
+    , id : String
+    , keypos : Int
+    , memory : Int
+    , name : String
+    , namedTable : Bool
+    , node : String
+    , owner : String
+    , protection : String
+    , readConcurrency : Bool
+    , size : Int
+    , type_ : String
+    , writeConcurrency : Bool
+    }
+
+type alias BitcaskStatus =
+    { keyCount : Int
+    , status : List BitcaskFileStatus
+    }
+
+type alias BitcaskFileStatus =
+    { filename : String
+    , fragmented : Bool
+    , deadBytes : Int
+    , totalBytes : Int
+    }
 
 type alias LeveledStatus =
     { fetchCountByLevel : Maybe FetchCountByLevel
     , getBodyTime : Maybe Int
-    , getSampleCount : Maybe Int
+    , getSampleCount : Int
     , headRspTime : Maybe Int
-    , headSampleCount : Maybe Int
+    , headSampleCount : Int
     , journalLastCompactionDuration : Maybe Int
     , journalLastCompactionMax : Maybe Float
     , journalLastCompactionMean : Maybe Float
@@ -55,15 +101,15 @@ type alias LeveledStatus =
     , journalLastCompactionScore : Maybe Float
     , journalLastCompactionTime : Maybe String
     , ledgerCacheSize : Maybe Int
-    , levelFilesCount : Maybe (List CountByLevel)
-    , nActiveJournalFiles : Maybe Int
+    , levelFilesCount : List CountByLevel
+    , nActiveJournalFiles : Int
     , pencillerInmemCacheSize : Maybe Int
     , pencillerLastMergeTime : Maybe String -- Time.Posix
     , pencillerWorkBacklogStatus : Maybe PencillerWorkBacklogStatus
     , putInkTime : Maybe Int
     , putMemTime : Maybe Int
-    , putSampleCount : Maybe Int
     , putPrepTime : Maybe Int
+    , putSampleCount : Int
     }
 
 type alias CountByLevel =
@@ -91,6 +137,12 @@ type alias CTStat =
     { count : Int
     , time : Int
     }
+
+type alias MultiStatus =
+    { backendStatus : Dict.Dict String BackendStatus
+    }
+
+
 
 dummyFetchCountByLevel =
     { notFound = {count = -1, time = -1}

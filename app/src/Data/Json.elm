@@ -255,20 +255,77 @@ vnodeStatus =
         |> required "counter_leasing" bool
 
 backendStatus =
-    succeed Vnode.BackendStatus
-        |> required "mod" string
-        |> required "status" specificBackendStatus
+    oneOf [ map Vnode.Bitcask bitcaskStatus
+          , map Vnode.Leveled leveledStatus
+          , map Vnode.Leveldb leveldbStatus
+          , map Vnode.Memory memoryStatus
+          , map Vnode.Multi multiStatus
+          , map Vnode.PrefixMulti multiStatus
+          ]
 
-specificBackendStatus =
-    oneOf [ map Vnode.Leveled leveledStatus ]
+-- bitcask
+
+bitcaskStatus =
+    succeed Vnode.BitcaskStatus
+        |> required "key_count" int
+        |> required "status" (list bitcaskFileStatus)
+
+bitcaskFileStatus =
+    succeed Vnode.BitcaskFileStatus
+        |> required "filename" string
+        |> required "fragmented" bool
+        |> required "dead_bytes" int
+        |> required "total_bytes" int
+
+-- leveldb
+
+leveldbStatus =
+    succeed Vnode.LeveldbStatus
+        |> required "compactions" (nullable int)
+        |> required "files_size_mb" (nullable int)
+        |> required "fixed_indexes" bool
+        |> required "level" (nullable int)
+        |> required "read_block_error" string
+        |> required "read_mb" (nullable int)
+        |> required "time" (nullable int)
+        |> required "write_mb" (nullable int)
+
+-- memory
+
+memoryStatus =
+    succeed Vnode.MemoryStatus
+        |> required "put_obj_size" int
+        |> required "used_memory" int
+        |> required "data_table_status" etsTableStatus
+        |> required "index_table_status" etsTableStatus
+
+etsTableStatus =
+    succeed Vnode.EtsTableStatus
+        |> required "compressed" bool
+        |> required "decentralized_counters" bool
+        |> required "heir" string
+        |> required "id" string
+        |> required "keypos" int
+        |> required "memory" int
+        |> required "name" string
+        |> required "named_table" bool
+        |> required "node" string
+        |> required "owner" string
+        |> required "protection" string
+        |> required "read_concurrency" bool
+        |> required "size" int
+        |> required "type" string
+        |> required "write_concurrency" bool
+
+-- leveled
 
 leveledStatus =
     succeed Vnode.LeveledStatus
         |> required "fetch_count_by_level" (nullable fetchCountByLevel)
         |> required "get_body_time" (nullable int)
-        |> required "get_sample_count" (nullable int)
+        |> required "get_sample_count" int
         |> required "head_rsp_time" (nullable int)
-        |> required "head_sample_count" (nullable int)
+        |> required "head_sample_count" int
         |> required "journal_last_compaction_duration" (nullable int)
         |> required "journal_last_compaction_max" (nullable float)
         |> required "journal_last_compaction_mean" (nullable float)
@@ -276,15 +333,15 @@ leveledStatus =
         |> required "journal_last_compaction_score" (nullable float)
         |> required "journal_last_compaction_time" (nullable string)
         |> required "ledger_cache_size" (nullable int)
-        |> required "level_files_count" (nullable (list countByLevel))
-        |> required "n_active_journal_files" (nullable int)
+        |> required "level_files_count" (list countByLevel)
+        |> required "n_active_journal_files" int
         |> required "penciller_inmem_cache_size" (nullable int)
         |> required "penciller_last_merge_time" (nullable string)
         |> required "penciller_work_backlog_status" (nullable pencillerWorkBacklogStatus)
         |> required "put_ink_time" (nullable int)
         |> required "put_mem_time" (nullable int)
         |> required "put_prep_time" (nullable int)
-        |> required "put_sample_count" (nullable int)
+        |> required "put_sample_count" int
 
 countByLevel =
     succeed Vnode.CountByLevel
@@ -311,3 +368,16 @@ ctStat =
     succeed Vnode.CTStat
         |> required "count" int
         |> required "time" int
+
+-- multi
+
+multiStatus =
+    succeed Vnode.MultiStatus
+        |> required "backend_status" (dict subBackendStatus)
+
+subBackendStatus =
+    oneOf [ map Vnode.Bitcask bitcaskStatus
+          , map Vnode.Leveled leveledStatus
+          , map Vnode.Leveldb leveldbStatus
+          , map Vnode.Bitcask bitcaskStatus
+          ]

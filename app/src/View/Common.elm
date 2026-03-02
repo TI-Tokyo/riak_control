@@ -22,24 +22,43 @@ module View.Common exposing (..)
 
 type SortByField
     = SortName
+    -- cluster
     | SortMemTotal
     | SortMemErlang
     | SortMemUsed
     | SortUptime
+    -- ttaae
     | SortTtaaeTreeStatus
     | SortTtaaeTreeNextRebuild
     | SortTtaaeTreeLastRebuild
     | SortTtaaeTreeTotalDirtySegments
-    | SortVnodeBEStatusLedgerCacheSize
-    | SortVnodeBEStatusNActiveJournalFiles
-    | SortVnodeBEStatusPencillerLastMergeTime
-    | SortVnodeBEStatusJournalLastCompactionTime
-    | SortVnodeBEStatusLevelFilesCountTotal
-    | SortVnodeBEStatusGetCount
-    | SortVnodeBEStatusHeadCount
-    | SortVnodeBEStatusPutCount
+    -- vnode
     | SortVnodeStatusCounter
     | SortVnodeStatusCounterLease
+    -- vnode: leveled
+    | SortVnodeLeveledLedgerCacheSize
+    | SortVnodeLeveledNActiveJournalFiles
+    | SortVnodeLeveledPencillerLastMergeTime
+    | SortVnodeLeveledJournalLastCompactionTime
+    | SortVnodeLeveledLevelFilesCountTotal
+    | SortVnodeLeveledGetCount
+    | SortVnodeLeveledHeadCount
+    | SortVnodeLeveledPutCount
+    -- vnode: leveldb
+    | SortVnodeLeveldbFilesize
+    | SortVnodeLeveldbCompactions
+    | SortVnodeLeveldbReadMb
+    | SortVnodeLeveldbWriteMb
+    -- vnode: bitcask
+    | SortVnodeBitcaskKeycount
+    | SortVnodeBitcaskDeadbytes
+    | SortVnodeBitcaskTotalbytes
+    -- vnode: memory
+    | SortVnodeMemoryUsedMemory
+    | SortVnodeMemoryPutObjSize
+    | SortVnodeMemoryDataMemory
+    | SortVnodeMemoryIndexMemory
+    --
     | SortUnsorted
 
 type alias SortOrder = Bool
@@ -58,14 +77,25 @@ selectSortByString a =
         SortTtaaeTreeNextRebuild -> "Next rebuild"
         SortTtaaeTreeLastRebuild -> "Last rebuild"
         SortTtaaeTreeTotalDirtySegments -> "Total dirty segments"
-        SortVnodeBEStatusLedgerCacheSize -> "Ledger cache (# keys)"
-        SortVnodeBEStatusNActiveJournalFiles -> "# active journal files"
-        SortVnodeBEStatusPencillerLastMergeTime -> "Penciller last merge time"
-        SortVnodeBEStatusJournalLastCompactionTime -> "Journal last compaction time"
-        SortVnodeBEStatusLevelFilesCountTotal -> "Level files count (Total)"
-        SortVnodeBEStatusGetCount -> "GET count"
-        SortVnodeBEStatusHeadCount -> "HEAD count"
-        SortVnodeBEStatusPutCount -> "PUT count"
+        SortVnodeLeveledLedgerCacheSize -> "Ledger cache (# keys)"
+        SortVnodeLeveledNActiveJournalFiles -> "# active journal files"
+        SortVnodeLeveledPencillerLastMergeTime -> "Penciller last merge time"
+        SortVnodeLeveledJournalLastCompactionTime -> "Journal last compaction time"
+        SortVnodeLeveledLevelFilesCountTotal -> "Level files count (Total)"
+        SortVnodeLeveledGetCount -> "GET count"
+        SortVnodeLeveledHeadCount -> "HEAD count"
+        SortVnodeLeveledPutCount -> "PUT count"
+        SortVnodeLeveldbFilesize -> "File size"
+        SortVnodeLeveldbCompactions -> "Compactions"
+        SortVnodeLeveldbReadMb -> "Read MB"
+        SortVnodeLeveldbWriteMb -> "Write MB"
+        SortVnodeBitcaskKeycount -> "Key count"
+        SortVnodeBitcaskDeadbytes -> "Dead bytes"
+        SortVnodeBitcaskTotalbytes -> "Total bytes"
+        SortVnodeMemoryUsedMemory -> "Used memory"
+        SortVnodeMemoryPutObjSize -> "Put obj size"
+        SortVnodeMemoryDataMemory -> "Data Memory"
+        SortVnodeMemoryIndexMemory -> "Index Memory"
         SortVnodeStatusCounter -> "Counter"
         SortVnodeStatusCounterLease -> "Counter lease"
         SortUnsorted -> "None"
@@ -81,14 +111,25 @@ stringToSortBy a =
         "Next rebuild" -> SortTtaaeTreeNextRebuild
         "Last rebuild" -> SortTtaaeTreeLastRebuild
         "Total dirty segments" -> SortTtaaeTreeTotalDirtySegments
-        "Ledger cache (# keys)" -> SortVnodeBEStatusLedgerCacheSize
-        "# active journal files" -> SortVnodeBEStatusNActiveJournalFiles
-        "Penciller last merge time" -> SortVnodeBEStatusPencillerLastMergeTime
-        "Journal last compaction time" -> SortVnodeBEStatusJournalLastCompactionTime
-        "Level files count (Total)" -> SortVnodeBEStatusLevelFilesCountTotal
-        "GET count" -> SortVnodeBEStatusGetCount
-        "HEAD count" -> SortVnodeBEStatusHeadCount
-        "PUT count" -> SortVnodeBEStatusPutCount
+        "Ledger cache (# keys)" -> SortVnodeLeveledLedgerCacheSize
+        "# active journal files" -> SortVnodeLeveledNActiveJournalFiles
+        "Penciller last merge time" -> SortVnodeLeveledPencillerLastMergeTime
+        "Journal last compaction time" -> SortVnodeLeveledJournalLastCompactionTime
+        "Level files count (Total)" -> SortVnodeLeveledLevelFilesCountTotal
+        "GET count" -> SortVnodeLeveledGetCount
+        "HEAD count" -> SortVnodeLeveledHeadCount
+        "PUT count" -> SortVnodeLeveledPutCount
+        "File size" -> SortVnodeLeveldbFilesize
+        "Compactions" -> SortVnodeLeveldbCompactions
+        "Read MB" -> SortVnodeLeveldbReadMb
+        "Write MB" -> SortVnodeLeveldbWriteMb
+        "Key count" -> SortVnodeBitcaskKeycount
+        "Dead bytes" -> SortVnodeBitcaskDeadbytes
+        "Total bytes" -> SortVnodeBitcaskTotalbytes
+        "Used memory" -> SortVnodeMemoryUsedMemory
+        "Put obj size" -> SortVnodeMemoryPutObjSize
+        "Data Memory" -> SortVnodeMemoryDataMemory
+        "Index Memory" -> SortVnodeMemoryIndexMemory
         "Counter" -> SortVnodeStatusCounter
         "Counter lease" -> SortVnodeStatusCounterLease
         _ -> SortUnsorted

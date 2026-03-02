@@ -26,6 +26,16 @@ import Iso8601
 import Regex
 import Json.Print
 
+
+cmp a b =
+    if a > b then
+        GT
+    else
+        if a < b then
+             LT
+         else
+             EQ
+
 headAndTail l defaultHd =
     case l of
         a0 :: aa ->

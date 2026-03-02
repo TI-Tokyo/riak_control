@@ -27,6 +27,7 @@ import Msg exposing (Msg(..))
 import View.Common exposing (SortByField(..))
 import View.Shared
 import View.Style
+import View.Vnode exposing (backendString)
 import Util
 
 import Html exposing (Html, text, div, img)
@@ -70,17 +71,7 @@ makeFilterControls m =
               (List.map
                    (\i -> let j = View.Common.selectSortByString i in
                           SelectItem.selectItem (SelectItem.config {value = j}) j)
-                   [ SortVnodeBEStatusLedgerCacheSize
-                   , SortVnodeBEStatusNActiveJournalFiles
-                   , SortVnodeBEStatusPencillerLastMergeTime
-                   , SortVnodeBEStatusJournalLastCompactionTime
-                   , SortVnodeBEStatusLevelFilesCountTotal
-                   , SortVnodeBEStatusGetCount
-                   , SortVnodeBEStatusHeadCount
-                   , SortVnodeBEStatusPutCount
-                   , SortVnodeStatusCounter
-                   , SortVnodeStatusCounterLease
-                   ])
+                   (backendString m |> sortFieldsByBackend))
         , Button.text (Button.config |> Button.setOnClick VnodeStatusSortOrderChanged)
             (View.Common.sortOrderText m.s.vnodeStatusSortOrder)
         , FormField.formField
@@ -96,3 +87,35 @@ makeFilterControls m =
                     )
               ]
         ]
+
+sortFieldsByBackend b =
+    case b of
+        "bitcask" ->
+            [ SortVnodeBitcaskKeycount
+            , SortVnodeBitcaskDeadbytes
+            , SortVnodeBitcaskTotalbytes
+            ]
+        "leveled" ->
+            [ SortVnodeLeveledLedgerCacheSize
+            , SortVnodeLeveledNActiveJournalFiles
+            , SortVnodeLeveledPencillerLastMergeTime
+            , SortVnodeLeveledJournalLastCompactionTime
+            , SortVnodeLeveledLevelFilesCountTotal
+            , SortVnodeLeveledGetCount
+            , SortVnodeLeveledHeadCount
+            , SortVnodeLeveledPutCount
+            ]
+        "leveldb" ->
+            [ SortVnodeLeveldbFilesize
+            , SortVnodeLeveldbCompactions
+            , SortVnodeLeveldbReadMb
+            , SortVnodeLeveldbWriteMb
+            ]
+        "memory" ->
+            [ SortVnodeMemoryUsedMemory
+            , SortVnodeMemoryPutObjSize
+            , SortVnodeMemoryDataMemory
+            , SortVnodeMemoryIndexMemory
+            ]
+        _ ->
+            []
