@@ -64,3 +64,7 @@ compareByTreeStatus f a b =
     case (a |> f |> ttaeTreeStatusToStr) < (b |> f |> ttaeTreeStatusToStr) of
         True -> LT
         False -> GT
+
+
+type Request
+    = GetTtaaeStatusAction String

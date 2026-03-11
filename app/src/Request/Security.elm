@@ -135,7 +135,7 @@ deleteGroupGrant m a b =
              (Maybe.withDefault "--" m.s.openEditGrantsDialogFor) a b)
 
 securityRequest m expect a =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ "security"  ] []
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "ctl"  ] []
         |> HttpBuilder.post
         |> HttpBuilder.withHeaders (stdHeaders m)
         |> HttpBuilder.withExpect expect
@@ -154,41 +154,41 @@ securityActionEncoder action =
     case action of
         Data.Security.ListUsers ->
             Json.Encode.object
-                [ ("action", string "ListUsers")
+                [ ("action", string "SecurityListUsers")
                 , ("params", Json.Encode.object [])
                 ]
 
         Data.Security.UserAdd name options ->
             Json.Encode.object
-                [ ("action", string "CreateUser")
+                [ ("action", string "SecurityCreateUser")
                 , ("params", Json.Encode.object [ ("name", string name)
                                                 , ("options", dict identity string options)
                                                 ])
                 ]
         Data.Security.UserMod name options ->
             Json.Encode.object
-                [ ("action", string "UpdateUser")
+                [ ("action", string "SecurityUpdateUser")
                 , ("params", Json.Encode.object [ ("name", string name)
                                                 , ("options", dict identity string options)
                                                 ])
                 ]
         Data.Security.UserDel name ->
             Json.Encode.object
-                [ ("action", string "DeleteUser")
+                [ ("action", string "SecurityDeleteUser")
                 , ("params", Json.Encode.object [ ("name", string name)
                                                 ])
                 ]
 
         Data.Security.AddUserGroup u g ->
             Json.Encode.object
-                [ ("action", string "AddUserGroup")
+                [ ("action", string "SecurityAddUserGroup")
                 , ("params", Json.Encode.object [ ("user", string u)
                                                 , ("group", string g)
                                                 ])
                 ]
         Data.Security.DeleteUserGroup u g ->
             Json.Encode.object
-                [ ("action", string "DeleteUserGroup")
+                [ ("action", string "SecurityDeleteUserGroup")
                 , ("params", Json.Encode.object [ ("user", string u)
                                                 , ("group", string g)
                                                 ])
@@ -196,7 +196,7 @@ securityActionEncoder action =
 
         Data.Security.AddUserGrant u a b ->
             Json.Encode.object
-                [ ("action", string "AddUserGrant")
+                [ ("action", string "SecurityAddUserGrant")
                 , ("params", Json.Encode.object [ ("user", string u)
                                                 , ("permission", string a)
                                                 , ("scope", string b)
@@ -204,7 +204,7 @@ securityActionEncoder action =
                 ]
         Data.Security.DeleteUserGrant u a b ->
             Json.Encode.object
-                [ ("action", string "DeleteUserGrant")
+                [ ("action", string "SecurityDeleteUserGrant")
                 , ("params", Json.Encode.object [ ("user", string u)
                                                 , ("permission", string a)
                                                 , ("scope", string b)
@@ -213,33 +213,33 @@ securityActionEncoder action =
 
         Data.Security.ListGroups ->
             Json.Encode.object
-                [ ("action", string "ListGroups")
+                [ ("action", string "SecurityListGroups")
                 , ("params", Json.Encode.object [])
                 ]
         Data.Security.GroupAdd name options ->
             Json.Encode.object
-                [ ("action", string "CreateGroup")
+                [ ("action", string "SecurityCreateGroup")
                 , ("params", Json.Encode.object [ ("name", string name)
                                                 , ("options", dict identity string options)
                                                 ])
                 ]
         Data.Security.GroupMod name options ->
             Json.Encode.object
-                [ ("action", string "UpdateGroup")
+                [ ("action", string "SecurityUpdateGroup")
                 , ("params", Json.Encode.object [ ("name", string name)
                                                 , ("options", dict identity string options)
                                                 ])
                 ]
         Data.Security.GroupDel name ->
             Json.Encode.object
-                [ ("action", string "DeleteGroup")
+                [ ("action", string "SecurityDeleteGroup")
                 , ("params", Json.Encode.object [ ("name", string name)
                                                 ])
                 ]
 
         Data.Security.AddGroupGrant u a b ->
             Json.Encode.object
-                [ ("action", string "AddGroupGrant")
+                [ ("action", string "SecurityAddGroupGrant")
                 , ("params", Json.Encode.object [ ("group", string u)
                                                 , ("permission", string a)
                                                 , ("scope", string b)
@@ -247,7 +247,7 @@ securityActionEncoder action =
                 ]
         Data.Security.DeleteGroupGrant u a b ->
             Json.Encode.object
-                [ ("action", string "DeleteGroupGrant")
+                [ ("action", string "SecurityDeleteGroupGrant")
                 , ("params", Json.Encode.object [ ("group", string u)
                                                 , ("permission", string a)
                                                 , ("scope", string b)
@@ -256,6 +256,6 @@ securityActionEncoder action =
 
         Data.Security.ListPermissions ->
             Json.Encode.object
-                [ ("action", string "ListPermissions")
+                [ ("action", string "SecurityListPermissions")
                 , ("params", Json.Encode.object [])
                 ]

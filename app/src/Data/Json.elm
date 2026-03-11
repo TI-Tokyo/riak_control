@@ -24,10 +24,10 @@ module Data.Json exposing
     , decodeSshSession
     , decodeScriptOutput
 
-    , decodeServerInfo
+    , decodeVersionInfo
 
     , decodeCluster
-    , decodeClusterActionResult
+    , decodeClusterPlanActionResult
 
     , decodeNodeConfig
 
@@ -36,21 +36,21 @@ module Data.Json exposing
 
     , decodePermissionList
 
-    , decodeTtaaeReport
+    , decodeTtaaeStatus
 
     , decodeVnodeStatusList
     )
 
 import Data.SshOps exposing (..)
-import Data.Server exposing (..)
+import Data.VersionInfo exposing (..)
 import Data.Cluster exposing (..)
 import Data.Security exposing (..)
 import Data.Ttaae as Ttaae
 import Data.Vnode as Vnode
 import Util
 
-import Json.Decode as D exposing (succeed, list, string, int, float, bool, map, dict, nullable, oneOf, null)
-import Json.Decode.Pipeline exposing (required, optional, hardcoded)
+import Json.Decode as D exposing (succeed, list, string, int, float, bool, map, dict, nullable, oneOf, null, at)
+import Json.Decode.Pipeline exposing (required, requiredAt, optional, hardcoded, custom)
 import Json.Encode
 import Iso8601
 import Time
@@ -101,14 +101,15 @@ decodeScriptOutput =
 
 -- Connection ------------------------------
 
-decodeServerInfo : D.Decoder ServerInfo
-decodeServerInfo =
-    succeed ServerInfo
-        |> required "riak_version" string
-        |> required "system_version" string
-        |> optional "nodename" string ""
-        |> required "uptime" int
-        |> required "uptime_str" string
+decodeVersionInfo : D.Decoder VersionInfo
+decodeVersionInfo =
+    succeed VersionInfo
+        |> requiredAt ["result", "riak_version"] string
+        |> requiredAt ["result", "system_version"] string
+        |> requiredAt ["result", "nodename"] string
+        |> requiredAt ["result", "uptime"] int
+        |> requiredAt ["result", "uptime_str"] string
+        |> requiredAt ["result", "https_listeners"] (dict string)
 
 
 -- Cluster ------------------------------
@@ -116,23 +117,23 @@ decodeServerInfo =
 decodeCluster : D.Decoder Cluster
 decodeCluster =
     succeed Cluster
-        |> required "current_cluster" (list currentMember)
-        |> required "staged_changes" (list stagedChange)
-        |> required "final_cluster" (list finalMember)
-        |> required "transfers" (list transferStats)
-        |> required "down_nodes" (list string)
+        |> requiredAt ["result", "current_cluster"] (list currentMember)
+        |> requiredAt ["result", "staged_changes"] (list stagedChange)
+        |> requiredAt ["result", "final_cluster"] (list finalMember)
+        |> requiredAt ["result", "transfers"] (list transferStats)
+        |> requiredAt ["result", "down_nodes"] (list string)
 
 
-decodeClusterActionResult : D.Decoder ActionResult
-decodeClusterActionResult =
-    succeed ActionResult
+decodeClusterPlanActionResult : D.Decoder ClusterPlanActionResult
+decodeClusterPlanActionResult =
+    succeed ClusterPlanActionResult
         |> required "result" string
 
 currentMember =
     succeed CurrentMember
         |> required "name" string
         |> required "status" currentMemberStatus
-        |> optional "system_info" decodeServerInfo Data.Server.emptyServerInfo
+        |> optional "system_info" decodeSubVersionInfo Data.VersionInfo.emptySubVersionInfo
         |> required "is_me" bool
         |> required "reachable" bool
         |> optional "services" (list string) []
@@ -145,6 +146,13 @@ currentMember =
         |> optional "claimant" bool False
         |> optional "staged_action" currentMemberStagedAction StagedNoChange
         |> optional "replacement" (nullable string) Nothing
+
+decodeSubVersionInfo =
+    succeed SubVersionInfo
+        |> required "riak_version" string
+        |> required "system_version" string
+        |> required "uptime" int
+        |> required "uptime_str" string
 
 currentMemberStatus =
     map Data.Cluster.currentMemberStatusFromStr string
@@ -188,7 +196,7 @@ decodeNodeConfig =
 
 decodeUserList : D.Decoder (List User)
 decodeUserList =
-    list user
+    at ["result"] (list user)
 
 user =
     succeed User
@@ -201,7 +209,7 @@ user =
 
 decodeGroupList : D.Decoder (List Group)
 decodeGroupList =
-    list group
+    at ["result"] (list group)
 
 group =
     succeed Group
@@ -217,12 +225,12 @@ grant =
 
 decodePermissionList : D.Decoder (List String)
 decodePermissionList =
-    list string
+    at ["result"] (list string)
 
 
 -- TictacAAE
-decodeTtaaeReport : D.Decoder (Dict String (List Ttaae.TtaaeTree))
-decodeTtaaeReport =
+decodeTtaaeStatus : D.Decoder (Dict String (List Ttaae.TtaaeTree))
+decodeTtaaeStatus =
     dict (list ttaaeTree)
 
 ttaaeTree =
@@ -242,7 +250,7 @@ ttaeTreeStatus =
 
 decodeVnodeStatusList : D.Decoder (List Vnode.VnodeStatus)
 decodeVnodeStatusList =
-    list vnodeStatus
+    at ["result"] (list vnodeStatus)
 
 vnodeStatus =
     succeed Vnode.VnodeStatus

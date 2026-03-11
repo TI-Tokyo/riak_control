@@ -74,6 +74,7 @@ init f =
                 , nodename = ""
                 , uptime = 0
                 , uptimeStr = "---"
+                , httpsListeners = Dict.empty
                 }
                 (not haveCreds) f.riakNodeUrl f.riakAdminUser f.riakAdminPassword
                 -- Cluster

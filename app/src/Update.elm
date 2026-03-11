@@ -32,7 +32,7 @@ import Request.Security
 import Request.Ttaae
 import Request.Vnode
 import Data.SshOps
-import Data.Server
+import Data.VersionInfo
 import Data.Cluster exposing (emptyCluster)
 import Data.Security exposing (dummyUser, dummyGroup)
 import Data.Ttaae
@@ -332,15 +332,15 @@ update msg m =
             , Cmd.none
             )
 
-        GetServerInfo ->
-            (m, Request.Admin.getServerInfo m)
-        GotServerInfo (Ok a) ->
+        GetVersionInfo ->
+            (m, Request.Admin.getVersionInfo m)
+        GotVersionInfo (Ok a) ->
             let
                 s_ = m.s
             in
-                ({m | s = {s_ | serverInfo = a}}, Cmd.none)
-        GotServerInfo (Err err) ->
-            ( handleHttpError m "Failed to get server info: " err
+                ({m | s = {s_ | versionInfo = a}}, Cmd.none)
+        GotVersionInfo (Err err) ->
+            ( handleHttpError m "Failed to get server version info: " err
             , Cmd.none
             )
 
@@ -380,17 +380,17 @@ update msg m =
         -- Cluster
         ------------------------------
         GetCluster ->
-            (m, Request.Cluster.getCluster m)
+            (m, Request.Cluster.getClusterStatus m)
         GotCluster (Ok a) ->
             let
                 s_ = m.s
-                prevT = s_.ttaaeReportShownForNode
+                prevT = s_.ttaaeStatusShownForNode
                 prevV = s_.vnodeStatusShownForNode
                 thisNode = connectedNode a
             in
                 ( {m | s = {s_ | cluster = a
                                , notReadyMessage = ""
-                               , ttaaeReportShownForNode = if prevT == "" then thisNode else prevT
+                               , ttaaeStatusShownForNode = if prevT == "" then thisNode else prevT
                                , vnodeStatusShownForNode = if prevV == "" then thisNode else prevV
                                }
                   }
@@ -675,9 +675,9 @@ update msg m =
                 claimantLast = (\a b -> if a.claimant then GT else LT)
                 rp = s_.cluster.current
                    |> List.sortWith claimantLast
-                   |> List.map (\{name, systemInfo} -> { name = name
-                                                       , lastUptime = systemInfo.uptime
-                                                       })
+                   |> List.map (\{name, versionInfo} -> { name = name
+                                                        , lastUptime = versionInfo.uptime
+                                                        })
             in
                 ( {m | s = {s_ | nodeBeingRestartedNow = Nothing
                                , rollingRestartQueue = rp}}
@@ -716,7 +716,7 @@ update msg m =
                         Nothing ->
                             -1
                         Just cm ->
-                            cm.systemInfo.uptime
+                            cm.versionInfo.uptime
             in
                 if currentUptime /= -1 && currentUptime < n.lastUptime then
                     (m, perform (\_ -> AttemptNodeRestart) Time.now)
@@ -726,12 +726,12 @@ update msg m =
 
         -- TictacAAE
         ------------------------------
-        GetTtaaeReport ->
-            (m, Request.Ttaae.getReport m m.s.ttaaeReportShownForNode)
-        GotTtaaeReport (Ok r) ->
+        GetTtaaeStatus ->
+            (m, Request.Ttaae.getStatus m m.s.ttaaeStatusShownForNode)
+        GotTtaaeStatus (Ok r) ->
             let s_ = m.s in
-            ({m | s = {s_ | ttaaeReport = r}}, Cmd.none)
-        GotTtaaeReport (Err err) ->
+            ({m | s = {s_ | ttaaeStatus = r}}, Cmd.none)
+        GotTtaaeStatus (Err err) ->
             ( handleHttpError m "Failed to get ttaae report: " err
             , Cmd.none
             )
@@ -745,7 +745,7 @@ update msg m =
 
         TtaaeTreeShowForNodeChanged a ->
             let s_ = m.s in
-            ({m | s = {s_ | ttaaeReportShownForNode = a}}, Request.Ttaae.getReport m a)
+            ({m | s = {s_ | ttaaeStatusShownForNode = a}}, Request.Ttaae.getStatus m a)
 
 
         -- Vnode
@@ -1090,7 +1090,7 @@ update msg m =
         -- system
         Tick a ->
             if m.s.activeTab == Msg.Cluster || m.s.rollingRestartQueue /= [] then
-                ({m | t = a}, Request.Cluster.getCluster m)
+                ({m | t = a}, Request.Cluster.getClusterStatus m)
             else
                 (m, Cmd.none)
         NoOp ->
@@ -1102,18 +1102,18 @@ refreshTabMsg m t =
         Msg.SshOps -> Cmd.batch [ Request.SshOps.listSshStoredKeys m
                                 , Request.SshOps.listSshScriptTemplates m
                                 ]
-        Msg.Connection -> Request.Admin.getServerInfo m
-        Msg.Cluster -> Request.Cluster.getCluster m
+        Msg.Connection -> Request.Admin.getVersionInfo m
+        Msg.Cluster -> Request.Cluster.getClusterStatus m
         Msg.Users -> Request.Security.listUsers m
         Msg.Groups -> Request.Security.listGroups m
-        Msg.Ttaae -> Request.Ttaae.getReport m m.s.ttaaeReportShownForNode
+        Msg.Ttaae -> Request.Ttaae.getStatus m m.s.ttaaeStatusShownForNode
         Msg.Vnode -> Request.Vnode.getVnodeStatus m m.s.vnodeStatusShownForNode
 
 refreshAll m =
     Cmd.batch [ Request.SshOps.listSshStoredKeys m
               , Request.SshOps.listSshScriptTemplates m
-              , Request.Admin.getServerInfo m
-              , Request.Cluster.getCluster m
+              , Request.Admin.getVersionInfo m
+              , Request.Cluster.getClusterStatus m
               , Request.Security.listUsers m
               , Request.Security.listGroups m
               , Request.Security.listPermissions m

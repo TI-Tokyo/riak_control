@@ -19,7 +19,7 @@
 -- ---------------------------------------------------------------------
 
 module Request.Cluster exposing
-    ( getCluster
+    ( getClusterStatus
     , planClear
     , planCommit
     , stageJoin
@@ -54,15 +54,15 @@ import Retry
 import Task
 
 
-getCluster : Model -> Cmd Msg
-getCluster m =
+getClusterStatus : Model -> Cmd Msg
+getClusterStatus m =
     let
-        url = Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
+        url = Url.Builder.crossOrigin m.c.riakNodeUrl [ "ctl" ] []
         task = Http.task
             { url = url
-            , method = "get"
+            , method = "post"
             , headers = List.map (\(h, v) -> Http.header h v) (stdHeaders m)
-            , body = Http.emptyBody
+            , body = Http.jsonBody (clusterActionEncoder GetClusterStatus)
             , resolver = Http.stringResolver clusterResolver
             , timeout = Nothing
             }
@@ -90,156 +90,156 @@ clusterResolver a =
 
 planClear : Model -> Cmd Msg
 planClear m =
-    actionRequest m Clear PlanCleared
+    clusterPlanActionRequest m (ClusterPlan Clear) PlanCleared
 
 planCommit : Model -> Cmd Msg
 planCommit m =
-    actionRequest m Commit PlanCommitted
+    clusterPlanActionRequest m (ClusterPlan Commit) PlanCommitted
 
 
 stageJoin : Model -> String -> Cmd Msg
 stageJoin m a =
-    actionRequest m (Apply (Data.Cluster.NodeJoin a)) PlanNodeJoined
+    clusterPlanActionRequest m (ClusterPlan (Apply (Data.Cluster.NodeJoin a))) PlanNodeJoined
 
 stageLeave : Model -> String -> Cmd Msg
 stageLeave m a =
-    actionRequest m (Apply (Data.Cluster.NodeLeave a)) PlanNodeLeft
+    clusterPlanActionRequest m (ClusterPlan (Apply (Data.Cluster.NodeLeave a))) PlanNodeLeft
 
 stageRemove : Model -> String -> Cmd Msg
 stageRemove m a =
-    actionRequest m (Apply (Data.Cluster.NodeRemove a)) PlanNodeRemoved
+    clusterPlanActionRequest m (ClusterPlan (Apply (Data.Cluster.NodeRemove a))) PlanNodeRemoved
 
 stageReplace : Model -> String -> String -> Cmd Msg
 stageReplace m a b =
-    actionRequest m (Apply (Data.Cluster.NodeReplace a b)) PlanNodeReplaced
+    clusterPlanActionRequest m (ClusterPlan (Apply (Data.Cluster.NodeReplace a b))) PlanNodeReplaced
 
 stageForceReplace : Model -> String -> String -> Cmd Msg
 stageForceReplace m a b =
-    actionRequest m (Apply (Data.Cluster.NodeForceReplace a b)) PlanNodeForceReplaced
+    clusterPlanActionRequest m (ClusterPlan (Apply (Data.Cluster.NodeForceReplace a b))) PlanNodeForceReplaced
 
 stageDown : Model -> String -> Cmd Msg
 stageDown m a =
-    actionRequest m (Apply (Data.Cluster.NodeDown a)) PlanNodeDowned
+    clusterPlanActionRequest m (ClusterPlan (Apply (Data.Cluster.NodeDown a))) PlanNodeDowned
 
 stageStop : Model -> String -> Cmd Msg
 stageStop m a =
-    actionRequest m (Apply (Data.Cluster.NodeStop a)) PlanNodeStopped
+    clusterPlanActionRequest m (ClusterPlan (Apply (Data.Cluster.NodeStop a))) PlanNodeStopped
 
 getNodeAppEnv : Model -> String -> Cmd Msg
 getNodeAppEnv m a =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "ctl" ] []
         |> HttpBuilder.post
-        |> HttpBuilder.withJsonBody (configActionEncoder (Data.Cluster.GetNodeAppEnv a))
+        |> HttpBuilder.withJsonBody (clusterActionEncoder (ClusterConfig (Data.Cluster.GetNodeAppEnv a)))
         |> HttpBuilder.withHeaders (stdHeaders m)
         |> HttpBuilder.withExpect (Http.expectJson GotNodeAppEnv Data.Json.decodeNodeConfig)
         |> HttpBuilder.request
 
 getNodeAdvancedConfig : Model -> String -> Cmd Msg
 getNodeAdvancedConfig m a =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "ctl" ] []
         |> HttpBuilder.post
-        |> HttpBuilder.withJsonBody (configActionEncoder (Data.Cluster.GetNodeAdvancedConfig a))
+        |> HttpBuilder.withJsonBody (clusterActionEncoder (ClusterConfig (Data.Cluster.GetNodeAdvancedConfig a)))
         |> HttpBuilder.withHeaders (stdHeaders m)
         |> HttpBuilder.withExpect (Http.expectJson GotNodeAdvancedConfig Data.Json.decodeNodeConfig)
         |> HttpBuilder.request
 
 putNodeAdvancedConfig : Model -> String -> String -> Cmd Msg
 putNodeAdvancedConfig m a b =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "ctl" ] []
         |> HttpBuilder.post
-        |> HttpBuilder.withJsonBody (configActionEncoder (Data.Cluster.PutNodeAdvancedConfig a b))
+        |> HttpBuilder.withJsonBody (clusterActionEncoder (ClusterConfig (Data.Cluster.PutNodeAdvancedConfig a b)))
         |> HttpBuilder.withHeaders (stdHeaders m)
         |> HttpBuilder.withExpect (Http.expectWhatever PuttedNodeAdvancedConfig)
         |> HttpBuilder.request
 
 signalRestart : Model -> String -> Cmd Msg
 signalRestart m a =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "ctl" ] []
         |> HttpBuilder.post
-        |> HttpBuilder.withJsonBody (configActionEncoder (Data.Cluster.SignalRestart a))
+        |> HttpBuilder.withJsonBody (clusterActionEncoder (ClusterConfig (Data.Cluster.SignalRestart a)))
         |> HttpBuilder.withHeaders (stdHeaders m)
         |> HttpBuilder.withExpect (Http.expectWhatever SignalledNodeRestart)
         |> HttpBuilder.request
 
 
-actionRequest m action msg =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ "cluster" ] []
+clusterPlanActionRequest m action msg =
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "ctl" ] []
         |> HttpBuilder.post
         |> HttpBuilder.withJsonBody (clusterActionEncoder action)
         |> HttpBuilder.withHeaders (stdHeaders m)
-        |> HttpBuilder.withExpect (Http.expectJson msg Data.Json.decodeClusterActionResult)
+        |> HttpBuilder.withExpect (Http.expectJson msg Data.Json.decodeClusterPlanActionResult)
         |> HttpBuilder.request
 
 clusterActionEncoder a =
     case a of
-        Clear ->
+        GetClusterStatus ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "clear_plan") ]
-        Commit ->
+                [ ("action", Json.Encode.string "ClusterGetStatus") ]
+        ClusterPlan Clear ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "commit_plan") ]
-        Apply (Data.Cluster.NodeJoin b) ->
+                [ ("action", Json.Encode.string "ClusterClearPlan") ]
+        ClusterPlan Commit ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "stage_join")
+                [ ("action", Json.Encode.string "ClusterCommitPlan") ]
+        ClusterPlan (Apply (Data.Cluster.NodeJoin b)) ->
+            Json.Encode.object
+                [ ("action", Json.Encode.string "ClusterStageJoin")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
                 ]
-        Apply (Data.Cluster.NodeLeave b) ->
+        ClusterPlan (Apply (Data.Cluster.NodeLeave b)) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "stage_leave")
+                [ ("action", Json.Encode.string "ClusterStageLeave")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
                 ]
-        Apply (Data.Cluster.NodeRemove b) ->
+        ClusterPlan (Apply (Data.Cluster.NodeRemove b)) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "stage_remove")
+                [ ("action", Json.Encode.string "ClusterStageRemove")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
                 ]
-        Apply (Data.Cluster.NodeReplace b c) ->
+        ClusterPlan (Apply (Data.Cluster.NodeReplace b c)) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "stage_replace")
+                [ ("action", Json.Encode.string "ClusterStageReplace")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b)
                                                 , ("with", Json.Encode.string c)
                                                 ])
                 ]
-        Apply (Data.Cluster.NodeForceReplace b c) ->
+        ClusterPlan (Apply (Data.Cluster.NodeForceReplace b c)) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "stage_force_replace")
+                [ ("action", Json.Encode.string "ClusterStageForceReplace")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b)
                                                 , ("with", Json.Encode.string c)
                                                 ])
                 ]
-        Apply (Data.Cluster.NodeDown b) ->
+        ClusterPlan (Apply (Data.Cluster.NodeDown b)) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "down_node")
+                [ ("action", Json.Encode.string "ClusterDownNode")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
                 ]
-        Apply (Data.Cluster.NodeStop b) ->
+        ClusterPlan (Apply (Data.Cluster.NodeStop b)) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "stop_node")
+                [ ("action", Json.Encode.string "ClusterStopNode")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
                 ]
-
-configActionEncoder a =
-    case a of
-        Data.Cluster.GetNodeAppEnv b ->
+        ClusterConfig (Data.Cluster.GetNodeAppEnv b) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "get_app_env")
+                [ ("action", Json.Encode.string "NodeGetAppEnv")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
                 ]
-        Data.Cluster.GetNodeAdvancedConfig b ->
+        ClusterConfig (Data.Cluster.GetNodeAdvancedConfig b) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "get_advanced_config")
+                [ ("action", Json.Encode.string "NodeGetAdvancedConfig")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
                 ]
-        Data.Cluster.PutNodeAdvancedConfig b c ->
+        ClusterConfig (Data.Cluster.PutNodeAdvancedConfig b c) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "put_advanced_config")
+                [ ("action", Json.Encode.string "NodePutAdvancedConfig")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b)
                                                 , ("config", Json.Encode.string c)
                                                 ])
                 ]
-        Data.Cluster.SignalRestart b ->
+        ClusterConfig (SignalRestart b) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "restart")
+                [ ("action", Json.Encode.string "NodeRestart")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b)
                                                 ])
                 ]

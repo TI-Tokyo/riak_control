@@ -40,8 +40,8 @@ import Dict
 
 
 makeContent m =
-    if m.s.ttaaeReport == Dict.empty then
-        div [ style "align-content" "center" ] [text "nothing to show" ]
+    if m.s.ttaaeStatus == Dict.empty then
+        div [ style "align-content" "center" ] [text "Nothing to show (TictacAAE not active?)" ]
     else
         makeProperContent m
 
@@ -58,7 +58,7 @@ makeProperContent m =
                           , cellr (String.fromInt totalDirtySegments)
                           , cell controllerPid
                           ])
-        report = Dict.get m.s.ttaaeReportShownForNode m.s.ttaaeReport
+        report = Dict.get m.s.ttaaeStatusShownForNode m.s.ttaaeStatus
                |> Maybe.withDefault [] |> sort m
     in
         div View.Style.topContent

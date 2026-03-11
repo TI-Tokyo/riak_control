@@ -20,7 +20,7 @@
 
 module Data.Cluster exposing (..)
 
-import Data.Server
+import Data.VersionInfo
 
 type alias Cluster =
     { current : List CurrentMember
@@ -33,7 +33,7 @@ type alias Cluster =
 type alias CurrentMember =
     { name : String
     , status : CurrentMemberStatus
-    , systemInfo : Data.Server.ServerInfo
+    , versionInfo : Data.VersionInfo.SubVersionInfo
     , isMe : Bool
     , reachable : Bool
     , services : List String
@@ -169,8 +169,9 @@ stageActionFromStr a =
         _ -> BAD_STAGE_ACTION
 
 type Action
-    = PlanAction
-    | ConfigAction
+    = GetClusterStatus
+    | ClusterPlan PlanAction
+    | ClusterConfig ConfigAction
 
 type PlanAction
     = Clear
@@ -187,7 +188,7 @@ type StageChange
     | NodeStop String
 
 
-type alias ActionResult =
+type alias ClusterPlanActionResult =
     { result : String }
 
 type alias ConfigResult =

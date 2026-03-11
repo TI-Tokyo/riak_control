@@ -26,8 +26,8 @@ module Msg exposing
 
 import Data.SshOps
 import Data.Security exposing (User, Group, Grant)
-import Data.Server exposing
-    ( ServerInfo
+import Data.VersionInfo exposing
+    ( VersionInfo
     , ServerConfig
     )
 import Data.Cluster exposing (Cluster, CurrentMember)
@@ -97,8 +97,8 @@ type Msg
     ----------
     | Ping
     | TimedPong (Result Http.Error Int)
-    | GetServerInfo
-    | GotServerInfo (Result Http.Error ServerInfo)
+    | GetVersionInfo
+    | GotVersionInfo (Result Http.Error VersionInfo)
 
     -- Cluster
     | GetCluster
@@ -114,23 +114,23 @@ type Msg
     | NodeMenuOpen String
     | NodeMenuClose
     | PlanClear
-    | PlanCleared (Result Http.Error Data.Cluster.ActionResult)
+    | PlanCleared (Result Http.Error Data.Cluster.ClusterPlanActionResult)
     | PlanCommit
-    | PlanCommitted (Result Http.Error Data.Cluster.ActionResult)
+    | PlanCommitted (Result Http.Error Data.Cluster.ClusterPlanActionResult)
     | PlanNodeJoin
-    | PlanNodeJoined (Result Http.Error Data.Cluster.ActionResult)
+    | PlanNodeJoined (Result Http.Error Data.Cluster.ClusterPlanActionResult)
     | PlanNodeLeave String
-    | PlanNodeLeft (Result Http.Error Data.Cluster.ActionResult)
+    | PlanNodeLeft (Result Http.Error Data.Cluster.ClusterPlanActionResult)
     | PlanNodeRemove String
-    | PlanNodeRemoved (Result Http.Error Data.Cluster.ActionResult)
+    | PlanNodeRemoved (Result Http.Error Data.Cluster.ClusterPlanActionResult)
     | PlanNodeReplace String String
-    | PlanNodeReplaced (Result Http.Error Data.Cluster.ActionResult)
+    | PlanNodeReplaced (Result Http.Error Data.Cluster.ClusterPlanActionResult)
     | PlanNodeForceReplace String String
-    | PlanNodeForceReplaced (Result Http.Error Data.Cluster.ActionResult)
+    | PlanNodeForceReplaced (Result Http.Error Data.Cluster.ClusterPlanActionResult)
     | PlanNodeDown String
-    | PlanNodeDowned (Result Http.Error Data.Cluster.ActionResult)
+    | PlanNodeDowned (Result Http.Error Data.Cluster.ClusterPlanActionResult)
     | PlanNodeStop String
-    | PlanNodeStopped (Result Http.Error Data.Cluster.ActionResult)
+    | PlanNodeStopped (Result Http.Error Data.Cluster.ClusterPlanActionResult)
 
     | AskPlanNodeReplace String
     | PlanNodeReplaceDialogConfirmed
@@ -164,8 +164,8 @@ type Msg
     | WaitForNode Data.Cluster.RestartingNode
 
     -- TictacAAE
-    | GetTtaaeReport
-    | GotTtaaeReport (Result Http.Error (Dict String (List Data.Ttaae.TtaaeTree)))
+    | GetTtaaeStatus
+    | GotTtaaeStatus (Result Http.Error (Dict String (List Data.Ttaae.TtaaeTree)))
 
     | TtaaeTreeSortByFieldChanged String
     | TtaaeTreeSortOrderChanged

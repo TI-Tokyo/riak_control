@@ -147,23 +147,29 @@ maybeItems indent aa pfx linelength =
             fullPfx = pfx ++ extra
         in
             "\n" ++
-                (String.padLeft indent ' ' fullPfx) ++
-                (limitedJoin linelength ", " indent aa)
+                (typeset linelength ", " (String.padLeft indent ' ' fullPfx) aa)
 
-limitedJoin linelength j indent aa =
+typeset linelength j primer aa =
     let
-        lines =
+        indent = String.length primer
+        arap =
             List.foldl
-                (\a q -> let last = Maybe.withDefault "" <| List.head q in
-                         case ( (String.length last) + (String.length j) + (String.length a) < linelength
-                              , String.length last
-                              ) of
-                             (True, 0) -> (a :: List.drop 1 q)
-                             (True, _) -> ((last ++ j ++ a) :: List.drop 1 q)
-                             (False, _) -> (((String.repeat indent " ") ++ a) :: q)
-                ) [] aa
+                (\item q ->
+                     let
+                         curline = Maybe.withDefault "" <| List.head q
+                         prevlines = List.drop 1 q
+                         _ = Debug.log "" (curline, item, indent)
+                     in
+                         if String.length curline == indent then  -- bol
+                             (curline ++ item) :: prevlines
+                         else
+                             if (String.length curline) + (String.length j) + (String.length item) < linelength then
+                                 (curline ++ j ++ item) :: prevlines
+                             else
+                                 ((String.repeat indent " ") ++ item) :: q
+                ) [primer] aa
     in
-        List.reverse lines |> String.join ",\n"
+        List.reverse arap |> String.join ",\n"
 
 checkboxStateFromBool a =
     if a then

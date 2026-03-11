@@ -39,24 +39,24 @@ makeContent m =
 
 makeServerInfo m =
     div []
-        [ serverInfoDetails m
+        [ versionInfoDetails m
         ]
 
-serverInfoDetails m =
+versionInfoDetails m =
     div []
-        [ serverInfoDetailsContent m
-        , serverInfoDetailsActions
+        [ versionInfoDetailsContent m
+        , versionInfoDetailsActions
         ]
 
-serverInfoDetailsContent m =
+versionInfoDetailsContent m =
     div View.Style.cardInnerContent
         [ text
-              ("Connected to: " ++ m.c.riakNodeUrl ++ " (" ++ m.s.serverInfo.nodename ++ ")\n" ++
-               "Riak version: " ++ m.s.serverInfo.riakVersion ++ " on " ++ m.s.serverInfo.systemVersion ++"\n" ++
-               "      Uptime: " ++ m.s.serverInfo.uptimeStr)
+              ("Connected to: " ++ m.c.riakNodeUrl ++ " (" ++ m.s.versionInfo.nodename ++ ")\n" ++
+               "Riak version: " ++ m.s.versionInfo.riakVersion ++ " on " ++ m.s.versionInfo.systemVersion ++"\n" ++
+               "      Uptime: " ++ m.s.versionInfo.uptimeStr)
         ]
 
-serverInfoDetailsActions =
+versionInfoDetailsActions =
     div []
         [ Button.text (Button.config |> Button.setOnClick ShowConfigDialog) "Change"
         , Button.text (Button.config |> Button.setOnClick Ping) "Ping"

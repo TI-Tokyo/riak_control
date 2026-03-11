@@ -19,12 +19,12 @@
 -- ---------------------------------------------------------------------
 
 module Request.Ttaae exposing
-    ( getReport
+    ( getStatus
     )
 
 import Model exposing (Model)
 import Data.Json
-import Data.Ttaae exposing (..)
+import Data.Ttaae as Ttaae
 import Msg exposing (Msg(..))
 import Util
 import Request.Util exposing (..)
@@ -35,18 +35,23 @@ import Url.Builder
 import Json.Encode
 import Json.Decode
 
+getStatus : Model -> String -> Cmd Msg
+getStatus m a =
+    actionRequest m (Ttaae.GetTtaaeStatusAction a) GotTtaaeStatus
 
-getReport : Model -> String -> Cmd Msg
-getReport m a =
-    let
-        qs =
-            if a == "" then
-                []
-            else
-                [ Url.Builder.string "nodes" a ]
-    in
-        Url.Builder.crossOrigin m.c.riakNodeUrl [ "tictacaae" ] qs
-            |> HttpBuilder.get
-            |> HttpBuilder.withHeaders (stdHeaders m)
-            |> HttpBuilder.withExpect (Http.expectJson GotTtaaeReport Data.Json.decodeTtaaeReport)
-            |> HttpBuilder.request
+actionRequest m req msg =
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "ctl" ] []
+        |> HttpBuilder.post
+        |> HttpBuilder.withJsonBody (requestParams req)
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withExpect (Http.expectJson GotTtaaeStatus Data.Json.decodeTtaaeStatus)
+        |> HttpBuilder.request
+
+requestParams req =
+    case req of
+        Ttaae.GetTtaaeStatusAction a ->
+            Json.Encode.object
+                [ ("action", Json.Encode.string "TictacaaeGetStatus")
+                , ("params", Json.Encode.object [ ("node", Json.Encode.string a)
+                                                ])
+                ]

@@ -20,10 +20,11 @@
 
 module Request.Admin exposing
     ( pingTask
-    , getServerInfo
+    , getVersionInfo
     )
 
 import Model exposing (Model)
+import Data.VersionInfo as VersionInfo
 import Data.Json
 import Msg exposing (Msg(..))
 import Util
@@ -68,10 +69,19 @@ pingResolver a =
         _ ->
             Err (Http.NetworkError)
 
-getServerInfo : Model -> Cmd Msg
-getServerInfo m =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ "system_info" ] []
-        |> HttpBuilder.get
+getVersionInfo : Model -> Cmd Msg
+getVersionInfo m =
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "ctl" ] []
+        |> HttpBuilder.post
         |> HttpBuilder.withHeaders (stdHeaders m)
-        |> HttpBuilder.withExpect (Http.expectJson GotServerInfo Data.Json.decodeServerInfo)
+        |> HttpBuilder.withJsonBody (requestParams VersionInfo.GetVersionInfo)
+        |> HttpBuilder.withExpect (Http.expectJson GotVersionInfo Data.Json.decodeVersionInfo)
         |> HttpBuilder.request
+
+requestParams req =
+    case req of
+        VersionInfo.GetVersionInfo ->
+            Json.Encode.object
+                [ ("action", Json.Encode.string "SystemGetVersionInfo")
+                , ("params", Json.Encode.object [])
+                ]

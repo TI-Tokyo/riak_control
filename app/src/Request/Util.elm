@@ -26,7 +26,6 @@ stdHeaders m =
     let ct = "application/json" in
     [ ("accept", ct)
     , ("content-type", ct)
-    , ("referer", m.c.riakNodeUrl)
     , ("authorization",
         "Basic " ++ (Base64.encode (m.c.riakAdminUser ++ ":" ++ m.c.riakAdminPassword)))
     ]

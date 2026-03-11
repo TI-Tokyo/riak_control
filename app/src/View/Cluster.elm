@@ -181,8 +181,8 @@ currentCardContent m u =
         "                Status: " ++ (Data.Cluster.currentMemberStatusToStr u.status) ++ "\n" ++
         "        Ring/Pending %: " ++ (mf2 (u.ringPct * 100)) ++ " / " ++ (mf2 (u.pendingPct * 100)) ++ "\n" ++
         " Mem total/erlang/used: " ++ (mf1 u.memTotal) ++ " / " ++ (mf1 u.memErlang) ++ " / " ++ (mf1 u.memUsed) ++ "\n" ++
-        "                Uptime: " ++ u.systemInfo.uptimeStr ++ "\n" ++
-        "          Riak version: " ++ u.systemInfo.riakVersion
+        "                Uptime: " ++ u.versionInfo.uptimeStr ++ "\n" ++
+        "          Riak version: " ++ u.versionInfo.riakVersion
 
 currentMemberCardActions m u =
     Just <|
@@ -284,7 +284,7 @@ sortCurrent m aa =
                 SortMemTotal -> List.sortBy .memTotal aa
                 SortMemErlang -> List.sortBy .memErlang aa
                 SortMemUsed -> List.sortBy .memUsed aa
-                SortUptime -> List.sortBy (.systemInfo >> .uptime) aa
+                SortUptime -> List.sortBy (.versionInfo >> .uptime) aa
                 _ -> aa
     in
         if m.s.clusterMemberSortOrder then aa0 else List.reverse aa0

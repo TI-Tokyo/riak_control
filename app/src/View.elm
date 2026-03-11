@@ -100,14 +100,14 @@ makeConnectionInfo m =
         Msg.SshOps ->
             [ text m.c.riakControlServerUrl ]
         _ ->
-            [ text (m.c.riakNodeUrl ++ " (" ++ m.s.serverInfo.nodename ++ ")") ]
+            [ text (m.c.riakNodeUrl ++ " (" ++ m.s.versionInfo.nodename ++ ")") ]
 
 listWhat m =
     case m.s.activeTab of
         Msg.SshOps -> RefreshBootOptions
-        Msg.Connection -> GetServerInfo
+        Msg.Connection -> GetVersionInfo
         Msg.Cluster -> GetCluster
-        Msg.Ttaae -> GetTtaaeReport
+        Msg.Ttaae -> GetTtaaeStatus
         Msg.Vnode -> GetVnodeStatus
         Msg.Users -> ListUsers
         Msg.Groups -> ListGroups

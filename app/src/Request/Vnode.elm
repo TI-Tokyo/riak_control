@@ -41,7 +41,7 @@ getVnodeStatus m a =
     actionRequest m (Vnode.GetVnodeStatusAction a Vnode.All) GotVnodeStatus
 
 actionRequest m req msg =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ "vnode" ] []
+    Url.Builder.crossOrigin m.c.riakNodeUrl [ "ctl" ] []
         |> HttpBuilder.post
         |> HttpBuilder.withJsonBody (requestParams req)
         |> HttpBuilder.withHeaders (stdHeaders m)
@@ -52,7 +52,7 @@ requestParams req =
     case req of
         Vnode.GetVnodeStatusAction a b ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "get_vnode_status")
+                [ ("action", Json.Encode.string "VnodeGetStatus")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string a)
                                                 , ("preflists", Json.Encode.string (Vnode.preflistSelectionToStr b))
                                                 ])

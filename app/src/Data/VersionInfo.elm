@@ -18,24 +18,35 @@
 --
 -- ---------------------------------------------------------------------
 
-module Data.Server exposing (..)
+module Data.VersionInfo exposing (..)
 
+import Dict exposing (Dict)
 
-type alias ServerInfo =
+type alias VersionInfo =
     { riakVersion : String
     , systemVersion : String
     , nodename : String
     , uptime : Int
     , uptimeStr : String
+    , httpsListeners : Dict String String
     }
 
-emptyServerInfo =
+type alias SubVersionInfo =
+    { riakVersion : String
+    , systemVersion : String
+    , uptime : Int
+    , uptimeStr : String
+    }
+
+emptySubVersionInfo =
     { riakVersion = ""
     , systemVersion = ""
-    , nodename = ""
     , uptime = -1
     , uptimeStr = ""
     }
 
 type alias ServerConfig =
     {}
+
+type Request
+    = GetVersionInfo

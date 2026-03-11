@@ -29,20 +29,19 @@ module Model exposing
     , clusterIsStable
     )
 
-import Data.SshOps
-import Data.Server exposing (..)
-import Data.Cluster exposing (..)
-import Data.Security exposing (..)
-import Data.Ttaae
-import Data.Vnode
+import Data.SshOps as SshOps
+import Data.VersionInfo as VersionInfo
+import Data.Cluster as Cluster
+import Data.Security as Security
+import Data.Ttaae as Ttaae
+import Data.Vnode as Vnode
 
 import Msg
 import View.Common exposing (SortOrder, SortByField)
 
-import RemoteData
 import Material.Snackbar as Snackbar
 import Time
-import Dict
+import Dict exposing (Dict)
 
 
 type alias Model =
@@ -62,13 +61,13 @@ type alias Config =
     }
 
 type alias State =
-    { cluster : Cluster
-    , nodeAdvancedConfigs : Dict.Dict String String
-    , nodeAppEnvs : Dict.Dict String String
-    , rollingRestartQueue : List Data.Cluster.RestartingNode
-    , nodeBeingRestartedNow : Maybe Data.Cluster.RestartingNode
-    , users : List User
-    , groups : List Group
+    { cluster : Cluster.Cluster
+    , nodeAdvancedConfigs : Dict String String
+    , nodeAppEnvs : Dict String String
+    , rollingRestartQueue : List Cluster.RestartingNode
+    , nodeBeingRestartedNow : Maybe Cluster.RestartingNode
+    , users : List Security.User
+    , groups : List Security.Group
     , permissions : List String
 
     , msgQueue : Snackbar.Queue Msg.Msg
@@ -80,12 +79,12 @@ type alias State =
     , rctlAdminCredsNewUser : String
     , rctlAdminCredsNewPassword : String
 
-    , sshScriptTemplateSpecs : List Data.SshOps.ScriptTemplate
+    , sshScriptTemplateSpecs : List SshOps.ScriptTemplate
     , sshTargetHostsStr : String
     , sshSelectedScriptTemplateName : String
     , sshScriptTemplateExpertParamsShown : Bool
 
-    , sshStoredKeys : List Data.SshOps.SshKey
+    , sshStoredKeys : List SshOps.SshKey
     , sshAddKeyDialogShown : Bool
     , sshNewKeyName : String
     , sshNewKeyBody : String
@@ -94,11 +93,13 @@ type alias State =
 
     , sshCurrentSessionId : String
     , sshScriptOutput : String
-    , sshScriptExecutionStatus : Data.SshOps.SshScriptExecutionStatus
+    , sshScriptExecutionStatus : SshOps.SshScriptExecutionStatus
 
-    -- connection
-    , serverInfo : ServerInfo
-    --
+    -- connection (previously also "admin", "server",
+    -- all missing the elusive point).
+    , versionInfo : VersionInfo.VersionInfo
+    -- ended up with 'versionInfo', following "Getting Version Info"
+    -- message the author sees when he starts Call of Duty Mobile.
     , configDialogShown : Bool
     , newConfigRiakNodeUrl : String
     , newConfigRiakAdminUser : String
@@ -144,7 +145,7 @@ type alias State =
     --
     , createGroupDialogShown : Bool
     , newGroupName : String
-    , openEditGroupDialogFor : Maybe Group
+    , openEditGroupDialogFor : Maybe Security.Group
     , confirmDeleteGroupDialogShownFor : Maybe String
 
     -- Group/User shared
@@ -155,15 +156,15 @@ type alias State =
     , addingGrantScope : String
 
     -- TictacAAE
-    , ttaaeReport : Dict.Dict String (List Data.Ttaae.TtaaeTree)
-    , ttaaeReportShownForNode : String
+    , ttaaeStatus : Dict String (List Ttaae.TtaaeTree)
+    , ttaaeStatusShownForNode : String
     , ttaaeTreeFilterValue : String
     , ttaaeTreeFilterIn : List String
     , ttaaeTreeSortBy : SortByField
     , ttaaeTreeSortOrder : SortOrder
 
     -- Vnode
-    , vnodeStatus : List Data.Vnode.VnodeStatus
+    , vnodeStatus : List Vnode.VnodeStatus
     , vnodeStatusShownForNode : String
     , vnodeStatusFilterValue : String
     , vnodeStatusFilterIn : List String
@@ -173,27 +174,27 @@ type alias State =
     }
 
 
-scriptTemplateBy : Model -> (Data.SshOps.ScriptTemplate -> String) -> String -> Data.SshOps.ScriptTemplate
+scriptTemplateBy : Model -> (SshOps.ScriptTemplate -> String) -> String -> SshOps.ScriptTemplate
 scriptTemplateBy m by a =
     case List.filter (\x -> a == by x) m.s.sshScriptTemplateSpecs of
-        [] -> Data.SshOps.dummyScriptTemplate
+        [] -> SshOps.dummyScriptTemplate
         u :: _ -> u
 
 
-userBy : Model -> (User -> String) -> String -> User
+userBy : Model -> (Security.User -> String) -> String -> Security.User
 userBy m by a =
     case List.filter (\x -> a == by x) m.s.users of
-        [] -> Data.Security.dummyUser
+        [] -> Security.dummyUser
         u :: _ -> u
 
-groupBy : Model -> (Group -> String) -> String -> Group
+groupBy : Model -> (Security.Group -> String) -> String -> Security.Group
 groupBy m by a =
     case List.filter (\x -> a == by x) m.s.groups of
-        [] -> Data.Security.dummyGroup
+        [] -> Security.dummyGroup
         g :: _ -> g
 
 
-nodeBy : Model -> (CurrentMember -> String) -> String -> Maybe CurrentMember
+nodeBy : Model -> (Cluster.CurrentMember -> String) -> String -> Maybe Cluster.CurrentMember
 nodeBy m by a =
     case List.filter (\x -> a == by x) m.s.cluster.current of
         [] -> Nothing
@@ -211,7 +212,7 @@ clusterIsStable m =
         (_, False, _) ->  -- transfers ongoing
             False
         (_, _, Just n) ->
-            (n.status == Data.Cluster.Valid) &&
+            (n.status == Cluster.Valid) &&
                 (List.member "riak_kv" n.services)
         (_, _, Nothing) ->
             m.s.nodeBeingRestartedNow == Nothing

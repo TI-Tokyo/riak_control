@@ -51,7 +51,7 @@ makeFilterControls m =
         [ Select.outlined
               (Select.config
               |> Select.setLabel (Just "Node")
-              |> Select.setSelected (Just m.s.ttaaeReportShownForNode)
+              |> Select.setSelected (Just m.s.ttaaeStatusShownForNode)
               |> Select.setOnChange TtaaeTreeShowForNodeChanged
               )
               (SelectItem.selectItem
