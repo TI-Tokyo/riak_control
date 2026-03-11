@@ -82,6 +82,6 @@ requestParams req =
     case req of
         VersionInfo.GetVersionInfo ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "SystemGetVersionInfo")
+                [ ("action", Json.Encode.string "GetVersionInfo")
                 , ("params", Json.Encode.object [])
                 ]
