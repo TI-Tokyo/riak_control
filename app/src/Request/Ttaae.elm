@@ -51,7 +51,7 @@ requestParams req =
     case req of
         Ttaae.GetTtaaeStatusAction a ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "GetTictacaaeStatus")
+                [ ("action", Json.Encode.string "TictacaaeGetStatus")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string a)
                                                 ])
                 ]

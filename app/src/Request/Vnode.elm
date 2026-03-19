@@ -52,7 +52,7 @@ requestParams req =
     case req of
         Vnode.GetVnodeStatusAction a b ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "GetVnodeStatus")
+                [ ("action", Json.Encode.string "VnodeGetStatus")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string a)
                                                 , ("preflists", Json.Encode.string (Vnode.preflistSelectionToStr b))
                                                 ])

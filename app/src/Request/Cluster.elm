@@ -174,72 +174,72 @@ clusterActionEncoder a =
     case a of
         GetClusterStatus ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "GetClusterStatus") ]
+                [ ("action", Json.Encode.string "ClusterGetStatus") ]
         ClusterPlan Clear ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "ClearPlan") ]
+                [ ("action", Json.Encode.string "ClusterClearPlan") ]
         ClusterPlan Commit ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "CommitPlan") ]
+                [ ("action", Json.Encode.string "ClusterCommitPlan") ]
         ClusterPlan (Apply (Data.Cluster.NodeJoin b)) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "StageJoin")
+                [ ("action", Json.Encode.string "ClusterStageJoin")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
                 ]
         ClusterPlan (Apply (Data.Cluster.NodeLeave b)) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "StageLeave")
+                [ ("action", Json.Encode.string "ClusterStageLeave")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
                 ]
         ClusterPlan (Apply (Data.Cluster.NodeRemove b)) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "StageRemove")
+                [ ("action", Json.Encode.string "ClusterStageRemove")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
                 ]
         ClusterPlan (Apply (Data.Cluster.NodeReplace b c)) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "StageReplace")
+                [ ("action", Json.Encode.string "ClusterStageReplace")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b)
                                                 , ("with", Json.Encode.string c)
                                                 ])
                 ]
         ClusterPlan (Apply (Data.Cluster.NodeForceReplace b c)) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "StageForceReplace")
+                [ ("action", Json.Encode.string "ClusterStageForceReplace")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b)
                                                 , ("with", Json.Encode.string c)
                                                 ])
                 ]
         ClusterPlan (Apply (Data.Cluster.NodeDown b)) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "DownNode")
+                [ ("action", Json.Encode.string "ClusterDownNode")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
                 ]
         ClusterPlan (Apply (Data.Cluster.NodeStop b)) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "StopNode")
+                [ ("action", Json.Encode.string "ClusterStopNode")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
                 ]
         ClusterConfig (Data.Cluster.GetNodeAppEnv b) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "GetNodeAppEnv")
+                [ ("action", Json.Encode.string "NodeGetAppEnv")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
                 ]
         ClusterConfig (Data.Cluster.GetNodeAdvancedConfig b) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "GetNodeAdvancedConfig")
+                [ ("action", Json.Encode.string "NodeGetAdvancedConfig")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
                 ]
         ClusterConfig (Data.Cluster.PutNodeAdvancedConfig b c) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "PutNodeAdvancedConfig")
+                [ ("action", Json.Encode.string "NodePutAdvancedConfig")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b)
                                                 , ("config", Json.Encode.string c)
                                                 ])
                 ]
         ClusterConfig (SignalRestart b) ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "RestartNode")
+                [ ("action", Json.Encode.string "NodeRestart")
                 , ("params", Json.Encode.object [ ("node", Json.Encode.string b)
                                                 ])
                 ]
