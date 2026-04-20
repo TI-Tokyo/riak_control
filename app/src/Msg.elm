@@ -211,9 +211,10 @@ type Msg
     | OpenTopDrawer
 
     | ShowConfigDialog
-    | ConfigRiakNodeUrlChanged String
-    | ConfigRiakAdminUserChanged String
-    | ConfigRiakAdminPasswordChanged String
+    | ConfigRiakNodePingUrlChanged String
+    | ConfigRiakAdminCtlUrlChanged String
+    | ConfigRiakAdminCtlUserChanged String
+    | ConfigRiakAdminCtlPasswordChanged String
     | SetConfig
     | SetConfigCancelled
 

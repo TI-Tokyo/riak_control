@@ -41,10 +41,8 @@ import Task
 
 pingTask m =
     let
-        url = Url.Builder.crossOrigin m.c.riakNodeUrl [ "ping" ] []
+        url = Url.Builder.crossOrigin m.c.riakAdminCtlUrl [ "ctl", "ping" ] []
         headers = [ ("accept", "*")
-                  , ("authorization",
-                         "Basic " ++ (Base64.encode (m.c.riakAdminUser ++ ":" ++ m.c.riakAdminPassword)))
                   ]
     in
         Http.task
@@ -71,7 +69,7 @@ pingResolver a =
 
 getVersionInfo : Model -> Cmd Msg
 getVersionInfo m =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ "ctl" ] []
+    Url.Builder.crossOrigin m.c.riakAdminCtlUrl [ "ctl" ] []
         |> HttpBuilder.post
         |> HttpBuilder.withHeaders (stdHeaders m)
         |> HttpBuilder.withJsonBody (requestParams VersionInfo.GetVersionInfo)

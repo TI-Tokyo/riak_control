@@ -29,8 +29,9 @@ const app = Elm.Main.init({
         riakControlServerUrl: location.href,
         riakControlServerUser: "murzyk",
         riakControlServerPassword: "synpoliana",
-        riakNodeUrl: "https://127.0.0.1:11018",
-        riakAdminUser: "murzyk",
-        riakAdminPassword: "kolochava"
+        riakAdminCtlUrl: "https://127.0.0.1:11014",
+        riakAdminCtlUser: "murzyk",
+        riakAdminCtlPassword: "kolochava",
+        riakNodePingUrl: "https://127.0.0.1:10018"
     }
 });

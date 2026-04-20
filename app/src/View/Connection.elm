@@ -51,7 +51,7 @@ versionInfoDetails m =
 versionInfoDetailsContent m =
     div View.Style.cardInnerContent
         [ text
-              ("Connected to: " ++ m.c.riakNodeUrl ++ " (" ++ m.s.versionInfo.nodename ++ ")\n" ++
+              ("Connected to: " ++ m.c.riakAdminCtlUrl ++ " (" ++ m.s.versionInfo.nodename ++ ")\n" ++
                "Riak version: " ++ m.s.versionInfo.riakVersion ++ " on " ++ m.s.versionInfo.systemVersion ++"\n" ++
                "      Uptime: " ++ m.s.versionInfo.uptimeStr)
         ]
@@ -79,23 +79,30 @@ configDialog m =
                           [ TextField.filled
                                 (TextField.config
                                 |> TextField.setAttributes [ attribute "spellCheck" "false" ]
-                                |> TextField.setLabel (Just "Riak node url")
-                                |> TextField.setValue (Just m.s.newConfigRiakNodeUrl)
-                                |> TextField.setOnInput ConfigRiakNodeUrlChanged
+                                |> TextField.setLabel (Just "Riak node standard http listener URL")
+                                |> TextField.setValue (Just m.s.newConfigRiakNodePingUrl)
+                                |> TextField.setOnInput ConfigRiakNodePingUrlChanged
+                                )
+                          , TextField.filled
+                                (TextField.config
+                                |> TextField.setAttributes [ attribute "spellCheck" "false" ]
+                                |> TextField.setLabel (Just "Riak node Admin API (/ctl) URL")
+                                |> TextField.setValue (Just m.s.newConfigRiakAdminCtlUrl)
+                                |> TextField.setOnInput ConfigRiakAdminCtlUrlChanged
                                 )
                           , TextField.filled
                                 (TextField.config
                                 |> TextField.setAttributes [ attribute "spellCheck" "false" ]
                                 |> TextField.setLabel (Just "Admin user")
-                                |> TextField.setValue (Just m.s.newConfigRiakAdminUser)
-                                |> TextField.setOnInput ConfigRiakAdminUserChanged
+                                |> TextField.setValue (Just m.s.newConfigRiakAdminCtlUser)
+                                |> TextField.setOnInput ConfigRiakAdminCtlUserChanged
                                 )
                           , TextField.filled
                                 (TextField.config
                                 |> TextField.setAttributes [ attribute "spellCheck" "false" ]
                                 |> TextField.setLabel (Just "Root password")
-                                |> TextField.setValue (Just m.s.newConfigRiakAdminPassword)
-                                |> TextField.setOnInput ConfigRiakAdminPasswordChanged
+                                |> TextField.setValue (Just m.s.newConfigRiakAdminCtlPassword)
+                                |> TextField.setOnInput ConfigRiakAdminCtlPasswordChanged
                                 )
                           ]
                     ]

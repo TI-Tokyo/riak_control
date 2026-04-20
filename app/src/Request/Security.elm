@@ -135,7 +135,7 @@ deleteGroupGrant m a b =
              (Maybe.withDefault "--" m.s.openEditGrantsDialogFor) a b)
 
 securityRequest m expect a =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ "ctl"  ] []
+    Url.Builder.crossOrigin m.c.riakAdminCtlUrl [ "ctl"  ] []
         |> HttpBuilder.post
         |> HttpBuilder.withHeaders (stdHeaders m)
         |> HttpBuilder.withExpect expect

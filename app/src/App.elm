@@ -38,20 +38,22 @@ type alias Flags =
     { riakControlServerUrl : String
     , riakControlServerUser : String
     , riakControlServerPassword : String
-    , riakNodeUrl : String
-    , riakAdminUser : String
-    , riakAdminPassword : String
+    , riakNodePingUrl : String
+    , riakAdminCtlUrl : String
+    , riakAdminCtlUser : String
+    , riakAdminCtlPassword : String
     }
 
 
 init : Flags -> (Model, Cmd Msg)
 init f =
     let
-        haveCreds = f.riakAdminPassword /= ""
+        haveCreds = f.riakAdminCtlPassword /= ""
         config =
             Config
                 f.riakControlServerUrl f.riakControlServerUser f.riakControlServerPassword
-                f.riakNodeUrl f.riakAdminUser f.riakAdminPassword
+                f.riakAdminCtlUrl f.riakAdminCtlUser f.riakAdminCtlPassword
+                f.riakNodePingUrl
                 3000
         state =
             State
@@ -76,7 +78,7 @@ init f =
                 , uptimeStr = "---"
                 , httpsListeners = Dict.empty
                 }
-                (not haveCreds) f.riakNodeUrl f.riakAdminUser f.riakAdminPassword
+                (not haveCreds) f.riakNodePingUrl f.riakAdminCtlUrl f.riakAdminCtlUser f.riakAdminCtlPassword
                 -- Cluster
                 "(awaiting refresh)" SortName True Nothing Nothing
                 False ""  ""

@@ -27,5 +27,5 @@ stdHeaders m =
     [ ("accept", ct)
     , ("content-type", ct)
     , ("authorization",
-        "Basic " ++ (Base64.encode (m.c.riakAdminUser ++ ":" ++ m.c.riakAdminPassword)))
+        "Basic " ++ (Base64.encode (m.c.riakAdminCtlUser ++ ":" ++ m.c.riakAdminCtlPassword)))
     ]

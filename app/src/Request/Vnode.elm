@@ -41,7 +41,7 @@ getVnodeStatus m a =
     actionRequest m (Vnode.GetVnodeStatusAction a Vnode.All) GotVnodeStatus
 
 actionRequest m req msg =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ "ctl" ] []
+    Url.Builder.crossOrigin m.c.riakAdminCtlUrl [ "ctl" ] []
         |> HttpBuilder.post
         |> HttpBuilder.withJsonBody (requestParams req)
         |> HttpBuilder.withHeaders (stdHeaders m)

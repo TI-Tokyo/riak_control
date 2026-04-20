@@ -100,7 +100,7 @@ makeConnectionInfo m =
         Msg.SshOps ->
             [ text m.c.riakControlServerUrl ]
         _ ->
-            [ text (m.c.riakNodeUrl ++ " (" ++ m.s.versionInfo.nodename ++ ")") ]
+            [ text (m.c.riakAdminCtlUrl ++ " (" ++ m.s.versionInfo.nodename ++ ")") ]
 
 listWhat m =
     case m.s.activeTab of

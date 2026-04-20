@@ -350,23 +350,27 @@ update msg m =
         ShowConfigDialog ->
             let s_ = m.s in
             ({m | s = {s_ | configDialogShown = True}}, Cmd.none)
-        ConfigRiakNodeUrlChanged s ->
+        ConfigRiakNodePingUrlChanged s ->
             let s_ = m.s in
-            ({m | s = {s_ | newConfigRiakNodeUrl = s}}, Cmd.none)
-        ConfigRiakAdminUserChanged s ->
+            ({m | s = {s_ | newConfigRiakNodePingUrl = s}}, Cmd.none)
+        ConfigRiakAdminCtlUrlChanged s ->
             let s_ = m.s in
-            ({m | s = {s_ | newConfigRiakAdminUser = s}}, Cmd.none)
-        ConfigRiakAdminPasswordChanged s ->
+            ({m | s = {s_ | newConfigRiakAdminCtlUrl = s}}, Cmd.none)
+        ConfigRiakAdminCtlUserChanged s ->
             let s_ = m.s in
-            ({m | s = {s_ | newConfigRiakAdminPassword = s}}, Cmd.none)
+            ({m | s = {s_ | newConfigRiakAdminCtlUser = s}}, Cmd.none)
+        ConfigRiakAdminCtlPasswordChanged s ->
+            let s_ = m.s in
+            ({m | s = {s_ | newConfigRiakAdminCtlPassword = s}}, Cmd.none)
         SetConfig ->
             let
                 c_ = m.c
                 s_ = m.s
             in
-                ( { m | c = {c_ | riakNodeUrl = m.s.newConfigRiakNodeUrl
-                                , riakAdminUser = m.s.newConfigRiakAdminUser
-                                , riakAdminPassword = m.s.newConfigRiakAdminPassword
+                ( { m | c = {c_ | riakNodePingUrl = m.s.newConfigRiakNodePingUrl
+                                , riakAdminCtlUrl = m.s.newConfigRiakAdminCtlUrl
+                                , riakAdminCtlUser = m.s.newConfigRiakAdminCtlUser
+                                , riakAdminCtlPassword = m.s.newConfigRiakAdminCtlPassword
                             },
                         s = {s_ | configDialogShown = False}
                   }

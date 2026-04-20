@@ -54,9 +54,10 @@ type alias Config =
     { riakControlServerUrl : String
     , riakControlServerUser : String
     , riakControlServerPassword : String
-    , riakNodeUrl : String
-    , riakAdminUser : String
-    , riakAdminPassword : String
+    , riakAdminCtlUrl : String
+    , riakAdminCtlUser : String
+    , riakAdminCtlPassword : String
+    , riakNodePingUrl : String
     , refreshEvery : Float
     }
 
@@ -101,9 +102,10 @@ type alias State =
     -- ended up with 'versionInfo', following "Getting Version Info"
     -- message the author sees when he starts Call of Duty Mobile.
     , configDialogShown : Bool
-    , newConfigRiakNodeUrl : String
-    , newConfigRiakAdminUser : String
-    , newConfigRiakAdminPassword : String
+    , newConfigRiakNodePingUrl : String
+    , newConfigRiakAdminCtlUrl : String
+    , newConfigRiakAdminCtlUser : String
+    , newConfigRiakAdminCtlPassword : String
 
     -- cluster
     , notReadyMessage : String

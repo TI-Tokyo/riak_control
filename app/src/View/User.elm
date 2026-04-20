@@ -143,7 +143,7 @@ userCardActions m u =
 
 
 maybeSelfMark m u =
-    if u.name == m.c.riakAdminUser then
+    if u.name == m.c.riakAdminCtlUser then
         [ Card.icon IconButton.config (IconButton.icon "*") ]
     else
         []

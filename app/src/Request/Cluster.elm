@@ -57,7 +57,7 @@ import Task
 getClusterStatus : Model -> Cmd Msg
 getClusterStatus m =
     let
-        url = Url.Builder.crossOrigin m.c.riakNodeUrl [ "ctl" ] []
+        url = Url.Builder.crossOrigin m.c.riakAdminCtlUrl [ "ctl" ] []
         task = Http.task
             { url = url
             , method = "post"
@@ -127,7 +127,7 @@ stageStop m a =
 
 getNodeAppEnv : Model -> String -> Cmd Msg
 getNodeAppEnv m a =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ "ctl" ] []
+    Url.Builder.crossOrigin m.c.riakAdminCtlUrl [ "ctl" ] []
         |> HttpBuilder.post
         |> HttpBuilder.withJsonBody (clusterActionEncoder (ClusterConfig (Data.Cluster.GetNodeAppEnv a)))
         |> HttpBuilder.withHeaders (stdHeaders m)
@@ -136,7 +136,7 @@ getNodeAppEnv m a =
 
 getNodeAdvancedConfig : Model -> String -> Cmd Msg
 getNodeAdvancedConfig m a =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ "ctl" ] []
+    Url.Builder.crossOrigin m.c.riakAdminCtlUrl [ "ctl" ] []
         |> HttpBuilder.post
         |> HttpBuilder.withJsonBody (clusterActionEncoder (ClusterConfig (Data.Cluster.GetNodeAdvancedConfig a)))
         |> HttpBuilder.withHeaders (stdHeaders m)
@@ -145,7 +145,7 @@ getNodeAdvancedConfig m a =
 
 putNodeAdvancedConfig : Model -> String -> String -> Cmd Msg
 putNodeAdvancedConfig m a b =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ "ctl" ] []
+    Url.Builder.crossOrigin m.c.riakAdminCtlUrl [ "ctl" ] []
         |> HttpBuilder.post
         |> HttpBuilder.withJsonBody (clusterActionEncoder (ClusterConfig (Data.Cluster.PutNodeAdvancedConfig a b)))
         |> HttpBuilder.withHeaders (stdHeaders m)
@@ -154,7 +154,7 @@ putNodeAdvancedConfig m a b =
 
 signalRestart : Model -> String -> Cmd Msg
 signalRestart m a =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ "ctl" ] []
+    Url.Builder.crossOrigin m.c.riakAdminCtlUrl [ "ctl" ] []
         |> HttpBuilder.post
         |> HttpBuilder.withJsonBody (clusterActionEncoder (ClusterConfig (Data.Cluster.SignalRestart a)))
         |> HttpBuilder.withHeaders (stdHeaders m)
@@ -163,7 +163,7 @@ signalRestart m a =
 
 
 clusterPlanActionRequest m action msg =
-    Url.Builder.crossOrigin m.c.riakNodeUrl [ "ctl" ] []
+    Url.Builder.crossOrigin m.c.riakAdminCtlUrl [ "ctl" ] []
         |> HttpBuilder.post
         |> HttpBuilder.withJsonBody (clusterActionEncoder action)
         |> HttpBuilder.withHeaders (stdHeaders m)
