@@ -51,8 +51,8 @@ makeContent m =
         [ div View.Style.card (makeGroups m)
         , div [] (View.Group.Dialog.makeCreateGroupDialog m)
         , div [] (View.Group.Dialog.makeEditGroupDialog m)
-        , div [] (View.Shared.makeEditGrantsDialog m Data.Security.GroupRole)
-        , div [] (View.Shared.makeAddGrantsDialog m Data.Security.GroupRole)
+        , div [] (View.Shared.makeEditPermissionsDialog m Data.Security.GroupClass)
+        , div [] (View.Shared.makeAddPermissionsDialog m Data.Security.GroupClass)
         , div [] (View.Shared.makeDeleteThingConfirmDialog
                       m .confirmDeleteGroupDialogShownFor
                       (.name << (Model.groupBy m .name)) "group"
@@ -108,9 +108,8 @@ makeGroup m a =
 cardContent m u =
     let
         options = List.map (\(k, v) -> k ++ "=" ++ v) (Dict.toList u.options)
-        grants = List.map (\{scope, permissions} -> scope ++ ":[" ++ (String.join "," permissions) ++ "]") u.grants
     in
-        View.Shared.maybeItems 12 grants "Grants" 60
+        View.Shared.maybeItems 12 u.permissions "Permissions" 60
         ++ View.Shared.maybeItems 12 options "Options" 60
 
 groupCardActions m a =
@@ -125,8 +124,8 @@ groupCardActions m a =
                                 |> Button.setOnClick (ShowEditGroupDialog a)
                                 ) "Edit"
                   , Card.button (Button.config
-                                |> Button.setOnClick (ShowEditGrantsDialog a.name)
-                                ) "Grants"
+                                |> Button.setOnClick (ShowEditPermissionsDialog a.name)
+                                ) "Permissions"
                   ]
             , icons = []
             }

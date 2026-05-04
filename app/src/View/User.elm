@@ -55,8 +55,8 @@ makeContent m =
         , div [] (View.User.Dialog.makeEditUserDialog m)
         , div [] (View.User.Dialog.makeEditUserGroupsDialog m)
         , div [] (View.User.Dialog.makeAddUserGroupsDialog m)
-        , div [] (View.Shared.makeEditGrantsDialog m Data.Security.UserRole)
-        , div [] (View.Shared.makeAddGrantsDialog m Data.Security.UserRole)
+        , div [] (View.Shared.makeEditPermissionsDialog m Data.Security.UserClass)
+        , div [] (View.Shared.makeAddPermissionsDialog m Data.Security.UserClass)
         , div [] (View.Shared.makeDeleteThingConfirmDialog
                       m .confirmDeleteUserDialogShownFor
                       (.name << (Model.userBy m .name)) "user"
@@ -112,12 +112,11 @@ makeUser m u =
 cardContent m u =
     let
         options = List.map (\(k, v) -> k ++ "=" ++ v) (Dict.toList u.options)
-        grants = List.map Data.Security.grantToStr u.grants
     in
         "          Name: " ++ u.name
-        ++ View.Shared.maybeItems 16 grants "Grants" 60
-        ++ View.Shared.maybeItems 16 u.groups "Groups" 60
-        ++ View.Shared.maybeItems 16 options "Options" 60
+        ++ View.Shared.maybeItems 18 u.permissions "Permissions" 60
+        ++ View.Shared.maybeItems 18 u.groups "Groups" 60
+        ++ View.Shared.maybeItems 18 options "Options" 60
 
 userCardActions m u =
     Just <|
@@ -134,8 +133,8 @@ userCardActions m u =
                                 |> Button.setOnClick (ShowEditUserGroupsDialog u.name)
                                 ) "Groups"
                   , Card.button (Button.config
-                                |> Button.setOnClick (ShowEditGrantsDialog u.name)
-                                ) "Grants"
+                                |> Button.setOnClick (ShowEditPermissionsDialog u.name)
+                                ) "Permissions"
                   ]
             , icons =
                 maybeSelfMark m u

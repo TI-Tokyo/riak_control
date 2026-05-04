@@ -25,15 +25,15 @@ module Request.Security exposing
     , updateUser
     , addUserGroup
     , deleteUserGroup
-    , addUserGrant
-    , deleteUserGrant
+    , addUserPermission
+    , deleteUserPermission
 
     , listGroups
     , createGroup
     , deleteGroup
     , updateGroup
-    , addGroupGrant
-    , deleteGroupGrant
+    , addGroupPermission
+    , deleteGroupPermission
 
     , listPermissions
     )
@@ -82,17 +82,17 @@ deleteUserGroup m a =
         (Data.Security.DeleteUserGroup
              (Maybe.withDefault "--" m.s.openEditUserGroupsDialogFor) a)
 
-addUserGrant : Model -> String -> String -> Cmd Msg
-addUserGrant m a b =
-    securityRequest m (Http.expectWhatever UserGrantAdded)
-        (Data.Security.AddUserGrant
-             (Maybe.withDefault "--" m.s.openAddGrantsDialogFor) a b)
+addUserPermission : Model -> String -> Cmd Msg
+addUserPermission m a =
+    securityRequest m (Http.expectWhatever UserPermissionAdded)
+        (Data.Security.AddUserPermission
+             (Maybe.withDefault "--" m.s.openAddPermissionsDialogFor) a)
 
-deleteUserGrant : Model -> String -> String -> Cmd Msg
-deleteUserGrant m a b =
-    securityRequest m (Http.expectWhatever UserGrantDeleted)
-        (Data.Security.DeleteUserGrant
-             (Maybe.withDefault "--" m.s.openEditGrantsDialogFor) a b)
+deleteUserPermission : Model -> String -> Cmd Msg
+deleteUserPermission m a =
+    securityRequest m (Http.expectWhatever UserPermissionDeleted)
+        (Data.Security.DeleteUserPermission
+             (Maybe.withDefault "--" m.s.openEditPermissionsDialogFor) a)
 
 deleteUser : Model -> String -> Cmd Msg
 deleteUser m a =
@@ -122,17 +122,17 @@ deleteGroup m a =
     securityRequest m (Http.expectWhatever GroupCreated)
         (Data.Security.GroupDel a)
 
-addGroupGrant : Model -> String -> String -> Cmd Msg
-addGroupGrant m a b =
-    securityRequest m (Http.expectWhatever GroupGrantAdded)
-        (Data.Security.AddGroupGrant
-             (Maybe.withDefault "--" m.s.openAddGrantsDialogFor) a b)
+addGroupPermission : Model -> String -> Cmd Msg
+addGroupPermission m a =
+    securityRequest m (Http.expectWhatever GroupPermissionAdded)
+        (Data.Security.AddGroupPermission
+             (Maybe.withDefault "--" m.s.openAddPermissionsDialogFor) a)
 
-deleteGroupGrant : Model -> String -> String -> Cmd Msg
-deleteGroupGrant m a b =
-    securityRequest m (Http.expectWhatever GroupGrantDeleted)
-        (Data.Security.DeleteGroupGrant
-             (Maybe.withDefault "--" m.s.openEditGrantsDialogFor) a b)
+deleteGroupPermission : Model -> String -> Cmd Msg
+deleteGroupPermission m a =
+    securityRequest m (Http.expectWhatever GroupPermissionDeleted)
+        (Data.Security.DeleteGroupPermission
+             (Maybe.withDefault "--" m.s.openEditPermissionsDialogFor) a)
 
 securityRequest m expect a =
     Url.Builder.crossOrigin m.c.riakAdminCtlUrl [ "ctl"  ] []
@@ -194,20 +194,18 @@ securityActionEncoder action =
                                                 ])
                 ]
 
-        Data.Security.AddUserGrant u a b ->
+        Data.Security.AddUserPermission u a ->
             Json.Encode.object
-                [ ("action", string "SecurityAddUserGrant")
+                [ ("action", string "SecurityAddUserPermission")
                 , ("params", Json.Encode.object [ ("user", string u)
                                                 , ("permission", string a)
-                                                , ("scope", string b)
                                                 ])
                 ]
-        Data.Security.DeleteUserGrant u a b ->
+        Data.Security.DeleteUserPermission u a ->
             Json.Encode.object
-                [ ("action", string "SecurityDeleteUserGrant")
+                [ ("action", string "SecurityDeleteUserPermission")
                 , ("params", Json.Encode.object [ ("user", string u)
                                                 , ("permission", string a)
-                                                , ("scope", string b)
                                                 ])
                 ]
 
@@ -237,20 +235,18 @@ securityActionEncoder action =
                                                 ])
                 ]
 
-        Data.Security.AddGroupGrant u a b ->
+        Data.Security.AddGroupPermission u a ->
             Json.Encode.object
-                [ ("action", string "SecurityAddGroupGrant")
+                [ ("action", string "SecurityAddGroupPermission")
                 , ("params", Json.Encode.object [ ("group", string u)
                                                 , ("permission", string a)
-                                                , ("scope", string b)
                                                 ])
                 ]
-        Data.Security.DeleteGroupGrant u a b ->
+        Data.Security.DeleteGroupPermission u a ->
             Json.Encode.object
-                [ ("action", string "SecurityDeleteGroupGrant")
+                [ ("action", string "SecurityDeleteGroupPermission")
                 , ("params", Json.Encode.object [ ("group", string u)
                                                 , ("permission", string a)
-                                                , ("scope", string b)
                                                 ])
                 ]
 

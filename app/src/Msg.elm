@@ -25,7 +25,7 @@ module Msg exposing
     )
 
 import Data.SshOps
-import Data.Security exposing (User, Group, Grant)
+import Data.Security exposing (User, Group)
 import Data.VersionInfo exposing
     ( VersionInfo
     , ServerConfig
@@ -241,8 +241,8 @@ type Msg
     | AddUserGroupDialogCancelled
     | UserGroupAdded (Result Http.Error ())
     | UserGroupDeleted (Result Http.Error ())
-    | UserGrantAdded (Result Http.Error ())
-    | UserGrantDeleted (Result Http.Error ())
+    | UserPermissionAdded (Result Http.Error ())
+    | UserPermissionDeleted (Result Http.Error ())
 
     -- groups
     | GroupFilterChanged String
@@ -255,19 +255,20 @@ type Msg
     | CreateGroupCancelled
     | ShowEditGroupDialog Group
     | EditGroupCancelled
-    | GroupGrantAdded (Result Http.Error ())
-    | GroupGrantDeleted (Result Http.Error ())
+    | GroupPermissionAdded (Result Http.Error ())
+    | GroupPermissionDeleted (Result Http.Error ())
 
     -- shared
-    | ShowEditGrantsDialog String
-    | SelectOrUnselectGrantToDelete String
-    | EditGrantsCancelled
-    | ShowAddGrantDialog String
-    | AddingGrantPermissionChanged String
-    | AddingGrantScopeChanged String
-    | AddGrant Data.Security.Role
-    | DeleteGrantBatch Data.Security.Role
-    | AddGrantDialogCancelled
+    | ShowEditPermissionsDialog String
+    | SelectOrUnselectPermissionToDelete String
+    | EditPermissionsCancelled
+    | ShowAddPermissionDialog String
+    | AddingPermissionPermissionChanged String
+    | AddUserPermission
+    | DeleteUserPermissionBatch
+    | AddGroupPermission
+    | DeleteGroupPermissionBatch
+    | AddPermissionDialogCancelled
 
     -- misc
     | SnackbarClosed Snackbar.MessageId

@@ -21,11 +21,11 @@
 module View.Shared exposing
     ( makeDeleteThingConfirmDialog
     , groupsAsList
-    , grantsAsList
+    , permissionsAsList
     , maybeItems
     , checkboxStateFromBool
-    , makeEditGrantsDialog
-    , makeAddGrantsDialog
+    , makeEditPermissionsDialog
+    , makeAddPermissionsDialog
     )
 
 import Msg exposing (..)
@@ -106,7 +106,7 @@ groupsAsList m allGroups selected msg =
     in
         div [] [element]
 
-grantsAsList m allGrants selected msg =
+permissionsAsList m allPermissions selected msg =
     let
         selectArg =
             \p ->
@@ -114,11 +114,10 @@ grantsAsList m allGrants selected msg =
                     Just ListItem.selected
                 else
                     Nothing
-        -- allGrantsAsStr = List.map Data.Security.grantToStr allGrants
         element =
-            case allGrants of
+            case allPermissions of
                 [] ->
-                    text "(no grants)"
+                    text "(no permissions)"
                 p0 :: pn ->
                     List.list List.config
                         (ListItem.listItem
@@ -179,41 +178,45 @@ checkboxStateFromBool a =
 
 
 
-makeEditGrantsDialog m role =
-    case m.s.openEditGrantsDialogFor of
+makeEditPermissionsDialog m role =
+    case m.s.openEditPermissionsDialogFor of
         Just a ->
-            makeEditGrantsDialog2 m role a
+            makeEditPermissionsDialog2 m role a
         Nothing ->
             []
 
-makeEditGrantsDialog2 m role a =
+makeEditPermissionsDialog2 m class a =
     let
-        (name, grants, pfx) =
-            case role of
-                Data.Security.UserRole -> let u = Model.userBy m .name a in (u.name, u.grants, "user")
-                Data.Security.GroupRole -> let g = Model.groupBy m .name a in (g.name, g.grants, "group")
+        (name, permissions, pfx) =
+            case class of
+                Data.Security.UserClass -> let u = Model.userBy m .name a in (u.name, u.permissions, "user")
+                Data.Security.GroupClass -> let g = Model.groupBy m .name a in (g.name, g.permissions, "group")
+        delMsg =
+            case class of
+                Data.Security.UserClass -> DeleteUserPermissionBatch
+                Data.Security.GroupClass -> DeleteGroupPermissionBatch
     in
     [ Dialog.confirmation
           (Dialog.config
           |> Dialog.setOpen True
-          |> Dialog.setOnClose EditGrantsCancelled
+          |> Dialog.setOnClose EditPermissionsCancelled
           )
           { title = "Permissions granted to " ++ pfx ++ " " ++ name
           , content =
                 [ div View.Style.dialogContentPart
-                      ([ grantsAsList m
-                             (List.map Data.Security.grantToStr grants)
-                             m.s.selectedGrantsForDelete
-                             SelectOrUnselectGrantToDelete ]
+                      ([ permissionsAsList m
+                             permissions
+                             m.s.selectedPermissionsForDelete
+                             SelectOrUnselectPermissionToDelete ]
                            ++ [ div []
                                     [ IconButton.iconButton
                                          (IconButton.config
-                                         |> IconButton.setOnClick (ShowAddGrantDialog a))
+                                         |> IconButton.setOnClick (ShowAddPermissionDialog a))
                                          (IconButton.icon "add")
                                     ,  IconButton.iconButton
                                           (IconButton.config
-                                          |> IconButton.setOnClick (DeleteGrantBatch role)
-                                          |> IconButton.setDisabled (m.s.selectedGrantsForDelete == [])
+                                          |> IconButton.setOnClick delMsg
+                                          |> IconButton.setDisabled (m.s.selectedPermissionsForDelete == [])
                                           |> IconButton.setAttributes [ style "color" "red" ])
                                           (IconButton.icon "delete")
                                     ]
@@ -222,60 +225,57 @@ makeEditGrantsDialog2 m role a =
                 ]
           , actions =
                 [ Button.text
-                      (Button.config |> Button.setOnClick EditGrantsCancelled)
+                      (Button.config |> Button.setOnClick EditPermissionsCancelled)
                       "Dismiss"
                 ]
           }
     ]
 
 
-makeAddGrantsDialog m role =
-    case m.s.openAddGrantsDialogFor of
+makeAddPermissionsDialog m class =
+    case m.s.openAddPermissionsDialogFor of
         Just u ->
-            makeAddGrantsDialog2 m role u
+            makeAddPermissionsDialog2 m class u
         Nothing ->
             []
 
-makeAddGrantsDialog2 m role a =
+makeAddPermissionsDialog2 m class a =
     let
-        (name, grants, pfx) =
-            case role of
-                Data.Security.UserRole -> let u = Model.userBy m .name a in (u.name, u.grants, "user")
-                Data.Security.GroupRole -> let g = Model.groupBy m .name a in (g.name, g.grants, "group")
+        (name, permissions, pfx) =
+            case class of
+                Data.Security.UserClass -> let u = Model.userBy m .name a in (u.name, u.permissions, "user")
+                Data.Security.GroupClass -> let g = Model.groupBy m .name a in (g.name, g.permissions, "group")
+        addMsg =
+            case class of
+                Data.Security.UserClass -> AddUserPermission
+                Data.Security.GroupClass -> AddGroupPermission
         (p0, pp) =
             case m.s.permissions of
                 q0 :: qp -> (q0, qp)
                 _ -> ("??", [])
-        allUserGrants = List.map Data.Security.grantToStr grants
     in
         [ Dialog.confirmation
               (Dialog.config
               |> Dialog.setOpen True
-              |> Dialog.setOnClose AddGrantDialogCancelled
+              |> Dialog.setOnClose AddPermissionDialogCancelled
               )
-              { title = "New grant for " ++ pfx ++ " " ++ name
+              { title = "New permission for " ++ pfx ++ " " ++ name
               , content =
                     [ Select.filled
                           (Select.config
                           |> Select.setLabel (Just "Permission")
-                          |> Select.setOnChange AddingGrantPermissionChanged)
+                          |> Select.setOnChange AddingPermissionPermissionChanged)
                           (SelectItem.selectItem (SelectItem.config { value = p0 }) p0)
                           (List.map (\px -> (SelectItem.selectItem (SelectItem.config { value = px }) px)) pp)
-                    , TextField.filled
-                          (TextField.config
-                          |> TextField.setLabel (Just "Scope")
-                          |> TextField.setValue (Just m.s.addingGrantScope)
-                          |> TextField.setOnInput AddingGrantScopeChanged
-                          )
                     ]
               , actions =
                     [ Button.text
-                          (Button.config |> Button.setOnClick AddGrantDialogCancelled)
+                          (Button.config |> Button.setOnClick AddPermissionDialogCancelled)
                           "Dismiss"
                     , Button.text
                           (Button.config
-                          |> Button.setOnClick (AddGrant role)
-                          |> Button.setDisabled (m.s.addingGrantPermission == "" || m.s.addingGrantScope == "")
+                          |> Button.setOnClick addMsg
+                          |> Button.setDisabled (m.s.addingPermissionPermission == "")
                           |> Button.setAttributes [ Dialog.defaultAction ])
                           "Add"
                     ]

@@ -151,11 +151,10 @@ type alias State =
     , confirmDeleteGroupDialogShownFor : Maybe String
 
     -- Group/User shared
-    , openEditGrantsDialogFor : Maybe String
-    , openAddGrantsDialogFor : Maybe String
-    , selectedGrantsForDelete : List String
-    , addingGrantPermission : String
-    , addingGrantScope : String
+    , openEditPermissionsDialogFor : Maybe String
+    , openAddPermissionsDialogFor : Maybe String
+    , selectedPermissionsForDelete : List String
+    , addingPermissionPermission : String
 
     -- TictacAAE
     , ttaaeStatus : Dict String (List Ttaae.TtaaeTree)

@@ -201,10 +201,43 @@ decodeUserList =
 user =
     succeed User
         |> required "name" string
+        |> required "created" isoDate
+        |> required "modified" isoDate
+        |> required "expires" expires
         |> required "groups" (list string)
-        |> required "password_hash" string
-        |> required "grants" (list grant)
+        |> required "permissions" (list string)
+        |> required "auth_method" authMethod
         |> optional "options" (dict string) Dict.empty
+
+isoDate =
+    map Time.millisToPosix int
+expires =
+    oneOf
+        [ map expiresFromInt int
+        , map expiresFromString string
+        ]
+expiresFromString a =
+    case a of
+        "never" -> Never
+        _ -> On (Time.millisToPosix 0)
+expiresFromInt a =
+    On (Time.millisToPosix a)
+
+-- permission =
+--     map permissionFromString string
+-- permissionFromString a =
+--     case a of
+--         "cluster_admin" -> ClusterAdmin
+--         "cluster_observer" -> ClusterObserver
+--         "security" -> Security
+--         _ -> INVALID_PERMISSION
+
+authMethod =
+    map authMethodFromString string
+authMethodFromString a =
+    case a of
+        "password" -> Password
+        _ -> INVALID_AUTHMETHOD
 
 
 decodeGroupList : D.Decoder (List Group)
@@ -214,19 +247,13 @@ decodeGroupList =
 group =
     succeed Group
         |> required "name" string
-        |> required "grants" (list grant)
-        |> optional "options" (dict string) Dict.empty
-
-grant =
-    succeed Grant
-        |> required "scope" string
         |> required "permissions" (list string)
+        |> optional "options" (dict string) Dict.empty
 
 
 decodePermissionList : D.Decoder (List String)
 decodePermissionList =
     at ["result"] (list string)
-
 
 -- TictacAAE
 decodeTtaaeStatus : D.Decoder (Dict String (List Ttaae.TtaaeTree))

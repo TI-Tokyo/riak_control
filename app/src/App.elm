@@ -92,7 +92,7 @@ init f =
                 "" ["Name"] SortName True
                 False "" Nothing Nothing
                 -- shared
-                Nothing Nothing  [] "" ""
+                Nothing Nothing  [] ""
                 -- TictacAAE
                 Dict.empty ""
                 "" [] SortUnsorted False

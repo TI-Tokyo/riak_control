@@ -18,66 +18,63 @@
 --
 -- ---------------------------------------------------------------------
 
-module Data.Security exposing (..)
+module Data.StandardRiakSecurity exposing (..)
 
 import Dict exposing (Dict)
-import Time
 
 
-type Class
-    = UserClass
-    | GroupClass
+type alias Grant =
+    { scope : String
+    , permissions : List String
+    }
 
+grantToStr : Grant -> String
+grantToStr {scope, permissions} =
+    scope ++ ":[" ++ (String.join "," permissions) ++ "]"
 
--- type Permission
---     = ClusterAdmin
---     | ClusterObserver
---     | Security
---     | INVALID_PERMISSION
-
-type Expires
-    = Never
-    | On Time.Posix
-
-type AuthMethod
-    = Password
-    | INVALID_AUTHMETHOD
+grantCrumbsFromStr : String -> List (String, String)
+grantCrumbsFromStr s =
+    let
+        (scope, pps) =
+            case String.split ":" s of
+                [_, a1, a2] -> (a1, a2)
+                _ -> ("", "")
+        permissions = String.slice 1 -1 pps |> String.split ","
+    in
+        List.map (\p -> (p, scope)) permissions
 
 type alias User =
     { name : String
-    , created : Time.Posix
-    , modified : Time.Posix
-    , expires : Expires
     , groups : List String
-    , permissions : List String
-    , authMethod : AuthMethod
+    , password_hash : String
+    , grants : List Grant
     , options : Dict.Dict String String
     }
 
 dummyUser =
     { name = "-"
-    , created = Time.millisToPosix 0
-    , modified = Time.millisToPosix 0
-    , expires = On (Time.millisToPosix 0)
     , groups = []
-    , permissions = []
-    , authMethod = Password
+    , password_hash = "-"
+    , grants = []
     , options = Dict.empty
     }
 
 
 type alias Group =
     { name : String
-    , permissions : List String
+    , grants : List Grant
     , options : Dict.Dict String String
     }
 
 dummyGroup =
     { name = "-"
-    , permissions = []
+    , grants = []
     , options = Dict.empty
     }
 
+type Role
+    = UserRole
+    | GroupRole
 
 type SecurityAction
     = ListUsers
@@ -86,12 +83,12 @@ type SecurityAction
     | UserDel String
     | AddUserGroup String String
     | DeleteUserGroup String String
-    | AddUserPermission String String
-    | DeleteUserPermission String String
+    | AddUserGrant String String String
+    | DeleteUserGrant String String String
     | ListGroups
     | GroupAdd String (Dict.Dict String String)
     | GroupMod String (Dict.Dict String String)
     | GroupDel String
-    | AddGroupPermission String String
-    | DeleteGroupPermission String String
+    | AddGroupGrant String String String
+    | DeleteGroupGrant String String String
     | ListPermissions

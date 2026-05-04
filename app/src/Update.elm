@@ -912,9 +912,23 @@ update msg m =
         UserGroupDeleted _ ->
             (m, Request.Security.listUsers m)
 
-        UserGrantAdded _ ->
+        AddUserPermission ->
+            let s_ = m.s in
+            ( { m | s = { s_ | openAddPermissionsDialogFor = Nothing
+                             , addingPermissionPermission = ""}}
+              , Request.Security.addUserPermission m m.s.addingPermissionPermission
+            )
+        DeleteUserPermissionBatch ->
+            let s_ = m.s in
+            ( {m | s = { s_ | selectedPermissionsForDelete = []}}
+            , Cmd.batch (List.map
+                             (Request.Security.deleteUserPermission m)
+                             s_.selectedPermissionsForDelete)
+            )
+
+        UserPermissionAdded _ ->
             (m, Request.Security.listUsers m)
-        UserGrantDeleted _ ->
+        UserPermissionDeleted _ ->
             (m, Request.Security.listUsers m)
 
 
@@ -998,71 +1012,51 @@ update msg m =
             let s_ = m.s in
             ({m | s = {s_ | openEditGroupDialogFor = Nothing}}, Cmd.none)
 
+        AddGroupPermission ->
+            let s_ = m.s in
+            ( { m | s = { s_ | openAddPermissionsDialogFor = Nothing
+                             , addingPermissionPermission = ""}}
+              , Request.Security.addGroupPermission m m.s.addingPermissionPermission
+            )
+        DeleteGroupPermissionBatch ->
+            let s_ = m.s in
+            ( {m | s = { s_ | selectedPermissionsForDelete = []}}
+            , Cmd.batch (List.map
+                             (Request.Security.deleteGroupPermission m)
+                             m.s.selectedPermissionsForDelete)
+            )
+
+        GroupPermissionAdded _ ->
+            (m, Request.Security.listGroups m)
+        GroupPermissionDeleted _ ->
+            (m, Request.Security.listGroups m)
+
+
         -- Group/User shared
-        ShowEditGrantsDialog a ->
+        ShowEditPermissionsDialog a ->
             let s_ = m.s in
-            ({m | s = {s_ | openEditGrantsDialogFor = Just a}}, Cmd.none)
-        EditGrantsCancelled ->
+            ({m | s = {s_ | openEditPermissionsDialogFor = Just a}}, Cmd.none)
+        EditPermissionsCancelled ->
             let s_ = m.s in
-            ({m | s = {s_ | openEditGrantsDialogFor = Nothing}}, Cmd.none)
+            ({m | s = {s_ | openEditPermissionsDialogFor = Nothing}}, Cmd.none)
 
 
-        ShowAddGrantDialog a ->
+        ShowAddPermissionDialog a ->
             let s_ = m.s in
-            ({m | s = {s_ | openAddGrantsDialogFor = Just a}}, Cmd.none)
-        AddGrantDialogCancelled ->
+            ({m | s = {s_ | openAddPermissionsDialogFor = Just a}}, Cmd.none)
+        AddPermissionDialogCancelled ->
             let s_ = m.s in
-            ({m | s = {s_ | openAddGrantsDialogFor = Nothing}}, Cmd.none)
-        SelectOrUnselectGrantToDelete a ->
+            ({m | s = {s_ | openAddPermissionsDialogFor = Nothing}}, Cmd.none)
+        SelectOrUnselectPermissionToDelete a ->
             let s_ = m.s in
-            ({m | s = {s_ | selectedGrantsForDelete = Util.addOrDeleteElement s_.selectedGrantsForDelete a}}
+            ({m | s = {s_ | selectedPermissionsForDelete = Util.addOrDeleteElement s_.selectedPermissionsForDelete a}}
             , Cmd.none
             )
-        AddingGrantPermissionChanged a ->
+        AddingPermissionPermissionChanged a ->
             let s_ = m.s in
-            ({m | s = {s_ | addingGrantPermission = a}}
+            ({m | s = {s_ | addingPermissionPermission = a}}
             , Cmd.none
             )
-        AddingGrantScopeChanged a ->
-            let s_ = m.s in
-            ({m | s = {s_ | addingGrantScope = a}}
-            , Cmd.none
-            )
-
-        AddGrant r ->
-            let
-                s_ = m.s
-                req =
-                    case r of
-                        Data.Security.UserRole -> Request.Security.addUserGrant
-                        Data.Security.GroupRole -> Request.Security.addGroupGrant
-                perm = s_.addingGrantPermission
-                scope = s_.addingGrantScope
-            in
-                ( {m | s = { s_
-                               | openAddGrantsDialogFor = Nothing
-                               , addingGrantPermission = ""
-                               , addingGrantScope = ""}}
-                , req m perm scope
-                )
-        DeleteGrantBatch r ->
-            let
-                s_ = m.s
-                req =
-                    case r of
-                        Data.Security.UserRole -> Request.Security.deleteUserGrant
-                        Data.Security.GroupRole -> Request.Security.deleteGroupGrant
-                pp = List.concat <| List.map Data.Security.grantCrumbsFromStr s_.selectedGrantsForDelete
-            in
-            ( {m | s = { s_
-                       | selectedGrantsForDelete = []}}
-            , Cmd.batch (List.map (\(p, s) -> req m p s) pp)
-            )
-
-        GroupGrantAdded _ ->
-            (m, Request.Security.listGroups m)
-        GroupGrantDeleted _ ->
-            (m, Request.Security.listGroups m)
 
 
         ListPermissions ->
