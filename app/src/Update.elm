@@ -916,19 +916,17 @@ update msg m =
             let s_ = m.s in
             ( { m | s = { s_ | openAddPermissionsDialogFor = Nothing
                              , addingPermissionPermission = ""}}
-              , Request.Security.addUserPermission m m.s.addingPermissionPermission
+              , Request.Security.addUserPermissions m [m.s.addingPermissionPermission]
             )
-        DeleteUserPermissionBatch ->
+        DeleteUserPermissions ->
             let s_ = m.s in
             ( {m | s = { s_ | selectedPermissionsForDelete = []}}
-            , Cmd.batch (List.map
-                             (Request.Security.deleteUserPermission m)
-                             s_.selectedPermissionsForDelete)
+            , Request.Security.deleteUserPermissions m m.s.selectedPermissionsForDelete
             )
 
-        UserPermissionAdded _ ->
+        UserPermissionsAdded _ ->
             (m, Request.Security.listUsers m)
-        UserPermissionDeleted _ ->
+        UserPermissionsDeleted _ ->
             (m, Request.Security.listUsers m)
 
 
@@ -1016,19 +1014,17 @@ update msg m =
             let s_ = m.s in
             ( { m | s = { s_ | openAddPermissionsDialogFor = Nothing
                              , addingPermissionPermission = ""}}
-              , Request.Security.addGroupPermission m m.s.addingPermissionPermission
+              , Request.Security.addGroupPermissions m [m.s.addingPermissionPermission]
             )
-        DeleteGroupPermissionBatch ->
+        DeleteGroupPermissions ->
             let s_ = m.s in
             ( {m | s = { s_ | selectedPermissionsForDelete = []}}
-            , Cmd.batch (List.map
-                             (Request.Security.deleteGroupPermission m)
-                             m.s.selectedPermissionsForDelete)
+            , Request.Security.deleteGroupPermissions m m.s.selectedPermissionsForDelete
             )
 
-        GroupPermissionAdded _ ->
+        GroupPermissionsAdded _ ->
             (m, Request.Security.listGroups m)
-        GroupPermissionDeleted _ ->
+        GroupPermissionsDeleted _ ->
             (m, Request.Security.listGroups m)
 
 

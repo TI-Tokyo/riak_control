@@ -241,8 +241,10 @@ type Msg
     | AddUserGroupDialogCancelled
     | UserGroupAdded (Result Http.Error ())
     | UserGroupDeleted (Result Http.Error ())
-    | UserPermissionAdded (Result Http.Error ())
-    | UserPermissionDeleted (Result Http.Error ())
+    | AddUserPermission
+    | DeleteUserPermissions
+    | UserPermissionsAdded (Result Http.Error ())
+    | UserPermissionsDeleted (Result Http.Error ())
 
     -- groups
     | GroupFilterChanged String
@@ -255,8 +257,8 @@ type Msg
     | CreateGroupCancelled
     | ShowEditGroupDialog Group
     | EditGroupCancelled
-    | GroupPermissionAdded (Result Http.Error ())
-    | GroupPermissionDeleted (Result Http.Error ())
+    | GroupPermissionsAdded (Result Http.Error ())
+    | GroupPermissionsDeleted (Result Http.Error ())
 
     -- shared
     | ShowEditPermissionsDialog String
@@ -264,10 +266,8 @@ type Msg
     | EditPermissionsCancelled
     | ShowAddPermissionDialog String
     | AddingPermissionPermissionChanged String
-    | AddUserPermission
-    | DeleteUserPermissionBatch
     | AddGroupPermission
-    | DeleteGroupPermissionBatch
+    | DeleteGroupPermissions
     | AddPermissionDialogCancelled
 
     -- misc

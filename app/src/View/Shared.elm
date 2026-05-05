@@ -193,8 +193,8 @@ makeEditPermissionsDialog2 m class a =
                 Data.Security.GroupClass -> let g = Model.groupBy m .name a in (g.name, g.permissions, "group")
         delMsg =
             case class of
-                Data.Security.UserClass -> DeleteUserPermissionBatch
-                Data.Security.GroupClass -> DeleteGroupPermissionBatch
+                Data.Security.UserClass -> DeleteUserPermissions
+                Data.Security.GroupClass -> DeleteGroupPermissions
     in
     [ Dialog.confirmation
           (Dialog.config

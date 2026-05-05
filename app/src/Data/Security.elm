@@ -86,12 +86,20 @@ type SecurityAction
     | UserDel String
     | AddUserGroup String String
     | DeleteUserGroup String String
-    | AddUserPermission String String
-    | DeleteUserPermission String String
+    | AddUserPermissions String (List String)
+    | DeleteUserPermissions String (List String)
     | ListGroups
     | GroupAdd String (Dict.Dict String String)
     | GroupMod String (Dict.Dict String String)
     | GroupDel String
-    | AddGroupPermission String String
-    | DeleteGroupPermission String String
+    | AddGroupPermissions String (List String)
+    | DeleteGroupPermissions String (List String)
     | ListPermissions
+
+
+abbreviatePerm a =
+    case a of
+        "cluster_admin" -> "adm"
+        "cluster_observer" -> "obs"
+        "security" -> "sec"
+        _ -> a
