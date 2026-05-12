@@ -111,13 +111,13 @@ makeUser m u =
 
 cardContent m u =
     let
-        options = List.map (\(k, v) -> k ++ "=" ++ v) (Dict.toList u.options)
+        tags = List.map (\(k, v) -> k ++ "=" ++ v) (Dict.toList u.tags)
         abbrPerms = List.map Data.Security.abbreviatePerm u.permissions
     in
         "           Name: " ++ u.name
         ++ View.Shared.maybeItems 14 abbrPerms "Permissions" 60
         ++ View.Shared.maybeItems 14 u.groups "Groups" 60
-        ++ View.Shared.maybeItems 14 options "Options" 60
+        ++ View.Shared.maybeItems 14 tags "Tags" 60
 
 userCardActions m u =
     Just <|

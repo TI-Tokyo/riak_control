@@ -51,7 +51,7 @@ type alias User =
     , groups : List String
     , permissions : List String
     , authMethod : AuthMethod
-    , options : Dict.Dict String String
+    , tags : Dict.Dict String String
     }
 
 dummyUser =
@@ -62,26 +62,26 @@ dummyUser =
     , groups = []
     , permissions = []
     , authMethod = Password
-    , options = Dict.empty
+    , tags = Dict.empty
     }
 
 
 type alias Group =
     { name : String
     , permissions : List String
-    , options : Dict.Dict String String
+    , tags : Dict.Dict String String
     }
 
 dummyGroup =
     { name = "-"
     , permissions = []
-    , options = Dict.empty
+    , tags = Dict.empty
     }
 
 
 type SecurityAction
     = ListUsers
-    | UserAdd String (Dict.Dict String String)
+    | UserAdd String String Expires (Dict.Dict String String)
     | UserMod String (Dict.Dict String String)
     | UserDel String
     | AddUserGroup String String

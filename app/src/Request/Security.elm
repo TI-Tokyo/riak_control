@@ -51,6 +51,7 @@ import HttpBuilder
 import Url.Builder
 import Json.Encode exposing (string, dict, list)
 import Url
+import Iso8601
 
 
 listUsers : Model -> Cmd Msg
@@ -61,8 +62,7 @@ listUsers m =
 createUser : Model -> Cmd Msg
 createUser m  =
     securityRequest m (Http.expectWhatever UserCreated)
-        (Data.Security.UserAdd m.s.newUserName
-             (Dict.fromList [("password",  m.s.newUserPassword)]))
+        (Data.Security.UserAdd m.s.newUserName m.s.newUserPassword Never Dict.empty)
 
 updateUser : Model -> Cmd Msg
 updateUser m  =
@@ -158,12 +158,24 @@ securityActionEncoder action =
                 , ("params", Json.Encode.object [])
                 ]
 
-        Data.Security.UserAdd name options ->
+        Data.Security.UserAdd name password expires tags ->
+            let
+                jo = Json.Encode.object
+                expiresObj =
+                    case expires of
+                        Never -> string "never"
+                        On a -> Iso8601.encode a
+            in
             Json.Encode.object
                 [ ("action", string "SecurityCreateUser")
-                , ("params", Json.Encode.object [ ("name", string name)
-                                                , ("options", dict identity string options)
-                                                ])
+                , ("params", jo [ ("name", string name)
+                                , ("auth_details", jo [ ("method", string "password")
+                                                      , ("password", string password)
+                                                      ]
+                                  )
+                                , ("expires", expiresObj)
+                                , ("tags", dict identity string tags)
+                                ])
                 ]
         Data.Security.UserMod name options ->
             Json.Encode.object

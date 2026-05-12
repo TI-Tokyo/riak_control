@@ -734,7 +734,9 @@ update msg m =
             (m, Request.Ttaae.getStatus m m.s.ttaaeStatusShownForNode)
         GotTtaaeStatus (Ok r) ->
             let s_ = m.s in
-            ({m | s = {s_ | ttaaeStatus = r}}, Cmd.none)
+            ( {m | s = {s_ | ttaaeStatus = Dict.insert m.s.ttaaeStatusShownForNode r s_.ttaaeStatus}}
+            , Cmd.none
+            )
         GotTtaaeStatus (Err err) ->
             ( handleHttpError m "Failed to get ttaae report: " err
             , Cmd.none

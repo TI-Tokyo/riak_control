@@ -32,6 +32,7 @@ type TtaaeTreeStatus
 
 type alias TtaaeTree =
     { partition : String
+    , isEmpty : Bool
     , status : TtaaeTreeStatus
     , lastRebuild : String
     , nextRebuild : String
