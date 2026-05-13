@@ -263,7 +263,6 @@ decodeTtaaeStatus =
 ttaaeTree =
     succeed Ttaae.TtaaeTree
         |> required "partition" string
-        |> required "is_empty" bool
         |> required "status" ttaeTreeStatus
         |> required "last_rebuild" string
         |> required "next_rebuild" string

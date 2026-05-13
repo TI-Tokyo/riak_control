@@ -49,16 +49,10 @@ makeProperContent m =
     let
         cell = (\a -> DataTable.cell [] [ text a ])
         cellr = (\a -> DataTable.cell [ style "text-align" "right" ] [ text a ])
-        statusStr = (\e a ->
-                         if e then
-                             "empty"
-                         else
-                             Data.Ttaae.ttaeTreeStatusToStr a
-                    )
-        row = (\{partition, isEmpty, status, lastRebuild, nextRebuild, totalDirtySegments, controllerPid} ->
+        row = (\{partition, status, lastRebuild, nextRebuild, totalDirtySegments, controllerPid} ->
                    DataTable.row []
                           [ cellr partition
-                          , cell (statusStr isEmpty status)
+                          , cell (Data.Ttaae.ttaeTreeStatusToStr status)
                           , cell lastRebuild
                           , cell nextRebuild
                           , cellr (String.fromInt totalDirtySegments)
