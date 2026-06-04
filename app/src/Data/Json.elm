@@ -260,9 +260,9 @@ decodePermissionList =
     at ["result"] (list string)
 
 -- TictacAAE
-decodeTtaaeStatus : D.Decoder (Dict String (List Ttaae.TtaaeTree))
+decodeTtaaeStatus : D.Decoder (List Ttaae.TtaaeTree)
 decodeTtaaeStatus =
-    dict (list ttaaeTree)
+    at ["result"] (list ttaaeTree)
 
 ttaaeTree =
     succeed Ttaae.TtaaeTree

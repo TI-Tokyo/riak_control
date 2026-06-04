@@ -157,7 +157,6 @@ typeset linelength j primer aa =
                      let
                          curline = Maybe.withDefault "" <| List.head q
                          prevlines = List.drop 1 q
-                         _ = Debug.log "" (curline, item, indent)
                      in
                          if String.length curline == indent then  -- bol
                              (curline ++ item) :: prevlines

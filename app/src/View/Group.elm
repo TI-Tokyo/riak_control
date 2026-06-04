@@ -107,10 +107,10 @@ makeGroup m a =
 
 cardContent m u =
     let
-        options = List.map (\(k, v) -> k ++ "=" ++ v) (Dict.toList u.options)
+        tags = List.map (\(k, v) -> k ++ "=" ++ v) (Dict.toList u.tags)
     in
         View.Shared.maybeItems 12 u.permissions "Permissions" 60
-        ++ View.Shared.maybeItems 12 options "Options" 60
+        ++ View.Shared.maybeItems 12 tags "Tags" 60
 
 groupCardActions m a =
     Just <|

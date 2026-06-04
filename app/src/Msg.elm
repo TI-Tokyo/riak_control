@@ -165,7 +165,7 @@ type Msg
 
     -- TictacAAE
     | GetTtaaeStatus
-    | GotTtaaeStatus (Result Http.Error (Dict String (List Data.Ttaae.TtaaeTree)))
+    | GotTtaaeStatus (Result Http.Error (List Data.Ttaae.TtaaeTree))
 
     | TtaaeTreeSortByFieldChanged String
     | TtaaeTreeSortOrderChanged
