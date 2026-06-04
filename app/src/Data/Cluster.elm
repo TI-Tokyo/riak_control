@@ -33,7 +33,7 @@ type alias Cluster =
 type alias CurrentMember =
     { name : String
     , status : CurrentMemberStatus
-    , versionInfo : Data.VersionInfo.SubVersionInfo
+    , versionInfo : Data.VersionInfo.VersionInfo
     , isMe : Bool
     , reachable : Bool
     , services : List String

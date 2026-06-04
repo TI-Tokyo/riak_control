@@ -23,6 +23,7 @@ module View.Connection exposing (makeContent)
 import Model exposing (Model)
 import Msg exposing (Msg(..))
 import View.Style
+import Data.VersionInfo
 
 import Html exposing (Html, text, div, pre)
 import Html.Attributes exposing (attribute, style)
@@ -30,6 +31,7 @@ import Material.Button as Button
 import Material.Dialog as Dialog
 import Material.TextField as TextField
 import Material.Typography as Typography
+import Dict as Dict
 
 makeContent m =
     div View.Style.topContent
@@ -49,12 +51,17 @@ versionInfoDetails m =
         ]
 
 versionInfoDetailsContent m =
-    div View.Style.cardInnerContent
-        [ text
-              ("Connected to: " ++ m.c.riakAdminCtlUrl ++ " (" ++ m.s.versionInfo.nodename ++ ")\n" ++
-               "Riak version: " ++ m.s.versionInfo.riakVersion ++ " on " ++ m.s.versionInfo.systemVersion ++"\n" ++
-               "      Uptime: " ++ m.s.versionInfo.uptimeStr)
-        ]
+    let
+        (nodename, vi) =
+            Maybe.withDefault ("", Data.VersionInfo.emptyVersionInfo)
+                (Dict.toList m.s.versionInfo |> List.head)
+    in
+        div View.Style.cardInnerContent
+            [ text
+                  ("Connected to: " ++ m.c.riakAdminCtlUrl ++ " (" ++ nodename ++ ")\n" ++
+                   "Riak version: " ++ vi.riakVersion ++ " on " ++ vi.systemVersion ++"\n" ++
+                   "      Uptime: " ++ vi.uptimeStr)
+            ]
 
 versionInfoDetailsActions =
     div []

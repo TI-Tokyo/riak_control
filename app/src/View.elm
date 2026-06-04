@@ -46,7 +46,7 @@ import Material.IconButton as IconButton
 import Material.List as List
 import Material.List.Item as ListItem
 import Material.Typography as Typography
-
+import Dict as Dict
 
 view : Model -> Html Msg
 view m =
@@ -96,11 +96,15 @@ makeTopAppBar m =
         ]
 
 makeConnectionInfo m =
-    case m.s.activeTab of
-        Msg.SshOps ->
-            [ text m.c.riakControlServerUrl ]
-        _ ->
-            [ text (m.c.riakAdminCtlUrl ++ " (" ++ m.s.versionInfo.nodename ++ ")") ]
+    let
+        nodename =
+            Maybe.withDefault "??" (Dict.keys m.s.versionInfo |> List.head)
+    in
+        case m.s.activeTab of
+            Msg.SshOps ->
+                [ text m.c.riakControlServerUrl ]
+            _ ->
+                [ text (m.c.riakAdminCtlUrl ++ " (" ++ nodename ++ ")") ]
 
 listWhat m =
     case m.s.activeTab of

@@ -20,6 +20,8 @@
 
 module Request.Util exposing (..)
 
+import HttpBuilder
+import Url.Builder
 import Base64
 
 stdHeaders m =
@@ -29,3 +31,11 @@ stdHeaders m =
     , ("authorization",
         "Basic " ++ (Base64.encode (m.c.riakAdminCtlUser ++ ":" ++ m.c.riakAdminCtlPassword)))
     ]
+
+req m a c e =
+    Url.Builder.crossOrigin m.c.riakAdminCtlUrl [ "ctl", a ] []
+        |> HttpBuilder.post
+        |> HttpBuilder.withHeaders (stdHeaders m)
+        |> HttpBuilder.withJsonBody c
+        |> HttpBuilder.withExpect e
+        |> HttpBuilder.request

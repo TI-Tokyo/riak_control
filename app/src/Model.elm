@@ -98,7 +98,7 @@ type alias State =
 
     -- connection (previously also "admin", "server",
     -- all missing the elusive point).
-    , versionInfo : VersionInfo.VersionInfo
+    , versionInfo : Dict String VersionInfo.VersionInfo
     -- ended up with 'versionInfo', following "Getting Version Info"
     -- message the author sees when he starts Call of Duty Mobile.
     , configDialogShown : Bool

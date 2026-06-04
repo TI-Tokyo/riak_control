@@ -23,6 +23,7 @@ module App exposing (init, subscriptions, Flags)
 import Model exposing (..)
 import Data.Cluster
 import Data.SshOps
+import Data.VersionInfo
 import Update exposing (refreshAll)
 import Msg exposing (Msg(..))
 import View.Common exposing (SortByField(..))
@@ -71,13 +72,7 @@ init f =
                 Static.awaitingOutput
                 Data.SshOps.ScriptNotStarted
                 -- config
-                { riakVersion = "---"
-                , systemVersion = "---"
-                , nodename = ""
-                , uptime = 0
-                , uptimeStr = "---"
-                , httpsListeners = Dict.empty
-                }
+                (Dict.fromList [("", Data.VersionInfo.emptyVersionInfo)])
                 (not haveCreds) f.riakNodePingUrl f.riakAdminCtlUrl f.riakAdminCtlUser f.riakAdminCtlPassword
                 -- Cluster
                 "(awaiting refresh)" SortName True Nothing Nothing

@@ -55,203 +55,195 @@ import Url
 
 listUsers : Model -> Cmd Msg
 listUsers m =
-    securityRequest m (Http.expectJson GotUserList Data.Json.decodeUserList)
+    securityRequest m "SecurityListUsers"
+        (Http.expectJson GotUserList Data.Json.decodeUserList)
         Data.Security.ListUsers
 
 createUser : Model -> Cmd Msg
 createUser m  =
-    securityRequest m (Http.expectWhatever UserCreated)
+    securityRequest m "SecurityCreateUser"
+        (Http.expectWhatever UserCreated)
         (Data.Security.UserAdd m.s.newUserName
              (Dict.fromList [("password",  m.s.newUserPassword)]))
 
 updateUser : Model -> Cmd Msg
 updateUser m  =
-    securityRequest m (Http.expectWhatever UserCreated)
+    securityRequest m "SecurityUpdateUser"
+        (Http.expectWhatever UserCreated)
         (Data.Security.UserMod m.s.newUserName
              (Dict.fromList [("password",  m.s.newUserPassword)]))
 
 addUserGroup : Model -> String -> Cmd Msg
 addUserGroup m a =
-    securityRequest m (Http.expectWhatever UserGroupAdded)
+    securityRequest m "SecurityAddUserGroup"
+        (Http.expectWhatever UserGroupAdded)
         (Data.Security.AddUserGroup
              (Maybe.withDefault "--" m.s.openEditUserGroupsDialogFor) a)
 
 deleteUserGroup : Model -> String -> Cmd Msg
 deleteUserGroup m a =
-    securityRequest m (Http.expectWhatever UserGroupAdded)
+    securityRequest m "SecurityDeleteUserGroup"
+        (Http.expectWhatever UserGroupAdded)
         (Data.Security.DeleteUserGroup
              (Maybe.withDefault "--" m.s.openEditUserGroupsDialogFor) a)
 
 addUserPermissions : Model -> (List String) -> Cmd Msg
 addUserPermissions m aa =
-    securityRequest m (Http.expectWhatever UserPermissionsAdded)
+    securityRequest m "SecurityAddUserPermissions"
+        (Http.expectWhatever UserPermissionsAdded)
         (Data.Security.AddUserPermissions
              (Maybe.withDefault "--" m.s.openAddPermissionsDialogFor) aa)
 
 deleteUserPermissions : Model -> (List String) -> Cmd Msg
 deleteUserPermissions m aa =
-    securityRequest m (Http.expectWhatever UserPermissionsDeleted)
+    securityRequest m "SecurityDeleteUserPermissions"
+        (Http.expectWhatever UserPermissionsDeleted)
         (Data.Security.DeleteUserPermissions
              (Maybe.withDefault "--" m.s.openEditPermissionsDialogFor) aa)
 
 deleteUser : Model -> String -> Cmd Msg
 deleteUser m a =
-    securityRequest m (Http.expectWhatever UserCreated)
+    securityRequest m "SecurityDeleteUser"
+        (Http.expectWhatever UserCreated)
         (Data.Security.UserDel a)
 
 
 listGroups : Model -> Cmd Msg
 listGroups m =
-    securityRequest m (Http.expectJson GotGroupList Data.Json.decodeGroupList)
+    securityRequest m "SecurityListGroups"
+        (Http.expectJson GotGroupList Data.Json.decodeGroupList)
         Data.Security.ListGroups
 
 createGroup : Model -> Cmd Msg
 createGroup m  =
-    securityRequest m (Http.expectWhatever GroupCreated)
+    securityRequest m "SecurityCreateGroup"
+        (Http.expectWhatever GroupCreated)
         (Data.Security.GroupAdd m.s.newGroupName
              (Dict.fromList []))
 
 updateGroup : Model -> Cmd Msg
 updateGroup m  =
-    securityRequest m (Http.expectWhatever GroupCreated)
+    securityRequest m "SecurityUpdateGroup"
+        (Http.expectWhatever GroupCreated)
         (Data.Security.GroupMod m.s.newGroupName
              (Dict.fromList []))
 
 deleteGroup : Model -> String -> Cmd Msg
 deleteGroup m a =
-    securityRequest m (Http.expectWhatever GroupCreated)
+    securityRequest m "SecurityDeleteGroup"
+        (Http.expectWhatever GroupCreated)
         (Data.Security.GroupDel a)
 
 addGroupPermissions : Model -> (List String) -> Cmd Msg
 addGroupPermissions m aa =
-    securityRequest m (Http.expectWhatever GroupPermissionsAdded)
+    securityRequest m "SecurityAddGroupPermissions"
+        (Http.expectWhatever GroupPermissionsAdded)
         (Data.Security.AddGroupPermissions
              (Maybe.withDefault "--" m.s.openAddPermissionsDialogFor) aa)
 
 deleteGroupPermissions : Model -> (List String) -> Cmd Msg
 deleteGroupPermissions m aa =
-    securityRequest m (Http.expectWhatever GroupPermissionsDeleted)
+    securityRequest m "SecurityDeleteGroupPermissions"
+        (Http.expectWhatever GroupPermissionsDeleted)
         (Data.Security.DeleteGroupPermissions
              (Maybe.withDefault "--" m.s.openEditPermissionsDialogFor) aa)
 
-securityRequest m expect a =
-    Url.Builder.crossOrigin m.c.riakAdminCtlUrl [ "ctl"  ] []
-        |> HttpBuilder.post
-        |> HttpBuilder.withHeaders (stdHeaders m)
-        |> HttpBuilder.withExpect expect
-        |> HttpBuilder.withJsonBody (securityActionEncoder a)
-        |> HttpBuilder.request
-
-
 listPermissions : Model -> Cmd Msg
 listPermissions m =
-    securityRequest m (Http.expectJson GotPermissionList Data.Json.decodePermissionList)
+    securityRequest m "SecurityListPermissions"
+        (Http.expectJson GotPermissionList Data.Json.decodePermissionList)
         Data.Security.ListPermissions
 
-
+securityRequest m action expect c =
+    Request.Util.req m action (securityActionEncoder c) expect
 
 securityActionEncoder action =
     case action of
         Data.Security.ListUsers ->
             Json.Encode.object
-                [ ("action", string "SecurityListUsers")
-                , ("params", Json.Encode.object [])
+                [ ("params", Json.Encode.object [])
                 ]
 
         Data.Security.UserAdd name options ->
             Json.Encode.object
-                [ ("action", string "SecurityCreateUser")
-                , ("params", Json.Encode.object [ ("name", string name)
+                [ ("params", Json.Encode.object [ ("name", string name)
                                                 , ("options", dict identity string options)
                                                 ])
                 ]
         Data.Security.UserMod name options ->
             Json.Encode.object
-                [ ("action", string "SecurityUpdateUser")
-                , ("params", Json.Encode.object [ ("name", string name)
+                [ ("params", Json.Encode.object [ ("name", string name)
                                                 , ("options", dict identity string options)
                                                 ])
                 ]
         Data.Security.UserDel name ->
             Json.Encode.object
-                [ ("action", string "SecurityDeleteUser")
-                , ("params", Json.Encode.object [ ("name", string name)
+                [ ("params", Json.Encode.object [ ("name", string name)
                                                 ])
                 ]
 
         Data.Security.AddUserGroup u g ->
             Json.Encode.object
-                [ ("action", string "SecurityAddUserGroup")
-                , ("params", Json.Encode.object [ ("user", string u)
+                [ ("params", Json.Encode.object [ ("user", string u)
                                                 , ("group", string g)
                                                 ])
                 ]
         Data.Security.DeleteUserGroup u g ->
             Json.Encode.object
-                [ ("action", string "SecurityDeleteUserGroup")
-                , ("params", Json.Encode.object [ ("user", string u)
+                [ ("params", Json.Encode.object [ ("user", string u)
                                                 , ("group", string g)
                                                 ])
                 ]
 
         Data.Security.AddUserPermissions u aa ->
             Json.Encode.object
-                [ ("action", string "SecurityAddUserPermissions")
-                , ("params", Json.Encode.object [ ("user", string u)
+                [ ("params", Json.Encode.object [ ("user", string u)
                                                 , ("permissions", list string aa)
                                                 ])
                 ]
         Data.Security.DeleteUserPermissions u aa ->
             Json.Encode.object
-                [ ("action", string "SecurityDeleteUserPermissions")
-                , ("params", Json.Encode.object [ ("user", string u)
+                [ ("params", Json.Encode.object [ ("user", string u)
                                                 , ("permissions", list string aa)
                                                 ])
                 ]
 
         Data.Security.ListGroups ->
             Json.Encode.object
-                [ ("action", string "SecurityListGroups")
-                , ("params", Json.Encode.object [])
+                [ ("params", Json.Encode.object [])
                 ]
         Data.Security.GroupAdd name options ->
             Json.Encode.object
-                [ ("action", string "SecurityCreateGroup")
-                , ("params", Json.Encode.object [ ("name", string name)
+                [ ("params", Json.Encode.object [ ("name", string name)
                                                 , ("options", dict identity string options)
                                                 ])
                 ]
         Data.Security.GroupMod name options ->
             Json.Encode.object
-                [ ("action", string "SecurityUpdateGroup")
-                , ("params", Json.Encode.object [ ("name", string name)
+                [ ("params", Json.Encode.object [ ("name", string name)
                                                 , ("options", dict identity string options)
                                                 ])
                 ]
         Data.Security.GroupDel name ->
             Json.Encode.object
-                [ ("action", string "SecurityDeleteGroup")
-                , ("params", Json.Encode.object [ ("name", string name)
+                [ ("params", Json.Encode.object [ ("name", string name)
                                                 ])
                 ]
 
         Data.Security.AddGroupPermissions u aa ->
             Json.Encode.object
-                [ ("action", string "SecurityAddGroupPermissions")
-                , ("params", Json.Encode.object [ ("group", string u)
+                [ ("params", Json.Encode.object [ ("group", string u)
                                                 , ("permissions", list string aa)
                                                 ])
                 ]
         Data.Security.DeleteGroupPermissions u aa ->
             Json.Encode.object
-                [ ("action", string "SecurityDeleteGroupPermissions")
-                , ("params", Json.Encode.object [ ("group", string u)
+                [ ("params", Json.Encode.object [ ("group", string u)
                                                 , ("permissions", list string aa)
                                                 ])
                 ]
 
         Data.Security.ListPermissions ->
             Json.Encode.object
-                [ ("action", string "SecurityListPermissions")
-                , ("params", Json.Encode.object [])
+                [ ("params", Json.Encode.object [])
                 ]

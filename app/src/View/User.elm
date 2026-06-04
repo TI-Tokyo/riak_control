@@ -114,7 +114,9 @@ cardContent m u =
         options = List.map (\(k, v) -> k ++ "=" ++ v) (Dict.toList u.options)
         abbrPerms = List.map Data.Security.abbreviatePerm u.permissions
     in
-        "           Name: " ++ u.name
+        "           Name: " ++ u.name ++ "\n" ++
+        "        Created: " ++ (Iso8601.fromTime u.created) ++ "\n" ++
+        "       Modified: " ++ (Iso8601.fromTime u.modified) ++ "\n" 
         ++ View.Shared.maybeItems 14 abbrPerms "Permissions" 60
         ++ View.Shared.maybeItems 14 u.groups "Groups" 60
         ++ View.Shared.maybeItems 14 options "Options" 60

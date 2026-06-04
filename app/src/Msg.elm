@@ -98,7 +98,7 @@ type Msg
     | Ping
     | TimedPong (Result Http.Error Int)
     | GetVersionInfo
-    | GotVersionInfo (Result Http.Error VersionInfo)
+    | GotVersionInfo (Result Http.Error (Dict String VersionInfo))
 
     -- Cluster
     | GetCluster

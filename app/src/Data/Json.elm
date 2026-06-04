@@ -101,15 +101,16 @@ decodeScriptOutput =
 
 -- Connection ------------------------------
 
-decodeVersionInfo : D.Decoder VersionInfo
+decodeVersionInfo : D.Decoder (Dict String VersionInfo)
 decodeVersionInfo =
+    at ["result"] (dict decodeVersionInfoItem)
+
+decodeVersionInfoItem =
     succeed VersionInfo
-        |> requiredAt ["result", "riak_version"] string
-        |> requiredAt ["result", "system_version"] string
-        |> requiredAt ["result", "nodename"] string
-        |> requiredAt ["result", "uptime"] int
-        |> requiredAt ["result", "uptime_str"] string
-        |> requiredAt ["result", "https_listeners"] (dict string)
+        |> required "riak_version" string
+        |> required "system_version" string
+        |> required "uptime" int
+        |> required "uptime_str" string
 
 
 -- Cluster ------------------------------
@@ -133,7 +134,7 @@ currentMember =
     succeed CurrentMember
         |> required "name" string
         |> required "status" currentMemberStatus
-        |> optional "system_info" decodeSubVersionInfo Data.VersionInfo.emptySubVersionInfo
+        |> optional "system_info" decodeSubVersionInfo Data.VersionInfo.emptyVersionInfo
         |> required "is_me" bool
         |> required "reachable" bool
         |> optional "services" (list string) []
@@ -148,7 +149,7 @@ currentMember =
         |> optional "replacement" (nullable string) Nothing
 
 decodeSubVersionInfo =
-    succeed SubVersionInfo
+    succeed VersionInfo
         |> required "riak_version" string
         |> required "system_version" string
         |> required "uptime" int
@@ -210,7 +211,10 @@ user =
         |> optional "options" (dict string) Dict.empty
 
 isoDate =
-    map Time.millisToPosix int
+    oneOf
+        [ map Time.millisToPosix int
+        , Iso8601.decoder
+        ]
 expires =
     oneOf
         [ map expiresFromInt int

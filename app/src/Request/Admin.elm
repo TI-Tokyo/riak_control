@@ -69,17 +69,12 @@ pingResolver a =
 
 getVersionInfo : Model -> Cmd Msg
 getVersionInfo m =
-    Url.Builder.crossOrigin m.c.riakAdminCtlUrl [ "ctl" ] []
-        |> HttpBuilder.post
-        |> HttpBuilder.withHeaders (stdHeaders m)
-        |> HttpBuilder.withJsonBody (requestParams VersionInfo.GetVersionInfo)
-        |> HttpBuilder.withExpect (Http.expectJson GotVersionInfo Data.Json.decodeVersionInfo)
-        |> HttpBuilder.request
+    Request.Util.req m "SystemGetVersionInfo" (params m VersionInfo.GetVersionInfo)
+        (Http.expectJson GotVersionInfo Data.Json.decodeVersionInfo)
 
-requestParams req =
+params m req =
     case req of
         VersionInfo.GetVersionInfo ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "SystemGetVersionInfo")
-                , ("params", Json.Encode.object [])
+                [ ("params", Json.Encode.object [ ("nodes", Json.Encode.string "this") ])
                 ]

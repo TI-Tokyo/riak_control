@@ -40,18 +40,14 @@ getStatus m a =
     actionRequest m (Ttaae.GetTtaaeStatusAction a) GotTtaaeStatus
 
 actionRequest m req msg =
-    Url.Builder.crossOrigin m.c.riakAdminCtlUrl [ "ctl" ] []
-        |> HttpBuilder.post
-        |> HttpBuilder.withJsonBody (requestParams req)
-        |> HttpBuilder.withHeaders (stdHeaders m)
-        |> HttpBuilder.withExpect (Http.expectJson GotTtaaeStatus Data.Json.decodeTtaaeStatus)
-        |> HttpBuilder.request
+    Request.Util.req m "TictacaaeGetStatus"
+        (requestParams req)
+        (Http.expectJson GotTtaaeStatus Data.Json.decodeTtaaeStatus)
 
 requestParams req =
     case req of
         Ttaae.GetTtaaeStatusAction a ->
             Json.Encode.object
-                [ ("action", Json.Encode.string "TictacaaeGetStatus")
-                , ("params", Json.Encode.object [ ("node", Json.Encode.string a)
+                [ ("params", Json.Encode.object [ ("node", Json.Encode.string a)
                                                 ])
                 ]

@@ -25,20 +25,11 @@ import Dict exposing (Dict)
 type alias VersionInfo =
     { riakVersion : String
     , systemVersion : String
-    , nodename : String
-    , uptime : Int
-    , uptimeStr : String
-    , httpsListeners : Dict String String
-    }
-
-type alias SubVersionInfo =
-    { riakVersion : String
-    , systemVersion : String
     , uptime : Int
     , uptimeStr : String
     }
 
-emptySubVersionInfo =
+emptyVersionInfo =
     { riakVersion = ""
     , systemVersion = ""
     , uptime = -1
