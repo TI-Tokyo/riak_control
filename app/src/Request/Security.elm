@@ -45,6 +45,7 @@ import Msg exposing (Msg(..))
 import Util
 import Request.Util exposing (..)
 
+import Time
 import Dict
 import Http
 import HttpBuilder
@@ -60,11 +61,16 @@ listUsers m =
         (Http.expectJson GotUserList Data.Json.decodeUserList)
         Data.Security.ListUsers
 
-createUser : Model -> Cmd Msg
-createUser m  =
-    securityRequest m "SecurityCreateUser"
-        (Http.expectWhatever UserCreated)
-        (Data.Security.UserAdd m.s.newUserName m.s.newUserPassword Never Dict.empty)
+createUser : Model -> Time.Posix -> Cmd Msg
+createUser m now =
+    let expires = Util.convertExpires m.s.newUserExpiresIn now in
+    case expires of
+        Ok expValue ->
+            securityRequest m "SecurityCreateUser"
+                (Http.expectWhatever UserCreated)
+                (Data.Security.UserAdd m.s.newUserName m.s.newUserPassword expValue Dict.empty)
+        Err _ ->
+            Cmd.none
 
 updateUser : Model -> Cmd Msg
 updateUser m  =

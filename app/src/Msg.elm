@@ -183,7 +183,7 @@ type Msg
     -- Users
     | ListUsers
     | GotUserList (Result Http.Error (List User))
-    | CreateUser
+    | CreateUser Time.Posix
     | UserCreated (Result Http.Error ())
     | DeleteUser String
     | DeleteUserConfirmed
@@ -227,6 +227,8 @@ type Msg
     | ShowCreateUserDialog
     | NewUserNameChanged String
     | NewUserPasswordChanged String
+    | NewUserExpiresInChanged String
+    | CalculateNewUserExpiryAndCreateUser
     | CreateUserCancelled
     | ShowEditUserDialog String
     | EditUserCancelled

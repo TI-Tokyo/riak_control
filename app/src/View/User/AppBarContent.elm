@@ -82,6 +82,6 @@ makeFilterChips m =
                        )
                        n
                 )
-            []
+            ["Tag name", "Tag value"]
     in
         FilterChipSet.chipSet [] first rest

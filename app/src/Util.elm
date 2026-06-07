@@ -20,6 +20,7 @@
 
 module Util exposing (..)
 
+import Data.Security
 import Time
 import DateTime
 import Iso8601
@@ -82,6 +83,58 @@ delElement l a =
 isGoodPassword a =
     7 < String.length a
 
+isGoodExpires a =
+    case convertExpires a (Time.millisToPosix 0) of
+        Ok _ -> True
+        Err _ -> False
+
+convertExpires : String -> Time.Posix -> Result String Data.Security.Expires
+convertExpires a now =
+    let
+        addUp =
+            \x ->
+                case x of
+                    Nothing -> 0
+                    Just c ->
+                        case (String.slice 0 -1 c, String.right 1 c) of
+                            (v, "d") -> 24 * 60 * 60 * (Maybe.withDefault 0 (String.toInt v))
+                            (v, "h") -> 60 * 60 * (Maybe.withDefault 0 (String.toInt v))
+                            (v, "m") -> 60 * (Maybe.withDefault 0 (String.toInt v))
+                            (v, "s") -> Maybe.withDefault 0 (String.toInt v)
+                            _ -> 0
+    in
+        case a of
+            "never" ->
+                Ok Data.Security.Never
+            _ ->
+                case Iso8601.toTime a of
+                    Ok t -> Ok (Data.Security.On t)
+                    Err _ ->
+                        let
+                            mm = Regex.find
+                                 (Maybe.withDefault Regex.never
+                                      <| Regex.fromString "in (\\d+d|) *(\\d+h|) *(\\d+m|) *(\\d+s|)") a
+                            subm =
+                                case List.head mm of
+                                    Just k -> k.submatches
+                                    Nothing -> []
+                        in
+                            case subm of
+                                [] ->
+                                    Err "invalid expires"
+                                [Nothing, Nothing, Nothing, Nothing] ->
+                                    Err "invalid expires"
+                                dhms ->
+                                    let
+                                        nowSeconds = (Time.posixToMillis now) // 1000
+                                        inSeconds = List.foldl (\x q -> q + (addUp x)) 0 dhms
+                                    in
+                                        Ok <| Data.Security.On <| Time.millisToPosix ((nowSeconds + inSeconds) * 1000)
+
+expiresToString a =
+    case a of
+        Data.Security.Never -> "never"
+        Data.Security.On x -> Iso8601.fromTime x
 
 
 pprintJson : String -> String

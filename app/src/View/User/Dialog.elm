@@ -75,6 +75,14 @@ makeCreateUserDialog m =
                                       |> TextField.setOnChange NewUserPasswordChanged
                                       |> TextField.setAttributes [ attribute "spellCheck" "false" ]
                                       )
+                                , TextField.filled
+                                      (TextField.config
+                                      |> TextField.setLabel (Just "Expires in")
+                                      |> TextField.setRequired False
+--                                      |> TextField.setValid (Util.isGoodExpires)
+                                      |> TextField.setOnChange NewUserExpiresInChanged
+                                      |> TextField.setAttributes [ attribute "spellCheck" "false" ]
+                                      )
                                 ]
                           ]
                     ]
@@ -84,7 +92,7 @@ makeCreateUserDialog m =
                           "Cancel"
                     , Button.text
                           (Button.config
-                          |> Button.setOnClick CreateUser
+                          |> Button.setOnClick CalculateNewUserExpiryAndCreateUser
                           |> Button.setDisabled (not (allRequiredFieldsGood m))
                           |> Button.setAttributes [ Dialog.defaultAction ]
                           )
@@ -98,7 +106,7 @@ makeCreateUserDialog m =
 allRequiredFieldsGood m =
     (m.s.newUserName /= "")
     && (Util.isGoodPassword m.s.newUserPassword)
-
+    && (Util.isGoodExpires m.s.newUserExpiresIn)
 
 
 makeEditUserDialog m =

@@ -81,10 +81,10 @@ init f =
                 False
                 -- User
                 "" ["Name"] SortName True
-                False "(newUserName)" "(newUserPassword)" Nothing Nothing
+                False "(newUserName)" "(newUserPassword)" "(newUserExpiresIn)" Nothing Nothing
                 Nothing Nothing [] []
                 -- Group
-                "" ["Name"] SortName True
+                "" ["Name", "Tag name", "Tag value"] SortName True
                 False "" Nothing Nothing
                 -- shared
                 Nothing Nothing  [] ""

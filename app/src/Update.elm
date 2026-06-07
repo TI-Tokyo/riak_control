@@ -820,8 +820,13 @@ update msg m =
         NewUserPasswordChanged a ->
             let s_ = m.s in
             ({m | s = {s_ | newUserPassword = a}}, Cmd.none)
-        CreateUser ->
-            (m, Request.Security.createUser m)
+        NewUserExpiresInChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | newUserExpiresIn = a}}, Cmd.none)
+        CalculateNewUserExpiryAndCreateUser ->
+            (m, perform (\t -> CreateUser t) Time.now)
+        CreateUser t ->
+            (m, Request.Security.createUser m t)
         CreateUserCancelled ->
             (resetCreateUserDialogFields m, Cmd.none)
         UserCreated (Ok ()) ->

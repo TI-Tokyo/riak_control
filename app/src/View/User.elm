@@ -73,14 +73,21 @@ makeUsers m =
             rr
 
 filter m uu =
-    case m.s.userFilterValue of
-        "" -> uu
-        s ->
-            List.filter
-                (\u ->
-                     (  (List.member "Name" m.s.userFilterIn && String.contains s u.name)
-                     )
-                ) uu
+    let
+        anyTagNameContains =
+            \tt s -> List.any (String.contains s) (Dict.keys tt)
+        anyTagValueContains =
+            \tt s -> List.any (String.contains s) (Dict.values tt)
+    in
+        case m.s.userFilterValue of
+            "" -> uu
+            s ->
+                List.filter
+                    (\u ->
+                         (List.member "Name" m.s.userFilterIn && String.contains s u.name) ||
+                         (List.member "Tag name" m.s.userFilterIn && anyTagNameContains u.tags s) ||
+                         (List.member "Tag value" m.s.userFilterIn && anyTagValueContains u.tags s)
+                    ) uu
 
 sort m aa =
     let
@@ -116,7 +123,8 @@ cardContent m u =
     in
         "           Name: " ++ u.name ++ "\n" ++
         "        Created: " ++ (Iso8601.fromTime u.created) ++ "\n" ++
-        "       Modified: " ++ (Iso8601.fromTime u.modified) ++ "\n" 
+        "       Modified: " ++ (Iso8601.fromTime u.modified) ++ "\n" ++
+        "        Expires: " ++ (Util.expiresToString u.expires) ++ "\n"
         ++ View.Shared.maybeItems 14 abbrPerms "Permissions" 60
         ++ View.Shared.maybeItems 14 u.groups "Groups" 60
         ++ View.Shared.maybeItems 14 tags "Tags" 60
