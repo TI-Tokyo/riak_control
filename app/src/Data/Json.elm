@@ -49,7 +49,8 @@ import Data.Ttaae as Ttaae
 import Data.Vnode as Vnode
 import Util
 
-import Json.Decode as D exposing (succeed, list, string, int, float, bool, map, dict, nullable, oneOf, null, at)
+import Json.Decode as D exposing
+    (succeed, fail, list, string, int, float, bool, map, dict, nullable, oneOf, null, at, field, value, andThen)
 import Json.Decode.Pipeline exposing (required, requiredAt, optional, hardcoded, custom)
 import Json.Encode
 import Iso8601
@@ -208,7 +209,7 @@ user =
         |> required "groups" (list string)
         |> required "permissions" (list string)
         |> required "auth_method" authMethod
-        |> optional "options" (dict string) Dict.empty
+        |> optional "tags" (dict string) Dict.empty
 
 isoDate =
     oneOf
@@ -218,15 +219,16 @@ isoDate =
 expires =
     oneOf
         [ map expiresFromInt int
-        , map expiresFromString string
+        , at [] string |> andThen maybeNever
+        , map On Iso8601.decoder
+        , fail "Invalid expires field"
         ]
-expiresFromString a =
-    case a of
-        "never" -> Never
-        _ -> On (Time.millisToPosix 0)
 expiresFromInt a =
     On (Time.millisToPosix a)
-
+maybeNever a =
+    case a of
+        "never" -> succeed Never
+        _ -> fail "not never"
 -- permission =
 --     map permissionFromString string
 -- permissionFromString a =
@@ -252,7 +254,7 @@ group =
     succeed Group
         |> required "name" string
         |> required "permissions" (list string)
-        |> optional "options" (dict string) Dict.empty
+        |> optional "tags" (dict string) Dict.empty
 
 
 decodePermissionList : D.Decoder (List String)
