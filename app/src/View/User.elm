@@ -130,8 +130,8 @@ cardContent m u =
         "       Modified: " ++ (Iso8601.fromTime u.modified) ++ "\n" ++
         "        Expires: " ++ (Util.expiresToString u.expires) ++ "\n"
         ++ View.Shared.maybeItems 14 abbrPerms "Permissions" 60
-        ++ View.Shared.maybeItems 14 u.groups "Groups" 60
-        ++ View.Shared.maybeItems 14 tags "Tags" 60
+        ++ View.Shared.maybeItems 14 u.groups  "     Groups" 60
+        ++ View.Shared.maybeItems 14 tags      "       Tags" 60
 
 userCardActions m u =
     Just <|
