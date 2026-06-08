@@ -19,7 +19,7 @@ if ! getent passwd $user >/dev/null; then
 fi
 
 for i in lib log; do
-    chown -R $user:$user /var/$i/riak
+    chown -R $user:$user /var/$i/riak-control
 done
 chown -R $user:$user /etc/riak-control
 
