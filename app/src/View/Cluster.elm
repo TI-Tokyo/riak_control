@@ -31,7 +31,7 @@ import View.Shared
 import View.Style
 import Util
 
-import Html exposing (Html, text, div, img, pre)
+import Html exposing (Html, text, div, img, pre, b)
 import Html.Attributes exposing (attribute, style, src)
 import Material.Card as Card
 import Material.Button as Button
@@ -236,15 +236,36 @@ makeStagedChanges m =
 
 makeFinalCluster m =
     let
+        leavingNodes =
+            List.filterMap
+                (\{action, name} ->
+                     if action == Data.Cluster.Leave then
+                         Just name
+                     else
+                         Nothing
+                ) m.s.cluster.stagedChanges
+        maybeLeavingNodesShuttingDownNotice =
+            if leavingNodes == [] then
+                []
+            else
+                [ div [ style "padding" "1em 0" ]
+                      [ text <| "After all transfers are complete, node" ++ (Util.maybeEs leavingNodes "s") ++ " "
+                      , b [ style "color" "red" ] [ text (String.join ", " leavingNodes) ]
+                      , text " will be stopped."
+                      ]
+                ]
         content =
             case m.s.cluster.planned |> (sortPlanned m) |> List.map (makeFinalMember m) of
                 [] ->
                     div [ style "font-size" "small" ] [ text "(no staged changes)" ]
                 rr ->
                     div [] [ div View.Style.card rr
-                           , div [] [ Button.text (Button.config |> Button.setOnClick PlanClear) "Clear"
+                           , div []
+                               (maybeLeavingNodesShuttingDownNotice ++
+                                    [ Button.text (Button.config |> Button.setOnClick PlanClear) "Clear"
                                     , Button.text (Button.config |> Button.setOnClick PlanCommit) "Commit"
                                     ]
+                               )
                            ]
     in
         if m.s.cluster.stagedChanges == [] then
