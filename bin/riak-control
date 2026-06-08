@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ## Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 ##
@@ -43,7 +43,7 @@ cmd="python3 $script_dir/rctl.py \
 u=riak-control
 
 if [ $UID = 0 ]; then
-    sudo -H -E -u $u -- "$cmd"
+    sudo -H -E -u $u -- $cmd
 else
     $cmd
 fi
