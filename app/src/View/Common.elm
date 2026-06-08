@@ -58,6 +58,10 @@ type SortByField
     | SortVnodeMemoryPutObjSize
     | SortVnodeMemoryDataMemory
     | SortVnodeMemoryIndexMemory
+    -- user
+    | SortUserCreated
+    | SortUserModified
+    | SortUserExpires
     --
     | SortUnsorted
 
@@ -98,6 +102,9 @@ selectSortByString a =
         SortVnodeMemoryIndexMemory -> "Index Memory"
         SortVnodeStatusCounter -> "Counter"
         SortVnodeStatusCounterLease -> "Counter lease"
+        SortUserCreated -> "Created"
+        SortUserModified -> "Modified"
+        SortUserExpires -> "Expires"
         SortUnsorted -> "None"
 
 stringToSortBy a =
@@ -132,5 +139,8 @@ stringToSortBy a =
         "Index Memory" -> SortVnodeMemoryIndexMemory
         "Counter" -> SortVnodeStatusCounter
         "Counter lease" -> SortVnodeStatusCounterLease
+        "Created" -> SortUserCreated
+        "Modified" -> SortUserModified
+        "Expires" -> SortUserExpires
         _ -> SortUnsorted
 

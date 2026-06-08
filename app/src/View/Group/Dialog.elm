@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------------------
 --
--- Copyright (c) 2025 TI Tokyo    All Rights Reserved.
+-- Copyright (c) 2026 TI Tokyo    All Rights Reserved.
 --
 -- This file is provided to you under the Apache License,
 -- Version 2.0 (the "License"); you may not use this file
@@ -54,17 +54,15 @@ makeCreateGroupDialog m =
               { title = "New group"
               , content =
                     [ div View.Style.dialogContentPart
-                          [ div [ style "display" "grid"
-                                , style "grid-template-columns" "repeat(2, 1fr)"
-                                , style "align-items" "left"
-                                , style "margin" "0.6em 0 0 0"
-                                ]
+                          [ div View.Style.newUserDialogGrid
                                 [ TextField.filled
                                       (TextField.config
                                       |> TextField.setLabel (Just "Name")
                                       |> TextField.setRequired True
                                       |> TextField.setOnChange NewGroupNameChanged
-                                      |> TextField.setAttributes [ attribute "spellCheck" "false" ]
+                                      |> TextField.setAttributes [ attribute "spellCheck" "false"
+                                                                 , style "grid-column-end" "span 2"
+                                                                 ]
                                       )
                                 ]
                           ]
@@ -102,12 +100,8 @@ makeEditGroupDialog m =
                   { title = "Edit group " ++ g.name
                   , content =
                         [ div View.Style.dialogContentPart
-                              [ div [ style "display" "grid"
-                                         , style "grid-template-columns" "repeat(2, 1fr)"
-                                         , style "align-items" "center"
-                                         , style "margin" "0.6em 0 0 0"
-                                         ]
-                                  [ text "Enabled"
+                              [ div View.Style.newUserDialogGrid
+                                  [ text "TODO: Tags"
                                   ]
                               ]
                         ]

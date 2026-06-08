@@ -81,7 +81,8 @@ makeTopAppBar m =
                           (IconButton.icon "refresh")
                     , text (activeTabName m)
                     ]
-              , TopAppBar.section [ TopAppBar.alignStart ]
+              , TopAppBar.section [ TopAppBar.alignStart
+                                  , style "min-width" "max-content" ]
                   [ makeFilterControls m ]
               , TopAppBar.section [ TopAppBar.alignEnd ]
                   [ span [ TopAppBar.alignEnd, style "padding" "0 1em" ]

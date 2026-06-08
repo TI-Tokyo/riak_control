@@ -84,3 +84,10 @@ filterAndSort =
     , style "align-items" "center"
     , style "justify-content" "center"
     ]
+
+newUserDialogGrid =
+    [ style "display" "grid"
+    , style "grid-template-columns" "repeat(2, 1fr)"
+    , style "align-items" "left"
+    , style "margin" "0.6em 0 0 0"
+    ]

@@ -68,12 +68,16 @@ dummyUser =
 
 type alias Group =
     { name : String
+    , created : Time.Posix
+    , modified : Time.Posix
     , permissions : List String
     , tags : Dict.Dict String String
     }
 
 dummyGroup =
     { name = "-"
+    , created = Time.millisToPosix 0
+    , modified = Time.millisToPosix 0
     , permissions = []
     , tags = Dict.empty
     }
@@ -84,8 +88,8 @@ type SecurityAction
     | UserAdd String String Expires (Dict.Dict String String)
     | UserMod String (Dict.Dict String String)
     | UserDel String
-    | AddUserGroup String String
-    | DeleteUserGroup String String
+    | AddUserGroups String (List String)
+    | DeleteUserGroups String (List String)
     | AddUserPermissions String (List String)
     | DeleteUserPermissions String (List String)
     | ListGroups

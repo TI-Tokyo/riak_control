@@ -20,7 +20,7 @@
 
 module Util exposing (..)
 
-import Data.Security
+import Data.Security exposing (Expires(..))
 import Time
 import DateTime
 import Iso8601
@@ -135,6 +135,18 @@ expiresToString a =
     case a of
         Data.Security.Never -> "never"
         Data.Security.On x -> Iso8601.fromTime x
+
+
+expiresSort a1 a2 =
+    case (a1.expires, a2.expires) of
+        (Never, Never) -> EQ
+        (Never, _) -> GT
+        (_, Never) -> LT
+        (On t1, On t2) ->
+            if (Time.posixToMillis t1) < (Time.posixToMillis t2) then LT
+            else if (Time.posixToMillis t1) > (Time.posixToMillis t2) then GT
+            else EQ
+
 
 
 pprintJson : String -> String

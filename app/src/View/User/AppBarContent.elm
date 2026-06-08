@@ -59,7 +59,7 @@ makeFilterControls m =
           (List.map
                (\i -> let j = View.Common.selectSortByString i in
                       SelectItem.selectItem (SelectItem.config {value = j}) j)
-               [])
+               [SortUserCreated, SortUserModified, SortUserExpires])
     , Button.text (Button.config |> Button.setOnClick UserSortOrderChanged)
             (View.Common.sortOrderText m.s.userSortOrder)
     ]

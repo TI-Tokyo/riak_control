@@ -56,11 +56,7 @@ makeCreateUserDialog m =
               { title = "New user"
               , content =
                     [ div View.Style.dialogContentPart
-                          [ div [ style "display" "grid"
-                                , style "grid-template-columns" "repeat(2, 1fr)"
-                                , style "align-items" "left"
-                                , style "margin" "0.6em 0 0 0"
-                                ]
+                          [ div View.Style.newUserDialogGrid
                                 [ TextField.filled
                                       (TextField.config
                                       |> TextField.setLabel (Just "Name")
@@ -72,16 +68,19 @@ makeCreateUserDialog m =
                                       (TextField.config
                                       |> TextField.setLabel (Just "Password")
                                       |> TextField.setRequired True
+                                      |> TextField.setPlaceholder (Just "At least 8 chars")
                                       |> TextField.setOnChange NewUserPasswordChanged
                                       |> TextField.setAttributes [ attribute "spellCheck" "false" ]
                                       )
                                 , TextField.filled
                                       (TextField.config
                                       |> TextField.setLabel (Just "Expires in")
-                                      |> TextField.setRequired False
---                                      |> TextField.setValid (Util.isGoodExpires)
+                                      |> TextField.setRequired True
+                                      |> TextField.setPlaceholder (Just "\"2026-03-18T01:02:03\" or \"in 5d 6h\"")
                                       |> TextField.setOnChange NewUserExpiresInChanged
-                                      |> TextField.setAttributes [ attribute "spellCheck" "false" ]
+                                      |> TextField.setAttributes [ attribute "spellCheck" "false"
+                                                                 , style "grid-column-end" "span 2"
+                                                                 ]
                                       )
                                 ]
                           ]
@@ -121,12 +120,8 @@ makeEditUserDialog m =
                   { title = "Edit user " ++ u.name
                   , content =
                         [ div View.Style.dialogContentPart
-                              [ div [ style "display" "grid"
-                                    , style "grid-template-columns" "repeat(2, 1fr)"
-                                    , style "align-items" "center"
-                                    , style "margin" "0.6em 0 0 0"
-                                    ]
-                                    [ text "Enabled" ]
+                              [ div View.Style.newUserDialogGrid
+                                    [ text "TODO Expires, Tags" ]
                               ]
                         ]
                   , actions =

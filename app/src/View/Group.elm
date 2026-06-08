@@ -44,6 +44,7 @@ import Material.Select.Item as SelectItem
 import Material.Switch as Switch
 import Iso8601
 import Dict
+import Time
 
 
 makeContent m =
@@ -83,6 +84,8 @@ sort m aa =
         aa0 =
             case m.s.groupSortBy of
                 SortName -> List.sortBy .name aa
+                SortUserCreated -> List.sortBy (.created >> Time.posixToMillis) aa
+                SortUserModified -> List.sortBy (.modified >> Time.posixToMillis) aa
                 _ -> aa
     in
         if m.s.groupSortOrder then aa0 else List.reverse aa0
@@ -105,11 +108,13 @@ makeGroup m a =
             }
         ]
 
-cardContent m u =
+cardContent m g =
     let
-        tags = List.map (\(k, v) -> k ++ "=" ++ v) (Dict.toList u.tags)
+        tags = List.map (\(k, v) -> k ++ "=" ++ v) (Dict.toList g.tags)
     in
-        View.Shared.maybeItems 12 u.permissions "Permissions" 60
+        "        Created: " ++ (Iso8601.fromTime g.created) ++ "\n" ++
+        "       Modified: " ++ (Iso8601.fromTime g.modified) ++ "\n" ++
+        View.Shared.maybeItems 12 g.permissions "Permissions" 60
         ++ View.Shared.maybeItems 12 tags "Tags" 60
 
 groupCardActions m a =

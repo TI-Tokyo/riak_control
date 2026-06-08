@@ -253,6 +253,8 @@ decodeGroupList =
 group =
     succeed Group
         |> required "name" string
+        |> required "created" isoDate
+        |> required "modified" isoDate
         |> required "permissions" (list string)
         |> optional "tags" (dict string) Dict.empty
 

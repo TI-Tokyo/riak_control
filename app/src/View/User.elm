@@ -24,7 +24,7 @@ module View.User exposing
 
 import Model exposing (Model)
 import Msg exposing (Msg(..))
-import Data.Security
+import Data.Security exposing (..)
 import View.User.Dialog
 import View.Common exposing (SortByField(..))
 import View.Shared
@@ -46,6 +46,7 @@ import Material.Chip.Filter as FilterChip
 import Material.ChipSet.Filter as FilterChipSet
 import Iso8601
 import Dict
+import Time
 
 
 makeContent m =
@@ -94,6 +95,9 @@ sort m aa =
         aa0 =
             case m.s.userSortBy of
                 SortName -> List.sortBy .name aa
+                SortUserCreated -> List.sortBy (.created >> Time.posixToMillis) aa
+                SortUserModified -> List.sortBy (.modified >> Time.posixToMillis) aa
+                SortUserExpires -> List.sortWith Util.expiresSort aa
                 _ -> aa
     in
         if m.s.userSortOrder then aa0 else List.reverse aa0

@@ -81,17 +81,17 @@ updateUser m  =
 
 addUserGroup : Model -> String -> Cmd Msg
 addUserGroup m a =
-    securityRequest m "SecurityAddUserGroup"
+    securityRequest m "SecurityAddUserGroups"
         (Http.expectWhatever UserGroupAdded)
-        (Data.Security.AddUserGroup
-             (Maybe.withDefault "--" m.s.openEditUserGroupsDialogFor) a)
+        (Data.Security.AddUserGroups
+             (Maybe.withDefault "--" m.s.openEditUserGroupsDialogFor) [a])
 
 deleteUserGroup : Model -> String -> Cmd Msg
 deleteUserGroup m a =
-    securityRequest m "SecurityDeleteUserGroup"
+    securityRequest m "SecurityDeleteUserGroups"
         (Http.expectWhatever UserGroupAdded)
-        (Data.Security.DeleteUserGroup
-             (Maybe.withDefault "--" m.s.openEditUserGroupsDialogFor) a)
+        (Data.Security.DeleteUserGroups
+             (Maybe.withDefault "--" m.s.openEditUserGroupsDialogFor) [a])
 
 addUserPermissions : Model -> (List String) -> Cmd Msg
 addUserPermissions m aa =
@@ -200,16 +200,16 @@ securityActionEncoder action =
                                                 ])
                 ]
 
-        Data.Security.AddUserGroup u g ->
+        Data.Security.AddUserGroups u gg ->
             Json.Encode.object
                 [ ("params", Json.Encode.object [ ("user", string u)
-                                                , ("group", string g)
+                                                , ("groups", list string gg)
                                                 ])
                 ]
-        Data.Security.DeleteUserGroup u g ->
+        Data.Security.DeleteUserGroups u gg ->
             Json.Encode.object
                 [ ("params", Json.Encode.object [ ("user", string u)
-                                                , ("group", string g)
+                                                , ("groups", list string gg)
                                                 ])
                 ]
 
