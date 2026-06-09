@@ -25,6 +25,7 @@ module View.User exposing
 import Model exposing (Model)
 import Msg exposing (Msg(..))
 import Data.Security exposing (..)
+import Data.Security.Lib as Lib
 import View.User.Dialog
 import View.Common exposing (SortByField(..))
 import View.Shared
@@ -97,7 +98,7 @@ sort m aa =
                 SortName -> List.sortBy .name aa
                 SortUserCreated -> List.sortBy (.created >> Time.posixToMillis) aa
                 SortUserModified -> List.sortBy (.modified >> Time.posixToMillis) aa
-                SortUserExpires -> List.sortWith Util.expiresSort aa
+                SortUserExpires -> List.sortWith Lib.sortUserByExpires aa
                 _ -> aa
     in
         if m.s.userSortOrder then aa0 else List.reverse aa0
@@ -123,12 +124,12 @@ makeUser m u =
 cardContent m u =
     let
         tags = List.map (\(k, v) -> k ++ "=" ++ v) (Dict.toList u.tags)
-        abbrPerms = List.map Data.Security.abbreviatePerm u.permissions
+        abbrPerms = List.map Lib.abbreviatePerm u.permissions
     in
         "           Name: " ++ u.name ++ "\n" ++
         "        Created: " ++ (Iso8601.fromTime u.created) ++ "\n" ++
         "       Modified: " ++ (Iso8601.fromTime u.modified) ++ "\n" ++
-        "        Expires: " ++ (Util.expiresToString u.expires) ++ "\n"
+        "        Expires: " ++ (Lib.expiresToString u.expires) ++ "\n"
         ++ View.Shared.maybeItems 14 abbrPerms "Permissions" 60
         ++ View.Shared.maybeItems 14 u.groups  "     Groups" 60
         ++ View.Shared.maybeItems 14 tags      "       Tags" 60
@@ -140,6 +141,7 @@ userCardActions m u =
                   [ Card.button (Button.config
                                 |> Button.setOnClick (DeleteUser u.name)
                                 |> Button.setAttributes [ style "color" "red" ]
+                                |> Button.setDisabled (u.name == m.c.riakAdminCtlUser)
                                 ) "Delete"
                   , Card.button (Button.config
                                 |> Button.setOnClick (ShowEditUserDialog u.name)

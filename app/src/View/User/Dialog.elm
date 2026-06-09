@@ -28,6 +28,7 @@ module View.User.Dialog exposing
 import Model exposing (Model)
 import Msg exposing (Msg(..))
 import Data.Security
+import Data.Security.Lib as Lib
 import View.Common exposing (SortByField(..))
 import View.Shared
 import View.Style
@@ -38,6 +39,7 @@ import Html.Attributes exposing (attribute, style)
 import Material.Button as Button
 import Material.IconButton as IconButton
 import Material.TextField as TextField
+import Material.TextArea as TextArea
 import Material.Select as Select
 import Material.Select.Item as SelectItem
 import Material.Switch as Switch
@@ -45,8 +47,20 @@ import Material.Checkbox as Checkbox
 import Material.Chip.Filter as FilterChip
 import Material.ChipSet.Filter as FilterChipSet
 import Material.Dialog as Dialog
+import Json.Decode as JD
+import Time
+
 
 makeCreateUserDialog m =
+    let
+        innerAttrs = [ attribute "spellCheck" "false"
+                     , style "margin" ".4em 0 .4em" ]
+        innerAttrs2 = innerAttrs ++ [ style "grid-column-end" "span 2" ]
+        tagsLabel =
+            if m.s.newUserTags == "" then
+                (Just "Tags (as a JSON object")
+            else Nothing
+    in
     if m.s.createUserDialogShown then
         [ Dialog.confirmation
               (Dialog.config
@@ -55,35 +69,39 @@ makeCreateUserDialog m =
               )
               { title = "New user"
               , content =
-                    [ div View.Style.dialogContentPart
-                          [ div View.Style.newUserDialogGrid
-                                [ TextField.filled
-                                      (TextField.config
-                                      |> TextField.setLabel (Just "Name")
-                                      |> TextField.setRequired True
-                                      |> TextField.setOnChange NewUserNameChanged
-                                      |> TextField.setAttributes [ attribute "spellCheck" "false" ]
-                                      )
-                                , TextField.filled
-                                      (TextField.config
-                                      |> TextField.setLabel (Just "Password")
-                                      |> TextField.setRequired True
-                                      |> TextField.setPlaceholder (Just "At least 8 chars")
-                                      |> TextField.setOnChange NewUserPasswordChanged
-                                      |> TextField.setAttributes [ attribute "spellCheck" "false" ]
-                                      )
-                                , TextField.filled
-                                      (TextField.config
-                                      |> TextField.setLabel (Just "Expires in")
-                                      |> TextField.setRequired True
-                                      |> TextField.setPlaceholder (Just "\"2026-03-18T01:02:03\" or \"in 5d 6h\"")
-                                      |> TextField.setOnChange NewUserExpiresInChanged
-                                      |> TextField.setAttributes [ attribute "spellCheck" "false"
-                                                                 , style "grid-column-end" "span 2"
-                                                                 ]
-                                      )
-                                ]
-                          ]
+                    [ div View.Style.newUserDialogGrid
+                           [ TextField.filled
+                                 (TextField.config
+                                 |> TextField.setLabel (Just "Name")
+                                 |> TextField.setRequired True
+                                 |> TextField.setOnChange NewUserNameChanged
+                                 |> TextField.setAttributes innerAttrs
+                                 )
+                           , TextField.filled
+                                 (TextField.config
+                                 |> TextField.setLabel (Just "Password")
+                                 |> TextField.setRequired True
+                                 |> TextField.setPlaceholder (Just "At least 8 chars")
+                                 |> TextField.setOnChange NewUserPasswordChanged
+                                 |> TextField.setAttributes innerAttrs
+                                 )
+                           , TextField.filled
+                                 (TextField.config
+                                 |> TextField.setLabel (Just "Expires in")
+                                 |> TextField.setRequired True
+                                 |> TextField.setPlaceholder (Just "\"2026-03-18T01:02:03\". \"in 5d 6h\" or \"never\"")
+                                 |> TextField.setOnChange NewUserExpiresInChanged
+                                 |> TextField.setAttributes innerAttrs2
+                                 )
+                           , TextArea.outlined
+                                 (TextArea.config
+                                 |> TextArea.setLabel tagsLabel
+                                 |> TextArea.setOnInput NewUserTagsChanged
+                                 |> TextArea.setRows (Just 12)
+                                 |> TextArea.setCols (Just 44)
+                                 |> TextArea.setAttributes innerAttrs2
+                                 )
+                           ]
                     ]
               , actions =
                     [ Button.text
@@ -104,9 +122,22 @@ makeCreateUserDialog m =
 
 allRequiredFieldsGood m =
     (m.s.newUserName /= "")
-    && (Util.isGoodPassword m.s.newUserPassword)
-    && (Util.isGoodExpires m.s.newUserExpiresIn)
+    && (isGoodPassword m.s.newUserPassword)
+    && (isGoodExpires m.s.newUserExpiresIn)
+    && (m.s.newUserTags == "" || isGoodTags m.s.newUserTags)
 
+isGoodPassword a =
+    7 < String.length a
+
+isGoodExpires a =
+    case Lib.convertExpires a (Time.millisToPosix 0) of
+        Ok _ -> True
+        Err _ -> False
+
+isGoodTags a =
+    case JD.decodeString (JD.dict JD.string) a of
+        Ok _ -> True
+        Err _ -> False
 
 makeEditUserDialog m =
     case m.s.openEditUserDialogFor of

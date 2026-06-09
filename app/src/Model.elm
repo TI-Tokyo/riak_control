@@ -132,6 +132,7 @@ type alias State =
     , newUserName : String
     , newUserPassword : String
     , newUserExpiresIn : String
+    , newUserTags : String
     , openEditUserDialogFor : Maybe String
     , confirmDeleteUserDialogShownFor : Maybe String
 

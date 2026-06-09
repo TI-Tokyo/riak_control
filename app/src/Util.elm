@@ -20,7 +20,6 @@
 
 module Util exposing (..)
 
-import Data.Security exposing (Expires(..))
 import Time
 import DateTime
 import Iso8601
@@ -45,9 +44,8 @@ headAndTail l defaultHd =
             (defaultHd, [])
 
 
-
-isoDateToPosix : String -> Time.Posix
-isoDateToPosix a =
+sureIsoDateToPosix : String -> Time.Posix
+sureIsoDateToPosix a =
     case Iso8601.toTime a of
         Ok s -> s
         Err _ -> Time.millisToPosix 0
@@ -61,7 +59,7 @@ ellipsize a n =
         a
 
 
-compareByPosixTime f a b =
+compareFieldByPosixTime f a b =
     case (a |> f |> Time.posixToMillis) < (b |> f |> Time.posixToMillis) of
         True -> LT
         False -> GT
@@ -79,74 +77,6 @@ addOrDeleteElement l a =
 
 delElement l a =
     List.filter (\x -> x /= a) l
-
-isGoodPassword a =
-    7 < String.length a
-
-isGoodExpires a =
-    case convertExpires a (Time.millisToPosix 0) of
-        Ok _ -> True
-        Err _ -> False
-
-convertExpires : String -> Time.Posix -> Result String Data.Security.Expires
-convertExpires a now =
-    let
-        addUp =
-            \x ->
-                case x of
-                    Nothing -> 0
-                    Just c ->
-                        case (String.slice 0 -1 c, String.right 1 c) of
-                            (v, "d") -> 24 * 60 * 60 * (Maybe.withDefault 0 (String.toInt v))
-                            (v, "h") -> 60 * 60 * (Maybe.withDefault 0 (String.toInt v))
-                            (v, "m") -> 60 * (Maybe.withDefault 0 (String.toInt v))
-                            (v, "s") -> Maybe.withDefault 0 (String.toInt v)
-                            _ -> 0
-    in
-        case a of
-            "never" ->
-                Ok Data.Security.Never
-            _ ->
-                case Iso8601.toTime a of
-                    Ok t -> Ok (Data.Security.On t)
-                    Err _ ->
-                        let
-                            mm = Regex.find
-                                 (Maybe.withDefault Regex.never
-                                      <| Regex.fromString "in (\\d+d|) *(\\d+h|) *(\\d+m|) *(\\d+s|)") a
-                            subm =
-                                case List.head mm of
-                                    Just k -> k.submatches
-                                    Nothing -> []
-                        in
-                            case subm of
-                                [] ->
-                                    Err "invalid expires"
-                                [Nothing, Nothing, Nothing, Nothing] ->
-                                    Err "invalid expires"
-                                dhms ->
-                                    let
-                                        nowSeconds = (Time.posixToMillis now) // 1000
-                                        inSeconds = List.foldl (\x q -> q + (addUp x)) 0 dhms
-                                    in
-                                        Ok <| Data.Security.On <| Time.millisToPosix ((nowSeconds + inSeconds) * 1000)
-
-expiresToString a =
-    case a of
-        Data.Security.Never -> "never"
-        Data.Security.On x -> Iso8601.fromTime x
-
-
-expiresSort a1 a2 =
-    case (a1.expires, a2.expires) of
-        (Never, Never) -> EQ
-        (Never, _) -> GT
-        (_, Never) -> LT
-        (On t1, On t2) ->
-            if (Time.posixToMillis t1) < (Time.posixToMillis t2) then LT
-            else if (Time.posixToMillis t1) > (Time.posixToMillis t2) then GT
-            else EQ
-
 
 maybeEs ii es =
     case List.length ii of

@@ -20,6 +20,7 @@
 
 module Data.Security exposing (..)
 
+import Util
 import Dict exposing (Dict)
 import Time
 
@@ -99,11 +100,3 @@ type SecurityAction
     | AddGroupPermissions String (List String)
     | DeleteGroupPermissions String (List String)
     | ListPermissions
-
-
-abbreviatePerm a =
-    case a of
-        "cluster_admin" -> "adm"
-        "cluster_observer" -> "obs"
-        "security" -> "sec"
-        _ -> a

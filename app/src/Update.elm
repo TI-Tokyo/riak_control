@@ -823,6 +823,9 @@ update msg m =
         NewUserExpiresInChanged a ->
             let s_ = m.s in
             ({m | s = {s_ | newUserExpiresIn = a}}, Cmd.none)
+        NewUserTagsChanged a ->
+            let s_ = m.s in
+            ({m | s = {s_ | newUserTags = a}}, Cmd.none)
         CalculateNewUserExpiryAndCreateUser ->
             (m, perform (\t -> CreateUser t) Time.now)
         CreateUser t ->
@@ -830,8 +833,7 @@ update msg m =
         CreateUserCancelled ->
             (resetCreateUserDialogFields m, Cmd.none)
         UserCreated (Ok ()) ->
-            (resetCreateUserDialogFields m, Cmd.batch [ Request.Security.listUsers m
-                                                      ])
+            (resetCreateUserDialogFields m, Request.Security.listUsers m)
         UserCreated (Err err) ->
             let s_ = m.s in
             ( {m | s = {s_ | msgQueue = Snackbar.addMessage
@@ -1124,6 +1126,9 @@ resetCreateUserDialogFields m =
     let s_ = m.s in
     {m | s = {s_ | createUserDialogShown = False
                  , newUserName = ""
+                 , newUserPassword = ""
+                 , newUserExpiresIn = ""
+                 , newUserTags = ""
              }
     }
 

@@ -228,6 +228,7 @@ type Msg
     | NewUserNameChanged String
     | NewUserPasswordChanged String
     | NewUserExpiresInChanged String
+    | NewUserTagsChanged String
     | CalculateNewUserExpiryAndCreateUser
     | CreateUserCancelled
     | ShowEditUserDialog String

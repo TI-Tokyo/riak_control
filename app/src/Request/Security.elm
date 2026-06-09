@@ -40,6 +40,7 @@ module Request.Security exposing
 
 import Model exposing (Model)
 import Data.Security exposing (..)
+import Data.Security.Lib as Lib
 import Data.Json
 import Msg exposing (Msg(..))
 import Util
@@ -50,7 +51,8 @@ import Dict
 import Http
 import HttpBuilder
 import Url.Builder
-import Json.Encode exposing (string, dict, list)
+import Json.Encode as JE exposing (list, string, dict, object)
+import Json.Decode as JD
 import Url
 import Iso8601
 
@@ -63,12 +65,18 @@ listUsers m =
 
 createUser : Model -> Time.Posix -> Cmd Msg
 createUser m now =
-    let expires = Util.convertExpires m.s.newUserExpiresIn now in
+    let
+        expires = Lib.convertExpires m.s.newUserExpiresIn now
+        tags =
+            case JD.decodeString (JD.dict JD.string) m.s.newUserTags of
+                Ok res -> res
+                Err _ ->  Dict.empty
+    in
     case expires of
         Ok expValue ->
             securityRequest m "SecurityCreateUser"
                 (Http.expectWhatever UserCreated)
-                (Data.Security.UserAdd m.s.newUserName m.s.newUserPassword expValue Dict.empty)
+                (Data.Security.UserAdd m.s.newUserName m.s.newUserPassword expValue tags)
         Err _ ->
             Cmd.none
 
@@ -166,102 +174,94 @@ securityRequest m action expect c =
 securityActionEncoder action =
     case action of
         Data.Security.ListUsers ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [])
-                ]
+            object [ ("params", object []) ]
 
         Data.Security.UserAdd name password expires tags ->
             let
-                jo = Json.Encode.object
+                jo = object
                 expiresObj =
                     case expires of
                         Never -> string "never"
                         On a -> Iso8601.encode a
             in
-            Json.Encode.object
-                [ ("params", jo [ ("name", string name)
-                                , ("auth_details", jo [ ("method", string "password")
-                                                      , ("password", string password)
-                                                      ]
-                                  )
-                                , ("expires", expiresObj)
-                                , ("tags", dict identity string tags)
-                                ])
-                ]
+                object
+                    [ ("params", jo [ ("name", string name)
+                                    , ("auth_details", jo [ ("method", string "password")
+                                                          , ("password", string password)
+                                                          ]
+                                      )
+                                    , ("expires", expiresObj)
+                                    , ("tags", dict identity string tags)
+                                    ])
+                    ]
         Data.Security.UserMod name options ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("name", string name)
-                                                , ("options", dict identity string options)
-                                                ])
+            object
+                [ ("params", object [ ("name", string name)
+                                    , ("options", dict identity string options)
+                                    ])
                 ]
         Data.Security.UserDel name ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("name", string name)
-                                                ])
-                ]
+            object
+                [ ("params", object [ ("name", string name) ]) ]
 
         Data.Security.AddUserGroups u gg ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("user", string u)
-                                                , ("groups", list string gg)
-                                                ])
+            object
+                [ ("params", object [ ("user", string u)
+                                    , ("groups", list string gg)
+                                    ])
                 ]
         Data.Security.DeleteUserGroups u gg ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("user", string u)
-                                                , ("groups", list string gg)
-                                                ])
+            object
+                [ ("params", object [ ("user", string u)
+                                    , ("groups", list string gg)
+                                    ])
                 ]
 
         Data.Security.AddUserPermissions u aa ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("user", string u)
-                                                , ("permissions", list string aa)
-                                                ])
+            object
+                [ ("params", object [ ("user", string u)
+                                    , ("permissions", list string aa)
+                                    ])
                 ]
         Data.Security.DeleteUserPermissions u aa ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("user", string u)
-                                                , ("permissions", list string aa)
-                                                ])
+            object
+                [ ("params", object [ ("user", string u)
+                                    , ("permissions", list string aa)
+                                    ])
                 ]
 
         Data.Security.ListGroups ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [])
-                ]
+            object
+                [ ("params", object []) ]
         Data.Security.GroupAdd name options ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("name", string name)
-                                                , ("options", dict identity string options)
-                                                ])
+            object
+                [ ("params", object [ ("name", string name)
+                                    , ("options", dict identity string options)
+                                    ])
                 ]
         Data.Security.GroupMod name options ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("name", string name)
-                                                , ("options", dict identity string options)
-                                                ])
+            object
+                [ ("params", object [ ("name", string name)
+                                    , ("options", dict identity string options)
+                                    ])
                 ]
         Data.Security.GroupDel name ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("name", string name)
-                                                ])
-                ]
+            object
+                [ ("params", object [ ("name", string name) ]) ]
 
         Data.Security.AddGroupPermissions u aa ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("group", string u)
-                                                , ("permissions", list string aa)
-                                                ])
+            object
+                [ ("params", object [ ("group", string u)
+                                    , ("permissions", list string aa)
+                                    ])
                 ]
         Data.Security.DeleteGroupPermissions u aa ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("group", string u)
-                                                , ("permissions", list string aa)
-                                                ])
+            object
+                [ ("params", object [ ("group", string u)
+                                    , ("permissions", list string aa)
+                                    ])
                 ]
 
         Data.Security.ListPermissions ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [])
-                ]
+            object
+                [ ("params", object []) ]
