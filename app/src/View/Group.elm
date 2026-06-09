@@ -75,8 +75,7 @@ filter m aa =
         s ->
             List.filter
                 (\g ->
-                     (  (List.member "Name" m.s.groupFilterIn && String.contains s g.name)
-                     )
+                     List.member "Name" m.s.groupFilterIn && String.contains s g.name
                 ) aa
 
 sort m aa =
@@ -92,21 +91,19 @@ sort m aa =
 
 
 makeGroup m a =
-    div []
-        [ Card.card Card.config
-             { blocks =
-                   ( Card.block <|
-                         div View.Style.cardInnerHeader
-                         [ text a.name ]
-                   , [ Card.block <|
-                           div View.Style.cardInnerContent
-                           [ cardContent m a |> text
-                           ]
-                     ]
-                   )
-             , actions = groupCardActions m a
-            }
-        ]
+    Card.card Card.config
+        { blocks =
+              ( Card.block <|
+                    div View.Style.cardInnerHeader
+                    [ text a.name ]
+              , [ Card.block <|
+                      div View.Style.cardInnerContent
+                      [ cardContent m a |> text
+                      ]
+                ]
+              )
+        , actions = groupCardActions m a
+        }
 
 cardContent m g =
     let

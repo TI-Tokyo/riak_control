@@ -105,21 +105,19 @@ sort m aa =
 
 
 makeUser m u =
-    div []
-        [ Card.card Card.config
-             { blocks =
-                   ( Card.block <|
-                         div View.Style.cardInnerHeader
-                         [ text u.name ]
-                   , [ Card.block <|
-                           div View.Style.cardInnerContent
-                           [ cardContent m u |> text
-                           ]
-                     ]
-                   )
-             , actions = userCardActions m u
-            }
-        ]
+    Card.card Card.config
+        { blocks =
+              ( Card.block <|
+                    div View.Style.cardInnerHeader
+                    [ text u.name ]
+              , [ Card.block <|
+                      div View.Style.cardInnerContent
+                      [ cardContent m u |> text
+                      ]
+                ]
+              )
+        , actions = userCardActions m u
+        }
 
 cardContent m u =
     let

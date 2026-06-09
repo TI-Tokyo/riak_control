@@ -39,6 +39,7 @@ subTab =
 card =
     [ style "display" "flex"
     , style "flex-wrap" "wrap"
+    , style "align-items" "stretch"
     , style "gap" "1em"
     ]
 
@@ -52,6 +53,7 @@ cardInnerContent =
     [ style "white-space" "pre"
     , style "font-family" "monospace"
     , style "padding" "1.5em"
+    , style "height" "stretch"
     ]
 
 cardInnerBlock =
