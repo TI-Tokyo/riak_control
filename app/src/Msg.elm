@@ -189,7 +189,7 @@ type Msg
     | DeleteUserConfirmed
     | DeleteUserNotConfirmed
     | UserDeleted (Result Http.Error ())
-    | UpdateUser
+    | UserUpdated (Result Http.Error ())
 
     -- Groups
     | ListGroups
@@ -227,11 +227,16 @@ type Msg
     | ShowCreateUserDialog
     | NewUserNameChanged String
     | NewUserPasswordChanged String
-    | NewUserExpiresInChanged String
+    | NewUserExpiresChanged String
     | NewUserTagsChanged String
     | CalculateNewUserExpiryAndCreateUser
     | CreateUserCancelled
     | ShowEditUserDialog String
+    | EditedUserExpiresChanged String
+    | EditedUserTagsChanged String
+    | SetUserExpiry Time.Posix
+    | SetUserTags
+    | CalculateEditedUserExpiryAndUpdateUser
     | EditUserCancelled
 
     | ShowEditUserGroupsDialog String

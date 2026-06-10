@@ -44,6 +44,9 @@ type AuthMethod
     = Password
     | INVALID_AUTHMETHOD
 
+type alias Tags =
+    Dict.Dict String String
+
 type alias User =
     { name : String
     , created : Time.Posix
@@ -52,7 +55,7 @@ type alias User =
     , groups : List String
     , permissions : List String
     , authMethod : AuthMethod
-    , tags : Dict.Dict String String
+    , tags : Tags
     }
 
 dummyUser =
@@ -72,7 +75,7 @@ type alias Group =
     , created : Time.Posix
     , modified : Time.Posix
     , permissions : List String
-    , tags : Dict.Dict String String
+    , tags : Tags
     }
 
 dummyGroup =
@@ -86,16 +89,17 @@ dummyGroup =
 
 type SecurityAction
     = ListUsers
-    | UserAdd String String Expires (Dict.Dict String String)
-    | UserMod String (Dict.Dict String String)
+    | UserAdd String String Expires Tags
+    | SetUserExpiry String Expires
+    | SetUserTags String Tags
     | UserDel String
     | AddUserGroups String (List String)
     | DeleteUserGroups String (List String)
     | AddUserPermissions String (List String)
     | DeleteUserPermissions String (List String)
     | ListGroups
-    | GroupAdd String (Dict.Dict String String)
-    | GroupMod String (Dict.Dict String String)
+    | GroupAdd String Tags
+    | GroupMod String Tags
     | GroupDel String
     | AddGroupPermissions String (List String)
     | DeleteGroupPermissions String (List String)

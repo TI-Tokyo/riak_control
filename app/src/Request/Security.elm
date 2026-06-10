@@ -22,7 +22,8 @@ module Request.Security exposing
     ( listUsers
     , createUser
     , deleteUser
-    , updateUser
+    , setUserExpiry
+    , setUserTags
     , addUserGroup
     , deleteUserGroup
     , addUserPermissions
@@ -66,26 +67,45 @@ listUsers m =
 createUser : Model -> Time.Posix -> Cmd Msg
 createUser m now =
     let
-        expires = Lib.convertExpires m.s.newUserExpiresIn now
+        expires =
+            case Lib.convertExpires m.s.newUserExpires now of
+                Ok v -> v
+                Err _ -> On (Time.millisToPosix 0)
         tags =
             case JD.decodeString (JD.dict JD.string) m.s.newUserTags of
                 Ok res -> res
                 Err _ ->  Dict.empty
     in
-    case expires of
-        Ok expValue ->
-            securityRequest m "SecurityCreateUser"
-                (Http.expectWhatever UserCreated)
-                (Data.Security.UserAdd m.s.newUserName m.s.newUserPassword expValue tags)
-        Err _ ->
-            Cmd.none
+        securityRequest m "SecurityCreateUser"
+            (Http.expectWhatever UserCreated)
+            (Data.Security.UserAdd m.s.newUserName m.s.newUserPassword expires tags)
 
-updateUser : Model -> Cmd Msg
-updateUser m  =
-    securityRequest m "SecurityUpdateUser"
-        (Http.expectWhatever UserCreated)
-        (Data.Security.UserMod m.s.newUserName
-             (Dict.fromList [("password",  m.s.newUserPassword)]))
+setUserExpiry : Model -> Time.Posix -> Cmd Msg
+setUserExpiry m now =
+    let
+        expires =
+            case Lib.convertExpires m.s.editedUserExpires now of
+                Ok v -> v
+                Err _ -> On (Time.millisToPosix 0)
+        _ = Debug.log "" expires
+    in
+    securityRequest m "SecuritySetUserExpiry"
+        (Http.expectWhatever UserUpdated)
+        (Data.Security.SetUserExpiry
+             (Maybe.withDefault "--" m.s.openEditUserDialogFor) expires)
+
+setUserTags : Model -> Cmd Msg
+setUserTags m  =
+    let
+        tags =
+            case JD.decodeString (JD.dict JD.string) m.s.editedUserTags of
+                Ok res -> res
+                Err _ ->  Dict.empty
+    in
+    securityRequest m "SecuritySetUserTags"
+        (Http.expectWhatever UserUpdated)
+        (Data.Security.SetUserTags
+             (Maybe.withDefault "--" m.s.openEditUserDialogFor) tags)
 
 addUserGroup : Model -> String -> Cmd Msg
 addUserGroup m a =
@@ -177,27 +197,26 @@ securityActionEncoder action =
             object [ ("params", object []) ]
 
         Data.Security.UserAdd name password expires tags ->
-            let
-                jo = object
-                expiresObj =
-                    case expires of
-                        Never -> string "never"
-                        On a -> Iso8601.encode a
-            in
-                object
-                    [ ("params", jo [ ("name", string name)
-                                    , ("auth_details", jo [ ("method", string "password")
-                                                          , ("password", string password)
-                                                          ]
-                                      )
-                                    , ("expires", expiresObj)
-                                    , ("tags", dict identity string tags)
-                                    ])
-                    ]
-        Data.Security.UserMod name options ->
             object
                 [ ("params", object [ ("name", string name)
-                                    , ("options", dict identity string options)
+                                    , ("auth_details", object [ ("method", string "password")
+                                                              , ("password", string password)
+                                                              ]
+                                      )
+                                    , ("expires", expiresObj expires)
+                                    , ("tags", dict identity string tags)
+                                    ])
+                ]
+        Data.Security.SetUserExpiry name expires ->
+            object
+                [ ("params", object [ ("name", string name)
+                                    , ("expires", expiresObj expires)
+                                    ])
+                ]
+        Data.Security.SetUserTags name tags ->
+            object
+                [ ("params", object [ ("name", string name)
+                                    , ("tags", dict identity string tags)
                                     ])
                 ]
         Data.Security.UserDel name ->
@@ -265,3 +284,9 @@ securityActionEncoder action =
         Data.Security.ListPermissions ->
             object
                 [ ("params", object []) ]
+
+
+expiresObj a =
+    case a of
+        Never -> string "never"
+        On t -> Iso8601.encode t

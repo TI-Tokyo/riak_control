@@ -35,6 +35,7 @@ import Data.SshOps
 import Data.VersionInfo
 import Data.Cluster exposing (emptyCluster)
 import Data.Security exposing (dummyUser, dummyGroup)
+import Data.Security.Lib
 import Data.Ttaae
 import Data.Vnode
 import Data.Json
@@ -47,9 +48,9 @@ import Task exposing (attempt, perform, andThen, succeed, sequence)
 import Platform.Cmd
 import Dict exposing (Dict)
 import Json.Decode
+import Json.Encode
 import Http
 import Process
-import RemoteData
 import Material.Snackbar as Snackbar
 
 
@@ -820,9 +821,9 @@ update msg m =
         NewUserPasswordChanged a ->
             let s_ = m.s in
             ({m | s = {s_ | newUserPassword = a}}, Cmd.none)
-        NewUserExpiresInChanged a ->
+        NewUserExpiresChanged a ->
             let s_ = m.s in
-            ({m | s = {s_ | newUserExpiresIn = a}}, Cmd.none)
+            ({m | s = {s_ | newUserExpires = a}}, Cmd.none)
         NewUserTagsChanged a ->
             let s_ = m.s in
             ({m | s = {s_ | newUserTags = a}}, Cmd.none)
@@ -865,11 +866,40 @@ update msg m =
             )
 
         ShowEditUserDialog a ->
+            let
+                s_ = m.s
+                u = Model.userBy m .name a
+            in
+                ({m | s = { s_ | openEditUserDialogFor = Just a
+                               , editedUserExpires = u.expires
+                                   |> Data.Security.Lib.expiresToString
+                               , editedUserTags =
+                                   Json.Encode.encode
+                                       0 (Json.Encode.dict identity Json.Encode.string u.tags)
+                                           |> Util.pprintJson
+                          }}, Cmd.none)
+        EditedUserExpiresChanged a ->
             let s_ = m.s in
-            ({m | s = {s_ | openEditUserDialogFor = Just a}}, Cmd.none)
-        UpdateUser ->
+            ({m | s = {s_ | editedUserExpires = a}}, Cmd.none)
+        EditedUserTagsChanged a ->
             let s_ = m.s in
-            ({m | s = {s_ | openEditUserDialogFor = Nothing}}, Request.Security.updateUser m)
+            ({m | s = {s_ | editedUserTags = a}}, Cmd.none)
+        CalculateEditedUserExpiryAndUpdateUser ->
+            let s_ = m.s in
+            ( m
+            , Cmd.batch [ perform (\t -> SetUserExpiry t) Time.now
+                        , perform (\_ -> SetUserTags) Time.now
+                        ]
+            )
+        SetUserExpiry t ->
+            (m, Request.Security.setUserExpiry m t)
+        SetUserTags ->
+            (m, Request.Security.setUserTags m)
+        UserUpdated _ ->
+            let s_ = m.s in
+            ( {m | s = {s_ | openEditUserDialogFor = Nothing}}
+            , Request.Security.listUsers m
+            )
         EditUserCancelled ->
             let s_ = m.s in
             ({m | s = {s_ | openEditUserDialogFor = Nothing}}, Cmd.none)
@@ -977,8 +1007,7 @@ update msg m =
         CreateGroupCancelled ->
             (resetCreateGroupDialogFields m, Cmd.none)
         GroupCreated (Ok ()) ->
-            (resetCreateGroupDialogFields m, Cmd.batch [ Request.Security.listGroups m
-                                                      ])
+            (resetCreateGroupDialogFields m, Request.Security.listGroups m)
         GroupCreated (Err err) ->
             let s_ = m.s in
             ( {m | s = {s_ | msgQueue = Snackbar.addMessage
@@ -1127,7 +1156,7 @@ resetCreateUserDialogFields m =
     {m | s = {s_ | createUserDialogShown = False
                  , newUserName = ""
                  , newUserPassword = ""
-                 , newUserExpiresIn = ""
+                 , newUserExpires = ""
                  , newUserTags = ""
              }
     }

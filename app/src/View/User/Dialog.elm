@@ -52,15 +52,6 @@ import Time
 
 
 makeCreateUserDialog m =
-    let
-        innerAttrs = [ attribute "spellCheck" "false"
-                     , style "margin" ".4em 0 .4em" ]
-        innerAttrs2 = innerAttrs ++ [ style "grid-column-end" "span 2" ]
-        tagsLabel =
-            if m.s.newUserTags == "" then
-                (Just "Tags (as a JSON object")
-            else Nothing
-    in
     if m.s.createUserDialogShown then
         [ Dialog.confirmation
               (Dialog.config
@@ -90,12 +81,12 @@ makeCreateUserDialog m =
                                  |> TextField.setLabel (Just "Expires in")
                                  |> TextField.setRequired True
                                  |> TextField.setPlaceholder (Just "\"2026-03-18T01:02:03\". \"in 5d 6h\" or \"never\"")
-                                 |> TextField.setOnChange NewUserExpiresInChanged
+                                 |> TextField.setOnChange NewUserExpiresChanged
                                  |> TextField.setAttributes innerAttrs2
                                  )
                            , TextArea.outlined
                                  (TextArea.config
-                                 |> TextArea.setLabel tagsLabel
+                                 |> TextArea.setLabel (tagsLabel m)
                                  |> TextArea.setOnInput NewUserTagsChanged
                                  |> TextArea.setRows (Just 12)
                                  |> TextArea.setCols (Just 44)
@@ -123,7 +114,7 @@ makeCreateUserDialog m =
 allRequiredFieldsGood m =
     (m.s.newUserName /= "")
     && (isGoodPassword m.s.newUserPassword)
-    && (isGoodExpires m.s.newUserExpiresIn)
+    && (isGoodExpires m.s.newUserExpires)
     && (m.s.newUserTags == "" || isGoodTags m.s.newUserTags)
 
 isGoodPassword a =
@@ -142,34 +133,53 @@ isGoodTags a =
 makeEditUserDialog m =
     case m.s.openEditUserDialogFor of
         Just a ->
-            let u = Model.userBy m .name a in
-            [ Dialog.confirmation
-                  (Dialog.config
-                  |> Dialog.setOpen True
-                  |> Dialog.setOnClose EditUserCancelled
-                  )
-                  { title = "Edit user " ++ u.name
-                  , content =
-                        [ div View.Style.dialogContentPart
-                              [ div View.Style.newUserDialogGrid
-                                    [ text "TODO Expires, Tags" ]
-                              ]
-                        ]
-                  , actions =
-                        [ Button.text
-                              (Button.config |> Button.setOnClick EditUserCancelled)
-                              "Cancel"
-                        , Button.text
-                              (Button.config
-                              |> Button.setOnClick UpdateUser
-                              |> Button.setAttributes [ Dialog.defaultAction ]
-                          )
-                          "Update"
-                        ]
-                  }
-            ]
+            makeEditUserDialog2 m (Model.userBy m .name a)
         Nothing ->
             []
+makeEditUserDialog2 m u =
+    [ Dialog.confirmation
+          (Dialog.config
+          |> Dialog.setOpen True
+          |> Dialog.setOnClose EditUserCancelled
+          )
+          { title = "Edit user " ++ u.name
+          , content =
+                [ div View.Style.dialogContentPart
+                      [ div View.Style.newUserDialogGrid
+                            [ TextField.filled
+                                  (TextField.config
+                                  |> TextField.setLabel (Just "Expires in")
+                                  |> TextField.setRequired True
+                                  |> TextField.setValue (Just m.s.editedUserExpires)
+                                  |> TextField.setPlaceholder (Just "\"2026-03-18T01:02:03\". \"in 5d 6h\" or \"never\"")
+                                  |> TextField.setOnChange EditedUserExpiresChanged
+                                  |> TextField.setAttributes innerAttrs2
+                                  )
+                            , TextArea.outlined
+                                  (TextArea.config
+                                  |> TextArea.setLabel (tagsLabel m)
+                                  |> TextArea.setValue (Just m.s.editedUserTags)
+                                  |> TextArea.setOnInput EditedUserTagsChanged
+                                  |> TextArea.setRows (Just 12)
+                                  |> TextArea.setCols (Just 44)
+                                  |> TextArea.setAttributes innerAttrs2
+                                  )
+                            ]
+                      ]
+                ]
+          , actions =
+                [ Button.text
+                      (Button.config |> Button.setOnClick EditUserCancelled)
+                      "Cancel"
+                , Button.text
+                      (Button.config
+                      |> Button.setOnClick CalculateEditedUserExpiryAndUpdateUser
+                      |> Button.setAttributes [ Dialog.defaultAction ]
+                  )
+                  "Update"
+                ]
+          }
+    ]
 
 
 makeEditUserGroupsDialog m =
@@ -254,3 +264,16 @@ makeAddUserGroupsDialog2 m a =
                     ]
               }
         ]
+
+
+innerAttrs =
+    [ attribute "spellCheck" "false"
+    , style "margin" ".4em 0 .4em"
+    ]
+innerAttrs2 =
+    innerAttrs ++
+        [ style "grid-column-end" "span 2" ]
+tagsLabel m =
+    if m.s.newUserTags == "" then
+        (Just "Tags (as a JSON object")
+    else Nothing

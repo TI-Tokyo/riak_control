@@ -131,12 +131,14 @@ type alias State =
     , createUserDialogShown : Bool
     , newUserName : String
     , newUserPassword : String
-    , newUserExpiresIn : String
+    , newUserExpires : String
     , newUserTags : String
     , openEditUserDialogFor : Maybe String
     , confirmDeleteUserDialogShownFor : Maybe String
 
     , openEditUserGroupsDialogFor : Maybe String
+    , editedUserExpires : String
+    , editedUserTags : String
     , openAddUserGroupsDialogFor : Maybe String
     , selectedUserGroupsForAdd : List String
     , selectedUserGroupsForDelete : List String
