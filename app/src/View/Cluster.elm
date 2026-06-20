@@ -55,6 +55,7 @@ makeContent m =
 makeProperContent m =
     div View.Style.topContent
         [ makeRollingRestartProgress m
+        , makeRepairs m
         , makeTransfers m
         , makeAddNodeFab m
         , makeCluster m
@@ -143,6 +144,8 @@ makeCurrentMember m u =
                               , li "App env" (GetNodeAppEnv u.name)
                               , li "advanced.config" (GetNodeAdvancedConfig u.name)
                               , li "Restart" (SignalNodeRestart u.name)
+                              , li "Start repair" (NodeRepairStart u.name)
+                              , li "Stop repair" (NodeRepairStop u.name "riak control admin")
                               ]
                         ]
             else
@@ -346,6 +349,23 @@ makeRollingRestartProgress m =
                 ] [ text <| "Rolling restart in progress: restarting now "
                         ++ (Maybe.withDefault {name = "", lastUptime = -1} m.s.nodeBeingRestartedNow |> .name)
                         ++ endMsg ]
+
+makeRepairs m =
+    if m.s.cluster.repairs == [] then
+        div [ style "color" "green"
+            ] [ text <| "No active node repairs" ]
+    else
+        let summary = Data.Cluster.nodeRepairSummary m.s.cluster.repairs in
+        div [ style "color" "magenta"
+            ] [ text <| (summaryToStr summary) ]
+
+summaryToStr {nodesRunningRepair, totalPertitionsBeingRepaired} =
+    case nodesRunningRepair of
+        [] -> "No nodes running repairs"
+        [node] -> "Repairs running on " ++ node ++ ". " ++
+                  "Partitions being repaired: " ++ (String.fromInt (totalPertitionsBeingRepaired))
+        multiple -> "Repairs running on multiple nodes: " ++ (String.join ", " multiple) ++ ". Don't let this happen!"
+
 
 makeTransfers m =
     if m.s.cluster.transfers == [] then

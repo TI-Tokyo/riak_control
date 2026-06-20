@@ -26,8 +26,9 @@ type alias Cluster =
     { current : List CurrentMember
     , stagedChanges : List StagedChange
     , planned : List FinalMember
-    , transfers : List TransferStats
     , downNodes : List String
+    , transfers : List TransferStats
+    , repairs : List RepairStatus
     }
 
 type alias CurrentMember =
@@ -84,8 +85,9 @@ emptyCluster =
     { current = []
     , stagedChanges = []
     , planned = []
-    , transfers = []
     , downNodes = []
+    , transfers = []
+    , repairs = []
     }
 
 
@@ -171,7 +173,7 @@ stageActionFromStr a =
 type Action
     = GetClusterStatus
     | ClusterPlan PlanAction
-    | ClusterConfig ConfigAction
+    | NodeOperation NodeAction
 
 type PlanAction
     = Clear
@@ -194,15 +196,42 @@ type alias ClusterPlanActionResult =
 type alias ConfigResult =
     { result : String }
 
-type ConfigAction
+type NodeAction
     = GetNodeAppEnv String
     | GetNodeAdvancedConfig String
     | PutNodeAdvancedConfig String String
     | SignalRestart String
+    | NodeRepairStatus (List String)
+    | NodeRepairStart String
+    | NodeRepairStop String String
 
 
 
 type alias RestartingNode =
     { name : String
     , lastUptime : Int
+    }
+
+
+type alias RepairStatus =
+    { node : String
+    , status : List RepairedPartition
+    }
+
+type alias RepairedPartition =
+    { idx : String
+    , mod : String
+    , pid : String
+    }
+
+type alias RepairStatusSummary =
+    { nodesRunningRepair : List String  -- >1 means some rogue admin did riak_client:repair_node()
+                                        -- on Erlang console
+    , totalPertitionsBeingRepaired : Int
+    }
+
+nodeRepairSummary : (List RepairStatus) -> RepairStatusSummary
+nodeRepairSummary r =
+    { nodesRunningRepair = List.foldl (\{node, status} q -> if status == [] then q else node :: q) [] r
+    , totalPertitionsBeingRepaired = List.foldl (\{status} q -> q + List.length status) 0 r
     }

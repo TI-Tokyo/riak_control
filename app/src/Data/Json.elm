@@ -30,6 +30,7 @@ module Data.Json exposing
     , decodeClusterPlanActionResult
 
     , decodeNodeConfig
+    , decodeRepairs
 
     , decodeUserList
     , decodeGroupList
@@ -122,8 +123,9 @@ decodeCluster =
         |> requiredAt ["result", "current_cluster"] (list currentMember)
         |> requiredAt ["result", "staged_changes"] (list stagedChange)
         |> requiredAt ["result", "final_cluster"] (list finalMember)
-        |> requiredAt ["result", "transfers"] (list transferStats)
         |> requiredAt ["result", "down_nodes"] (list string)
+        |> requiredAt ["result", "transfers"] (list transferStats)
+        |> requiredAt ["result", "repairs"] (list repairs)
 
 
 decodeClusterPlanActionResult : D.Decoder ClusterPlanActionResult
@@ -184,6 +186,19 @@ transferStats =
         |> required "node" string
         |> required "state" transferStatsState
         |> required "count" int
+
+decodeRepairs =
+    list repairs
+
+repairs =
+    succeed RepairStatus
+        |> required "node" string
+        |> required "status" (list repairedPartition)
+repairedPartition =
+    succeed RepairedPartition
+        |> required "idx" string
+        |> required "mod" string
+        |> required "pid" string
 
 transferStatsState =
     map Data.Cluster.transferStatsStateFromStr string

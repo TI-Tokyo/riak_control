@@ -35,6 +35,10 @@ module Request.Cluster exposing
     , putNodeAdvancedConfig
 
     , signalRestart
+
+    , nodeRepairStatus
+    , nodeRepairStart
+    , nodeRepairStop
     )
 
 import Model exposing (Model)
@@ -47,8 +51,8 @@ import Request.Util exposing (..)
 import Http
 import HttpBuilder
 import Url.Builder
-import Json.Encode
-import Json.Decode
+import Json.Encode as JE
+import Json.Decode as JD
 import Retry
 import Task
 
@@ -75,7 +79,7 @@ getClusterStatus m =
 clusterResolver a =
     case a of
         Http.GoodStatus_ _ body ->
-            case Json.Decode.decodeString Data.Json.decodeCluster body of
+            case JD.decodeString Data.Json.decodeCluster body of
                 Ok b ->
                     Ok b
                 Err err ->
@@ -135,26 +139,44 @@ stageStop m a =
 getNodeAppEnv : Model -> String -> Cmd Msg
 getNodeAppEnv m a =
     Request.Util.req m "NodeGetAppEnv"
-        (clusterActionEncoder (ClusterConfig (Data.Cluster.GetNodeAppEnv a)))
+        (clusterActionEncoder (NodeOperation (Data.Cluster.GetNodeAppEnv a)))
         (Http.expectJson GotNodeAppEnv Data.Json.decodeNodeConfig)
 
 getNodeAdvancedConfig : Model -> String -> Cmd Msg
 getNodeAdvancedConfig m a =
     Request.Util.req m "NodeGetAdvancedConfig"
-        (clusterActionEncoder (ClusterConfig (Data.Cluster.GetNodeAdvancedConfig a)))
+        (clusterActionEncoder (NodeOperation (Data.Cluster.GetNodeAdvancedConfig a)))
         (Http.expectJson GotNodeAdvancedConfig Data.Json.decodeNodeConfig)
 
 putNodeAdvancedConfig : Model -> String -> String -> Cmd Msg
 putNodeAdvancedConfig m a b =
     Request.Util.req m "NodePutAdvancedConfig"
-        (clusterActionEncoder (ClusterConfig (Data.Cluster.PutNodeAdvancedConfig a b)))
+        (clusterActionEncoder (NodeOperation (Data.Cluster.PutNodeAdvancedConfig a b)))
         (Http.expectWhatever PuttedNodeAdvancedConfig)
 
 signalRestart : Model -> String -> Cmd Msg
 signalRestart m a =
     Request.Util.req m "NodeRestart"
-        (clusterActionEncoder (ClusterConfig (Data.Cluster.SignalRestart a)))
+        (clusterActionEncoder (NodeOperation (Data.Cluster.SignalRestart a)))
         (Http.expectWhatever SignalledNodeRestart)
+
+nodeRepairStatus : Model -> List String -> Cmd Msg
+nodeRepairStatus m aa =
+    Request.Util.req m "NodeRepairStatus"
+        (clusterActionEncoder (NodeOperation (Data.Cluster.NodeRepairStatus aa)))
+        (Http.expectJson GotNodeRepairStatus Data.Json.decodeRepairs)
+
+nodeRepairStart : Model -> String -> Cmd Msg
+nodeRepairStart m a =
+    Request.Util.req m "NodeRepairStart"
+        (clusterActionEncoder (NodeOperation (Data.Cluster.NodeRepairStart a)))
+        (Http.expectWhatever (NodeRepairStarted a))
+
+nodeRepairStop : Model -> String -> String -> Cmd Msg
+nodeRepairStop m a b =
+    Request.Util.req m "NodeRepairStop"
+        (clusterActionEncoder (NodeOperation (Data.Cluster.NodeRepairStop a b)))
+        (Http.expectWhatever (NodeRepairStopped a))
 
 clusterPlanActionRequest m a c msg =
     Request.Util.req
@@ -164,61 +186,78 @@ clusterPlanActionRequest m a c msg =
 clusterActionEncoder a =
     case a of
         GetClusterStatus ->
-            Json.Encode.object
+            JE.object
                 []
         ClusterPlan Clear ->
-            Json.Encode.object
+            JE.object
                 []
         ClusterPlan Commit ->
-            Json.Encode.object
+            JE.object
                 []
         ClusterPlan (Apply (Data.Cluster.NodeJoin b)) ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+            JE.object
+                [ ("params", JE.object [ ("node", JE.string b) ])
                 ]
         ClusterPlan (Apply (Data.Cluster.NodeLeave b)) ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+            JE.object
+                [ ("params", JE.object [ ("node", JE.string b) ])
                 ]
         ClusterPlan (Apply (Data.Cluster.NodeRemove b)) ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+            JE.object
+                [ ("params", JE.object [ ("node", JE.string b) ])
                 ]
         ClusterPlan (Apply (Data.Cluster.NodeReplace b c)) ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("node", Json.Encode.string b)
-                                                , ("with", Json.Encode.string c)
-                                                ])
+            JE.object
+                [ ("params", JE.object [ ("node", JE.string b)
+                                       , ("with", JE.string c)
+                                       ])
                 ]
         ClusterPlan (Apply (Data.Cluster.NodeForceReplace b c)) ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("node", Json.Encode.string b)
-                                                , ("with", Json.Encode.string c)
-                                                ])
+            JE.object
+                [ ("params", JE.object [ ("node", JE.string b)
+                                       , ("with", JE.string c)
+                                       ])
                 ]
         ClusterPlan (Apply (Data.Cluster.NodeDown b)) ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+            JE.object
+                [ ("params", JE.object [ ("node", JE.string b) ])
                 ]
         ClusterPlan (Apply (Data.Cluster.NodeStop b)) ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+            JE.object
+                [ ("params", JE.object [ ("node", JE.string b) ])
                 ]
-        ClusterConfig (Data.Cluster.GetNodeAppEnv b) ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+        NodeOperation (Data.Cluster.GetNodeAppEnv b) ->
+            JE.object
+                [ ("params", JE.object [ ("node", JE.string b) ])
                 ]
-        ClusterConfig (Data.Cluster.GetNodeAdvancedConfig b) ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+        NodeOperation (Data.Cluster.GetNodeAdvancedConfig b) ->
+            JE.object
+                [ ("params", JE.object [ ("node", JE.string b) ])
                 ]
-        ClusterConfig (Data.Cluster.PutNodeAdvancedConfig b c) ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("node", Json.Encode.string b)
-                                                , ("config", Json.Encode.string c)
-                                                ])
+        NodeOperation (Data.Cluster.PutNodeAdvancedConfig b c) ->
+            JE.object
+                [ ("params", JE.object [ ("node", JE.string b)
+                                       , ("config", JE.string c)
+                                       ])
                 ]
-        ClusterConfig (SignalRestart b) ->
-            Json.Encode.object
-                [ ("params", Json.Encode.object [ ("node", Json.Encode.string b) ])
+        NodeOperation (Data.Cluster.SignalRestart b) ->
+            JE.object
+                [ ("params", JE.object [ ("node", JE.string b) ])
+                ]
+
+        NodeOperation (Data.Cluster.NodeRepairStatus b) ->
+            JE.object
+                [ ("params", JE.object [ ("nodes", JE.list JE.string b) ])
+                ]
+
+        NodeOperation (Data.Cluster.NodeRepairStart b) ->
+            JE.object
+                [ ("params", JE.object [ ("node", JE.string b) ])
+                ]
+
+        NodeOperation (Data.Cluster.NodeRepairStop b c) ->
+            JE.object
+                [ ("params", JE.object [ ("node", JE.string b)
+                                       , ("reason", JE.string c)
+                                       ])
                 ]

@@ -41,7 +41,7 @@ getVnodeStatus m a =
     actionRequest m (Vnode.GetVnodeStatusAction a Vnode.All) GotVnodeStatus
 
 actionRequest m c msg =
-    Request.Util.req m "VnodeGetStatus"
+    Request.Util.req m "VnodeStatus"
         (requestParams c)
         (Http.expectJson msg Data.Json.decodeVnodeStatusList)
 

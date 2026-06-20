@@ -728,6 +728,55 @@ update msg m =
                 else
                     (m, perform (\_ -> WaitForNode n) (Process.sleep 5000 |> andThen (\_ -> Time.now)))
 
+        GetNodeRepairStatus nn ->
+            (m, Request.Cluster.nodeRepairStatus m nn)
+        GotNodeRepairStatus (Ok r) ->
+            let
+                s_ = m.s
+                summary = Data.Cluster.nodeRepairSummary r
+                t =
+                    case summary.nodesRunningRepair of
+                        [] -> "No nodes running repairs"
+                        [node] -> "Repairs running on " ++ node ++ "\n" ++
+                                  "Partitions being repaired: " ++ (String.fromInt (summary.totalPertitionsBeingRepaired))
+                        multiple -> "Repairs running on multiple nodes: " ++ (String.join ", " multiple) ++ ". Don't let this happen!"
+            in
+            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
+                                (Snackbar.message t) m.s.msgQueue}}
+            , Cmd.none
+            )
+        GotNodeRepairStatus (Err err) ->
+            ( handleHttpError m ("Failed to get node repair status: ") err
+            , Cmd.none
+            )
+
+        NodeRepairStart n ->
+            (m, Request.Cluster.nodeRepairStart m n)
+
+        NodeRepairStarted n (Ok ()) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
+                                (Snackbar.message ("Node repair started on " ++ n)) m.s.msgQueue}}
+            , Cmd.none
+            )
+        NodeRepairStarted n (Err err) ->
+            ( handleHttpError m ("Failed to start node repair on " ++ n ++ ": ") err
+            , Cmd.none
+            )
+
+        NodeRepairStop n rsn ->
+            (m, Request.Cluster.nodeRepairStop m n rsn)
+
+        NodeRepairStopped n (Ok ()) ->
+            let s_ = m.s in
+            ( {m | s = {s_ | msgQueue = Snackbar.addMessage
+                                (Snackbar.message ("Node repair stopped on " ++ n)) m.s.msgQueue}}
+            , Cmd.none
+            )
+        NodeRepairStopped n (Err err) ->
+            ( handleHttpError m ("Failed to stop node repair on " ++ n ++ ": ") err
+            , Cmd.none
+            )
 
         -- TictacAAE
         ------------------------------

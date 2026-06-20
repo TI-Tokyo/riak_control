@@ -155,6 +155,12 @@ type Msg
 
     | SignalNodeRestart String
     | SignalledNodeRestart (Result Http.Error ())
+    | GetNodeRepairStatus (List String)
+    | GotNodeRepairStatus (Result Http.Error (List Data.Cluster.RepairStatus))
+    | NodeRepairStart String
+    | NodeRepairStarted String (Result Http.Error ())
+    | NodeRepairStop String String
+    | NodeRepairStopped String (Result Http.Error ())
 
     | PromptBeginRollingRestart
     | BeginRollingRestartConfirmed
