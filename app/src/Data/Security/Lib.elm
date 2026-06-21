@@ -80,7 +80,6 @@ convertExpires a now =
                                     let
                                         nowSeconds = (Time.posixToMillis now) // 1000
                                         inSeconds = List.foldl (\x q -> q + (addUp x)) 0 dhms
-                                        _ = Debug.log "inSeconds" inSeconds
                                     in
                                         Ok <| On <| Time.millisToPosix ((nowSeconds + inSeconds) * 1000)
 expiresToString : Expires -> String

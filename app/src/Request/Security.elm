@@ -87,7 +87,6 @@ setUserExpiry m now =
             case Lib.convertExpires m.s.editedUserExpires now of
                 Ok v -> v
                 Err _ -> On (Time.millisToPosix 0)
-        _ = Debug.log "" expires
     in
     securityRequest m "SecuritySetUserExpiry"
         (Http.expectWhatever UserUpdated)
