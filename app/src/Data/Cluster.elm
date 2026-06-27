@@ -221,7 +221,6 @@ type alias RepairStatus =
 type alias RepairedPartition =
     { idx : String
     , mod : String
-    , pid : String
     }
 
 type alias RepairStatusSummary =

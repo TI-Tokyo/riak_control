@@ -198,7 +198,6 @@ repairedPartition =
     succeed RepairedPartition
         |> required "idx" string
         |> required "mod" string
-        |> required "pid" string
 
 transferStatsState =
     map Data.Cluster.transferStatsStateFromStr string
